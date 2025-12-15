@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Memory & Pointers Deep Dive | CS5008 Guide</title>
+    <link rel="stylesheet" href="../css/styles.css">
+    <link rel="icon"
+        href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>">
+</head>
+
+<body>
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <header class="header">
+        <div class="header-content"><a href="../index.html" class="logo"><span
+                    class="logo-icon">⚡</span><span>CS5008</span></a>
+            <div class="header-actions"><button class="theme-toggle" id="themeToggle"
+                    aria-label="Toggle theme">🌙</button></div>
+        </div>
+    </header>
+
+    <main class="main-container" style="max-width: 900px;">
+        <nav style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: var(--space-6);"><a href="../index.html"
+                style="color: var(--text-muted);">← Back to modules</a></nav>
+
+        <div style="margin-bottom: var(--space-10);">
+            <div
+                style="display: inline-flex; padding: var(--space-2) var(--space-4); background: rgba(6, 182, 212, 0.1); border-radius: var(--radius-full); font-size: 0.875rem; color: var(--accent-cyan); margin-bottom: var(--space-4);">
+                🧠 Foundation • +100 XP</div>
+            <h1 style="margin-bottom: var(--space-3);">Memory & <span class="text-gradient">Pointers</span></h1>
+            <p style="font-size: 1.1rem; max-width: 600px;">The most critical C concept. Master pointers and memory
+                management to unlock everything else.</p>
+            <div
+                style="display: flex; gap: var(--space-4); margin-top: var(--space-4); font-size: 0.9rem; color: var(--text-muted);">
+                <span>⏱️ 90 min</span><span>🎯 6 sections</span><span>🧠 3 quizzes</span>
+            </div>
+        </div>
+
+        <div class="progress-bar" style="margin-bottom: var(--space-8);">
+            <div class="progress-bar-fill" id="moduleProgress" style="width: 0%"></div>
+        </div>
+
+        <!-- Section: Memory Model -->
+        <div class="section open" id="section-model">
+            <div class="section-header" onclick="toggleSection('section-model')">
+                <h3 class="section-title">🗺️ The C Memory Model</h3><span class="section-toggle">▶</span>
+            </div>
+            <div class="section-content">
+                <p>In C, memory is just a giant array of bytes. Every variable, string, and struct lives at some address
+                    in this array.</p>
+
+                <pre><code>Memory: A giant array of bytes
+┌────┬────┬────┬────┬────┬────┬────┬────┬────┬────┐
+│ 0  │ 1  │ 2  │ 3  │ 4  │ 5  │ 6  │ 7  │ 8  │... │
+└────┴────┴────┴────┴────┴────┴────┴────┴────┴────┘
+              ↑
+         Address 0x0003
+
+int x = 42;   // x might be at address 0x1000
+int *p = &x;  // p stores 0x1000</code></pre>
+
+                <blockquote
+                    style="border-left: 4px solid var(--accent-cyan); padding-left: var(--space-5); margin: var(--space-6) 0;">
+                    <strong style="color: var(--accent-cyan);">🎯 Key Insight:</strong> A pointer is just an integer
+                    that happens to represent an address!
+                </blockquote>
+            </div>
+        </div>
+
+        <!-- Section: Pointer Operations -->
+        <div class="section" id="section-ops">
+            <div class="section-header" onclick="toggleSection('section-ops')">
+                <h3 class="section-title">👉 Pointer Operations</h3><span class="section-toggle">▶</span>
+            </div>
+            <div class="section-content">
+                <p>Two fundamental operations:</p>
+
+                <div
+                    style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4); margin: var(--space-6) 0;">
+                    <div
+                        style="background: var(--bg-card); border: 1px solid var(--accent-green); border-radius: var(--radius-lg); padding: var(--space-5);">
+                        <div style="font-weight: 600; color: var(--accent-green); margin-bottom: var(--space-3);">&amp;
+                            Address-of</div>
+                        <pre style="margin: 0; font-size: 0.85rem;"><code>int x = 42;
+int *p = &x;  // Get address</code></pre>
+                        <p style="margin-top: var(--space-3); font-size: 0.9rem;">Returns the memory address where x is
+                            stored</p>
+                    </div>
+                    <div
+                        style="background: var(--bg-card); border: 1px solid var(--accent-purple); border-radius: var(--radius-lg); padding: var(--space-5);">
+                        <div style="font-weight: 600; color: var(--accent-purple); margin-bottom: var(--space-3);">*
+                            Dereference</div>
+                        <pre style="margin: 0; font-size: 0.85rem;"><code>*p = 100;     // Set value
+int y = *p;   // Get value</code></pre>
+                        <p style="margin-top: var(--space-3); font-size: 0.9rem;">Access the value at the address p
+                            points to</p>
+                    </div>
+                </div>
+
+                <pre><code>int x = 42;
+int *p = &x;
+
+printf("x = %d\n", x);        // 42
+printf("&x = %p\n", &x);      // 0x7fff... (some address)
+printf("p = %p\n", p);        // Same address!
+printf("*p = %d\n", *p);      // 42 (value at that address)
+
+*p = 100;                     // Modify through pointer
+printf("x = %d\n", x);        // 100 (x changed!)</code></pre>
+            </div>
+        </div>
+
+        <!-- Section: Stack vs Heap -->
+        <div class="section" id="section-stack-heap">
+            <div class="section-header" onclick="toggleSection('section-stack-heap')">
+                <h3 class="section-title">📚 Stack vs Heap</h3><span class="section-toggle">▶</span>
+            </div>
+            <div class="section-content">
+                <div
+                    style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4); margin: var(--space-4) 0;">
+                    <div
+                        style="background: var(--bg-card); border: 1px solid var(--border-default); border-radius: var(--radius-lg); padding: var(--space-5);">
+                        <div style="font-weight: 600; color: var(--accent-cyan); margin-bottom: var(--space-3);">📚
+                            Stack</div>
+                        <ul style="font-size: 0.9rem; margin: 0; padding-left: var(--space-4);">
+                            <li>Local variables</li>
+                            <li>Function parameters</li>
+                            <li>Auto-managed (freed on return)</li>
+                            <li>Fast allocation</li>
+                            <li>Limited size (~1MB)</li>
+                        </ul>
+                    </div>
+                    <div
+                        style="background: var(--bg-card); border: 1px solid var(--border-default); border-radius: var(--radius-lg); padding: var(--space-5);">
+                        <div style="font-weight: 600; color: var(--accent-purple); margin-bottom: var(--space-3);">🏔️
+                            Heap</div>
+                        <ul style="font-size: 0.9rem; margin: 0; padding-left: var(--space-4);">
+                            <li>malloc/calloc allocations</li>
+                            <li>Survives function returns</li>
+                            <li>YOU must free it</li>
+                            <li>Slower allocation</li>
+                            <li>Large (GBs available)</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <pre><code>void example() {
+    int stack_var = 42;              // Stack (auto-freed)
+    int *heap_ptr = malloc(100);     // Heap (you free it)
+    
+    // When function returns:
+    // - stack_var disappears automatically
+    // - heap_ptr memory still exists (memory leak if not freed!)
+    
+    free(heap_ptr);  // Clean up heap
+}</code></pre>
+            </div>
+        </div>
+
+        <!-- Section: malloc/free -->
+        <div class="section" id="section-malloc">
+            <div class="section-header" onclick="toggleSection('section-malloc')">
+                <h3 class="section-title">🔧 malloc, calloc, realloc, free</h3><span class="section-toggle">▶</span>
+            </div>
+            <div class="section-content">
+                <pre><code>// malloc: Allocate uninitialized memory
+int *arr = malloc(10 * sizeof(int));  // 10 ints (garbage values)
+
+// calloc: Allocate and zero-initialize
+int *arr = calloc(10, sizeof(int));   // 10 ints (all zeros)
+
+// realloc: Resize allocation
+arr = realloc(arr, 20 * sizeof(int)); // Now 20 ints
+
+// free: Release memory
+free(arr);
+arr = NULL;  // Good practice: prevent use-after-free</code></pre>
+
+                <h4 style="margin-top: var(--space-6);">⚠️ Common Mistakes</h4>
+                <div style="display: grid; gap: var(--space-3); margin-top: var(--space-4);">
+                    <div
+                        style="background: rgba(239, 68, 68, 0.1); border-left: 3px solid var(--accent-red); padding: var(--space-4); border-radius: 0 var(--radius-md) var(--radius-md) 0;">
+                        <strong>Memory Leak:</strong> Forgetting to <code>free()</code>
+                    </div>
+                    <div
+                        style="background: rgba(239, 68, 68, 0.1); border-left: 3px solid var(--accent-red); padding: var(--space-4); border-radius: 0 var(--radius-md) var(--radius-md) 0;">
+                        <strong>Use After Free:</strong> Using pointer after <code>free()</code>
+                    </div>
+                    <div
+                        style="background: rgba(239, 68, 68, 0.1); border-left: 3px solid var(--accent-red); padding: var(--space-4); border-radius: 0 var(--radius-md) var(--radius-md) 0;">
+                        <strong>Double Free:</strong> Calling <code>free()</code> twice on same pointer
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section: Pointer Arithmetic -->
+        <div class="section" id="section-arithmetic">
+            <div class="section-header" onclick="toggleSection('section-arithmetic')">
+                <h3 class="section-title">➕ Pointer Arithmetic</h3><span class="section-toggle">▶</span>
+            </div>
+            <div class="section-content">
+                <p>Adding to a pointer moves it by element size, not bytes:</p>
+
+                <pre><code>int arr[5] = {10, 20, 30, 40, 50};
+int *p = arr;         // Points to arr[0]
+
+printf("%d\n", *p);      // 10
+printf("%d\n", *(p+1));  // 20  (p+1 moves 4 bytes for int)
+printf("%d\n", *(p+2));  // 30
+
+// Array indexing is just pointer arithmetic!
+arr[2]  ==  *(arr + 2)  ==  *(p + 2)  // All equal 30</code></pre>
+
+                <pre><code>Memory Layout:
+┌────────┬────────┬────────┬────────┬────────┐
+│   10   │   20   │   30   │   40   │   50   │
+└────────┴────────┴────────┴────────┴────────┘
+    ↑         ↑
+    p        p+1     (moves 4 bytes, not 1)</code></pre>
+            </div>
+        </div>
+
+        <!-- Section: Quiz -->
+        <div class="section" id="section-quiz">
+            <div class="section-header" onclick="toggleSection('section-quiz')">
+                <h3 class="section-title">🧠 Check Your Understanding</h3><span class="section-toggle">▶</span>
+            </div>
+            <div class="section-content">
+                <div class="quiz" data-correct="1" data-quiz-id="q1" data-module-id="memory-pointers"
+                    data-explanation="*p dereferences the pointer, giving you the value at the address p points to.">
+                    <div class="quiz-question">If <code>int x = 42; int *p = &x;</code>, what is <code>*p</code>?</div>
+                    <div class="quiz-options">
+                        <div class="quiz-option" data-value="0">
+                            <div class="quiz-radio"></div><span>The address of x</span>
+                        </div>
+                        <div class="quiz-option" data-value="1">
+                            <div class="quiz-radio"></div><span>42</span>
+                        </div>
+                        <div class="quiz-option" data-value="2">
+                            <div class="quiz-radio"></div><span>The address of p</span>
+                        </div>
+                        <div class="quiz-option" data-value="3">
+                            <div class="quiz-radio"></div><span>Undefined</span>
+                        </div>
+                    </div>
+                    <div class="quiz-feedback"></div>
+                </div>
+
+                <div class="quiz" data-correct="2" data-quiz-id="q2" data-module-id="memory-pointers"
+                    data-explanation="malloc allocates heap memory. You must call free() to release it.">
+                    <div class="quiz-question">Memory allocated with malloc() must be freed by:</div>
+                    <div class="quiz-options">
+                        <div class="quiz-option" data-value="0">
+                            <div class="quiz-radio"></div><span>The garbage collector</span>
+                        </div>
+                        <div class="quiz-option" data-value="1">
+                            <div class="quiz-radio"></div><span>Function return</span>
+                        </div>
+                        <div class="quiz-option" data-value="2">
+                            <div class="quiz-radio"></div><span>Calling free()</span>
+                        </div>
+                        <div class="quiz-option" data-value="3">
+                            <div class="quiz-radio"></div><span>It's freed automatically</span>
+                        </div>
+                    </div>
+                    <div class="quiz-feedback"></div>
+                </div>
+
+                <div class="quiz" data-correct="1" data-quiz-id="q3" data-module-id="memory-pointers"
+                    data-explanation="For int* (4 bytes per int), p+1 moves 4 bytes to the next int.">
+                    <div class="quiz-question">If <code>int *p = arr;</code> and arr starts at address 1000, where is
+                        <code>p+2</code>?</div>
+                    <div class="quiz-options">
+                        <div class="quiz-option" data-value="0">
+                            <div class="quiz-radio"></div><span>1002</span>
+                        </div>
+                        <div class="quiz-option" data-value="1">
+                            <div class="quiz-radio"></div><span>1008</span>
+                        </div>
+                        <div class="quiz-option" data-value="2">
+                            <div class="quiz-radio"></div><span>1016</span>
+                        </div>
+                        <div class="quiz-option" data-value="3">
+                            <div class="quiz-radio"></div><span>2000</span>
+                        </div>
+                    </div>
+                    <div class="quiz-feedback"></div>
+                </div>
+            </div>
+        </div>
+
+        <div
+            style="display: flex; justify-content: space-between; align-items: center; padding: var(--space-6); background: var(--bg-card); border-radius: var(--radius-xl); border: 1px solid var(--border-default); margin-top: var(--space-10);">
+            <a href="week-02-intro-c.html" style="color: var(--text-secondary);">← Intro to C</a>
+            <a href="data-structures.html"
+                style="padding: var(--space-3) var(--space-5); background: var(--gradient-primary); color: white; border-radius: var(--radius-md); font-weight: 600;">Next:
+                Data Structures →</a>
+        </div>
+    </main>
+
+    <script src="../js/modules-data.js"></script>
+    <script src="../js/unlock.js"></script>
+    <script src="../js/progress.js"></script>
+    <script src="../js/quiz.js"></script>
+    <script>
+        function toggleSection(sectionId) { const section = document.getElementById(sectionId); if (section) { section.classList.toggle('open'); if (section.classList.contains('open') && window.ProgressTracker) { ProgressTracker.expandSection('memory-pointers', sectionId); updateProgress(); } } }
+        function updateProgress() { if (window.ProgressTracker) { const progress = ProgressTracker.getModuleProgress('memory-pointers'); const bar = document.getElementById('moduleProgress'); if (bar) bar.style.width = `${progress.percentComplete}%`; } }
+        document.addEventListener('DOMContentLoaded', () => { const toggle = document.getElementById('themeToggle'); const savedTheme = localStorage.getItem('cs5008_theme') || 'dark'; document.documentElement.setAttribute('data-theme', savedTheme); toggle.textContent = savedTheme === 'dark' ? '🌙' : '☀️'; toggle.addEventListener('click', () => { const current = document.documentElement.getAttribute('data-theme'); const next = current === 'dark' ? 'light' : 'dark'; document.documentElement.setAttribute('data-theme', next); localStorage.setItem('cs5008_theme', next); toggle.textContent = next === 'dark' ? '🌙' : '☀️'; }); if (window.ProgressTracker) { ProgressTracker.visitModule('memory-pointers'); updateProgress(); } });
+    </script>
+</body>
+
+</html>

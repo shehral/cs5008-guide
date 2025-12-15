@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Data Structures for Compilers | CS5008 Guide</title>
+    <link rel="stylesheet" href="../css/styles.css">
+    <link rel="icon"
+        href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>">
+</head>
+
+<body>
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <header class="header">
+        <div class="header-content"><a href="../index.html" class="logo"><span
+                    class="logo-icon">⚡</span><span>CS5008</span></a>
+            <div class="header-actions"><button class="theme-toggle" id="themeToggle"
+                    aria-label="Toggle theme">🌙</button></div>
+        </div>
+    </header>
+
+    <main class="main-container" style="max-width: 900px;">
+        <nav style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: var(--space-6);"><a href="../index.html"
+                style="color: var(--text-muted);">← Back to modules</a></nav>
+
+        <div style="margin-bottom: var(--space-10);">
+            <div
+                style="display: inline-flex; padding: var(--space-2) var(--space-4); background: rgba(16, 185, 129, 0.1); border-radius: var(--radius-full); font-size: 0.875rem; color: var(--accent-green); margin-bottom: var(--space-4);">
+                📊 Foundation • +100 XP</div>
+            <h1 style="margin-bottom: var(--space-3);">Data <span class="text-gradient">Structures</span></h1>
+            <p style="font-size: 1.1rem; max-width: 600px;">The building blocks your compiler uses: dynamic arrays,
+                linked lists, hash tables, trees, and graphs.</p>
+            <div
+                style="display: flex; gap: var(--space-4); margin-top: var(--space-4); font-size: 0.9rem; color: var(--text-muted);">
+                <span>⏱️ 90 min</span><span>🎯 6 sections</span><span>🧠 3 quizzes</span>
+            </div>
+        </div>
+
+        <div class="progress-bar" style="margin-bottom: var(--space-8);">
+            <div class="progress-bar-fill" id="moduleProgress" style="width: 0%"></div>
+        </div>
+
+        <!-- Section: Dynamic Arrays -->
+        <div class="section open" id="section-arrays">
+            <div class="section-header" onclick="toggleSection('section-arrays')">
+                <h3 class="section-title">📦 Dynamic Arrays</h3><span class="section-toggle">▶</span>
+            </div>
+            <div class="section-content">
+                <p>In Python, lists grow automatically. In C, you manage this manually:</p>
+
+                <pre><code>typedef struct {
+    Token *items;     // Pointer to array
+    long count;       // Elements used
+    long capacity;    // Elements allocated
+} Token_Array;
+
+// Append with automatic growth
+void da_append(Token_Array *arr, Token tok) {
+    if (arr->count >= arr->capacity) {
+        // Double capacity when full!
+        arr->capacity = arr->capacity == 0 ? 16 : arr->capacity * 2;
+        arr->items = realloc(arr->items, arr->capacity * sizeof(Token));
+    }
+    arr->items[arr->count++] = tok;
+}</code></pre>
+
+                <h4 style="margin-top: var(--space-6);">Why Double?</h4>
+                <table style="width: 100%; border-collapse: collapse; margin-top: var(--space-4);">
+                    <tr style="background: var(--bg-card);">
+                        <th style="padding: var(--space-2); border: 1px solid var(--border-subtle);">Appends</th>
+                        <th style="padding: var(--space-2); border: 1px solid var(--border-subtle);">Old Cap</th>
+                        <th style="padding: var(--space-2); border: 1px solid var(--border-subtle);">New Cap</th>
+                        <th style="padding: var(--space-2); border: 1px solid var(--border-subtle);">Copies</th>
+                    </tr>
+                    <tr>
+                        <td style="padding: var(--space-2); border: 1px solid var(--border-subtle);">17th</td>
+                        <td style="padding: var(--space-2); border: 1px solid var(--border-subtle);">16</td>
+                        <td style="padding: var(--space-2); border: 1px solid var(--border-subtle);">32</td>
+                        <td style="padding: var(--space-2); border: 1px solid var(--border-subtle);">16</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: var(--space-2); border: 1px solid var(--border-subtle);">33rd</td>
+                        <td style="padding: var(--space-2); border: 1px solid var(--border-subtle);">32</td>
+                        <td style="padding: var(--space-2); border: 1px solid var(--border-subtle);">64</td>
+                        <td style="padding: var(--space-2); border: 1px solid var(--border-subtle);">32</td>
+                    </tr>
+                </table>
+                <p style="margin-top: var(--space-4);"><strong>Amortized O(1)</strong> per append. If we grew by +1 each
+                    time, it would be O(n)!</p>
+            </div>
+        </div>
+
+        <!-- Section: Linked Lists -->
+        <div class="section" id="section-linked">
+            <div class="section-header" onclick="toggleSection('section-linked')">
+                <h3 class="section-title">🔗 Linked Lists</h3><span class="section-toggle">▶</span>
+            </div>
+            <div class="section-content">
+                <p>AST nodes use doubly-linked lists for siblings:</p>
+
+                <pre><code>typedef struct AST_Node {
+    AST_Kind kind;
+    struct AST_Node *prev;  // Previous sibling
+    struct AST_Node *next;  // Next sibling
+    // ... data fields
+} AST_Node;</code></pre>
+
+                <pre><code>Visualization:
+first → [A] ⇄ [B] ⇄ [C] ← last
+         └─prev/next─┘</code></pre>
+
+                <h4 style="margin-top: var(--space-6);">Traversal</h4>
+                <pre><code>// Forward
+for (AST_Node *n = list->first; n != NULL; n = n->next) {
+    process(n);
+}
+
+// Backward
+for (AST_Node *n = list->last; n != NULL; n = n->prev) {
+    process(n);
+}</code></pre>
+
+                <h4 style="margin-top: var(--space-6);">Complexity</h4>
+                <table style="width: 100%; border-collapse: collapse;">
+                    <tr>
+                        <td style="padding: var(--space-2); border: 1px solid var(--border-subtle);">Append</td>
+                        <td
+                            style="padding: var(--space-2); border: 1px solid var(--border-subtle); color: var(--accent-green);">
+                            O(1)</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: var(--space-2); border: 1px solid var(--border-subtle);">Insert/Delete</td>
+                        <td
+                            style="padding: var(--space-2); border: 1px solid var(--border-subtle); color: var(--accent-green);">
+                            O(1)</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: var(--space-2); border: 1px solid var(--border-subtle);">Random Access</td>
+                        <td
+                            style="padding: var(--space-2); border: 1px solid var(--border-subtle); color: var(--accent-red);">
+                            O(n)</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+
+        <!-- Section: Hash Tables -->
+        <div class="section" id="section-hash">
+            <div class="section-header" onclick="toggleSection('section-hash')">
+                <h3 class="section-title">#️⃣ Hash Tables</h3><span class="section-toggle">▶</span>
+            </div>
+            <div class="section-content">
+                <p>Symbol tables use hash tables for O(1) variable lookup:</p>
+
+                <pre><code>Symbol_Table (size = 8):
+slots[0] → NULL
+slots[1] → Symbol("x", 42) → Symbol("foo", 10) → NULL
+slots[2] → NULL
+slots[3] → Symbol("y", 5) → NULL
+...
+
+// Collision: "x" and "foo" both hash to slot 1
+// Solution: External chaining (linked list per slot)</code></pre>
+
+                <h4 style="margin-top: var(--space-6);">FNV-1a Hash Function</h4>
+                <pre><code>long hash_string(String s) {
+    long hash = 2166136261u;  // FNV offset
+    for (long i = 0; i < s.count; i++) {
+        hash ^= s.data[i];
+        hash *= 16777619;     // FNV prime
+    }
+    return hash;
+}</code></pre>
+
+                <h4 style="margin-top: var(--space-6);">Load Factor</h4>
+                <p><strong>Load factor = entries / slots</strong></p>
+                <p>When load factor > 0.75, double table size and rehash. This keeps chains short!</p>
+            </div>
+        </div>
+
+        <!-- Section: Trees -->
+        <div class="section" id="section-trees">
+            <div class="section-header" onclick="toggleSection('section-trees')">
+                <h3 class="section-title">🌳 Trees & Traversals</h3><span class="section-toggle">▶</span>
+            </div>
+            <div class="section-content">
+                <p>Your AST is a tree! Understanding traversal order is crucial:</p>
+
+                <pre><code>Expression: 2 + 3 * 4
+
+        +
+       / \
+      2   *
+         / \
+        3   4</code></pre>
+
+                <div
+                    style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: var(--space-4); margin: var(--space-6) 0;">
+                    <div
+                        style="background: var(--bg-card); border: 1px solid var(--border-default); border-radius: var(--radius-lg); padding: var(--space-4);">
+                        <div style="font-weight: 600; color: var(--accent-purple); margin-bottom: var(--space-2);">
+                            Pre-order</div>
+                        <div style="font-size: 0.85rem;">Root, Left, Right</div>
+                        <code style="font-size: 0.8rem;">+ 2 * 3 4</code>
+                    </div>
+                    <div
+                        style="background: var(--bg-card); border: 1px solid var(--border-default); border-radius: var(--radius-lg); padding: var(--space-4);">
+                        <div style="font-weight: 600; color: var(--accent-cyan); margin-bottom: var(--space-2);">
+                            In-order</div>
+                        <div style="font-size: 0.85rem;">Left, Root, Right</div>
+                        <code style="font-size: 0.8rem;">2 + 3 * 4</code>
+                    </div>
+                    <div
+                        style="background: var(--bg-card); border: 1px solid var(--border-default); border-radius: var(--radius-lg); padding: var(--space-4);">
+                        <div style="font-weight: 600; color: var(--accent-green); margin-bottom: var(--space-2);">
+                            Post-order</div>
+                        <div style="font-size: 0.85rem;">Left, Right, Root</div>
+                        <code style="font-size: 0.8rem;">2 3 4 * +</code>
+                    </div>
+                </div>
+
+                <p><strong>Post-order = Stack machine order!</strong> That's why code gen uses post-order traversal.</p>
+            </div>
+        </div>
+
+        <!-- Section: Graphs -->
+        <div class="section" id="section-graphs">
+            <div class="section-header" onclick="toggleSection('section-graphs')">
+                <h3 class="section-title">🔀 Graphs & DFS/BFS</h3><span class="section-toggle">▶</span>
+            </div>
+            <div class="section-content">
+                <p>Control flow forms a graph. DFS and BFS help analyze it:</p>
+
+                <pre><code>if (x > 0) {     Control Flow Graph:
+    y = 1;       
+} else {              [entry]
+    y = 2;              │
+}                      ↓
+                   [x > 0?]
+                   /      \
+              [y=1]      [y=2]
+                   \      /
+                    [exit]</code></pre>
+
+                <h4 style="margin-top: var(--space-6);">Representations</h4>
+                <div
+                    style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4); margin: var(--space-4) 0;">
+                    <div
+                        style="background: var(--bg-card); border: 1px solid var(--border-default); border-radius: var(--radius-lg); padding: var(--space-4);">
+                        <div style="font-weight: 600; margin-bottom: var(--space-2);">Adjacency List</div>
+                        <pre style="margin: 0; font-size: 0.8rem;"><code>0: [1, 2]
+1: [3]
+2: [3]
+3: []</code></pre>
+                    </div>
+                    <div
+                        style="background: var(--bg-card); border: 1px solid var(--border-default); border-radius: var(--radius-lg); padding: var(--space-4);">
+                        <div style="font-weight: 600; margin-bottom: var(--space-2);">Adjacency Matrix</div>
+                        <pre style="margin: 0; font-size: 0.8rem;"><code>  0 1 2 3
+0[0 1 1 0]
+1[0 0 0 1]
+2[0 0 0 1]</code></pre>
+                    </div>
+                </div>
+
+                <p><strong>DFS</strong>: Go deep first (use stack). <strong>BFS</strong>: Go wide first (use queue).</p>
+            </div>
+        </div>
+
+        <!-- Section: Big-O -->
+        <div class="section" id="section-bigo">
+            <div class="section-header" onclick="toggleSection('section-bigo')">
+                <h3 class="section-title">📈 Big-O Quick Reference</h3><span class="section-toggle">▶</span>
+            </div>
+            <div class="section-content">
+                <table style="width: 100%; border-collapse: collapse;">
+                    <tr style="background: var(--bg-card);">
+                        <th style="padding: var(--space-2); border: 1px solid var(--border-subtle);">Structure</th>
+                        <th style="padding: var(--space-2); border: 1px solid var(--border-subtle);">Access</th>
+                        <th style="padding: var(--space-2); border: 1px solid var(--border-subtle);">Insert</th>
+                        <th style="padding: var(--space-2); border: 1px solid var(--border-subtle);">Delete</th>
+                    </tr>
+                    <tr>
+                        <td style="padding: var(--space-2); border: 1px solid var(--border-subtle);">Array</td>
+                        <td style="padding: var(--space-2); border: 1px solid var(--border-subtle);">O(1)</td>
+                        <td style="padding: var(--space-2); border: 1px solid var(--border-subtle);">O(n)</td>
+                        <td style="padding: var(--space-2); border: 1px solid var(--border-subtle);">O(n)</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: var(--space-2); border: 1px solid var(--border-subtle);">Dynamic Array</td>
+                        <td style="padding: var(--space-2); border: 1px solid var(--border-subtle);">O(1)</td>
+                        <td style="padding: var(--space-2); border: 1px solid var(--border-subtle);">O(1)*</td>
+                        <td style="padding: var(--space-2); border: 1px solid var(--border-subtle);">O(n)</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: var(--space-2); border: 1px solid var(--border-subtle);">Linked List</td>
+                        <td style="padding: var(--space-2); border: 1px solid var(--border-subtle);">O(n)</td>
+                        <td style="padding: var(--space-2); border: 1px solid var(--border-subtle);">O(1)</td>
+                        <td style="padding: var(--space-2); border: 1px solid var(--border-subtle);">O(1)</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: var(--space-2); border: 1px solid var(--border-subtle);">Hash Table</td>
+                        <td style="padding: var(--space-2); border: 1px solid var(--border-subtle);">O(1)</td>
+                        <td style="padding: var(--space-2); border: 1px solid var(--border-subtle);">O(1)</td>
+                        <td style="padding: var(--space-2); border: 1px solid var(--border-subtle);">O(1)</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: var(--space-2); border: 1px solid var(--border-subtle);">BST</td>
+                        <td style="padding: var(--space-2); border: 1px solid var(--border-subtle);">O(log n)</td>
+                        <td style="padding: var(--space-2); border: 1px solid var(--border-subtle);">O(log n)</td>
+                        <td style="padding: var(--space-2); border: 1px solid var(--border-subtle);">O(log n)</td>
+                    </tr>
+                </table>
+                <p style="margin-top: var(--space-4); font-size: 0.9rem; color: var(--text-muted);">* Amortized O(1) for
+                    dynamic array append</p>
+            </div>
+        </div>
+
+        <!-- Section: Quiz -->
+        <div class="section" id="section-quiz">
+            <div class="section-header" onclick="toggleSection('section-quiz')">
+                <h3 class="section-title">🧠 Check Your Understanding</h3><span class="section-toggle">▶</span>
+            </div>
+            <div class="section-content">
+                <div class="quiz" data-correct="3" data-quiz-id="q1" data-module-id="data-structures"
+                    data-explanation="Hash tables provide O(1) average lookup, perfect for symbol tables.">
+                    <div class="quiz-question">Which data structure is best for O(1) variable lookup?</div>
+                    <div class="quiz-options">
+                        <div class="quiz-option" data-value="0">
+                            <div class="quiz-radio"></div><span>Array</span>
+                        </div>
+                        <div class="quiz-option" data-value="1">
+                            <div class="quiz-radio"></div><span>Linked List</span>
+                        </div>
+                        <div class="quiz-option" data-value="2">
+                            <div class="quiz-radio"></div><span>Binary Tree</span>
+                        </div>
+                        <div class="quiz-option" data-value="3">
+                            <div class="quiz-radio"></div><span>Hash Table</span>
+                        </div>
+                    </div>
+                    <div class="quiz-feedback"></div>
+                </div>
+
+                <div class="quiz" data-correct="2" data-quiz-id="q2" data-module-id="data-structures"
+                    data-explanation="Post-order visits children before parent, which produces stack machine order.">
+                    <div class="quiz-question">Which traversal produces stack machine order for expressions?</div>
+                    <div class="quiz-options">
+                        <div class="quiz-option" data-value="0">
+                            <div class="quiz-radio"></div><span>Pre-order</span>
+                        </div>
+                        <div class="quiz-option" data-value="1">
+                            <div class="quiz-radio"></div><span>In-order</span>
+                        </div>
+                        <div class="quiz-option" data-value="2">
+                            <div class="quiz-radio"></div><span>Post-order</span>
+                        </div>
+                        <div class="quiz-option" data-value="3">
+                            <div class="quiz-radio"></div><span>Level-order</span>
+                        </div>
+                    </div>
+                    <div class="quiz-feedback"></div>
+                </div>
+            </div>
+        </div>
+
+        <div
+            style="display: flex; justify-content: space-between; align-items: center; padding: var(--space-6); background: var(--bg-card); border-radius: var(--radius-xl); border: 1px solid var(--border-default); margin-top: var(--space-10);">
+            <a href="memory-pointers.html" style="color: var(--text-secondary);">← Memory & Pointers</a>
+            <a href="week-03-cpu.html"
+                style="padding: var(--space-3) var(--space-5); background: var(--gradient-primary); color: white; border-radius: var(--radius-md); font-weight: 600;">Next:
+                CPU Architecture →</a>
+        </div>
+    </main>
+
+    <script src="../js/modules-data.js"></script>
+    <script src="../js/unlock.js"></script>
+    <script src="../js/progress.js"></script>
+    <script src="../js/quiz.js"></script>
+    <script>
+        function toggleSection(sectionId) { const section = document.getElementById(sectionId); if (section) { section.classList.toggle('open'); if (section.classList.contains('open') && window.ProgressTracker) { ProgressTracker.expandSection('data-structures', sectionId); updateProgress(); } } }
+        function updateProgress() { if (window.ProgressTracker) { const progress = ProgressTracker.getModuleProgress('data-structures'); const bar = document.getElementById('moduleProgress'); if (bar) bar.style.width = `${progress.percentComplete}%`; } }
+        document.addEventListener('DOMContentLoaded', () => { const toggle = document.getElementById('themeToggle'); const savedTheme = localStorage.getItem('cs5008_theme') || 'dark'; document.documentElement.setAttribute('data-theme', savedTheme); toggle.textContent = savedTheme === 'dark' ? '🌙' : '☀️'; toggle.addEventListener('click', () => { const current = document.documentElement.getAttribute('data-theme'); const next = current === 'dark' ? 'light' : 'dark'; document.documentElement.setAttribute('data-theme', next); localStorage.setItem('cs5008_theme', next); toggle.textContent = next === 'dark' ? '🌙' : '☀️'; }); if (window.ProgressTracker) { ProgressTracker.visitModule('data-structures'); updateProgress(); } });
+    </script>
+</body>
+
+</html>

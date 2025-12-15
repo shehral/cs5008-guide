@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Week 15: Advanced Topics & Final Review | CS5008 Guide</title>
+    <link rel="stylesheet" href="../css/styles.css">
+    <link rel="icon"
+        href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>">
+</head>
+
+<body>
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+
+    <header class="header">
+        <div class="header-content">
+            <a href="../index.html" class="logo">
+                <span class="logo-icon">⚡</span>
+                <span>CS5008</span>
+            </a>
+            <div class="header-actions">
+                <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme">🌙</button>
+            </div>
+        </div>
+    </header>
+
+    <main class="main-container module-page">
+        <nav class="breadcrumb">
+            <a href="../index.html">← Back to modules</a>
+        </nav>
+
+        <div class="module-header">
+            <div class="module-badge orange">🏆 Final Week • +200 XP</div>
+            <h1>Advanced <span class="text-gradient">Topics</span></h1>
+            <p>Graph algorithms, dynamic programming, and everything you need for the final exam.</p>
+        </div>
+
+        <div class="progress-bar mb-6">
+            <div class="progress-bar-fill" id="moduleProgress" style="width: 0%"></div>
+        </div>
+
+        <!-- Section 1: Graph Algorithms -->
+        <div class="section open" id="section-graphs">
+            <div class="section-header" onclick="toggleSection('section-graphs')">
+                <h3 class="section-title">🔀 Graph Algorithms</h3>
+                <span class="section-toggle">▶</span>
+            </div>
+            <div class="section-content">
+                <p><strong>Why in a compiler course?</strong> Control flow forms a <em>graph</em> (statements are nodes,
+                    jumps are edges). Compiler optimization uses graph algorithms.</p>
+
+                <h4>Graph Representation: Adjacency List</h4>
+                <pre><code>// Graph structure
+Graph = {
+    num_vertices: int
+    adj_list: array of arrays    // neighbors for each vertex
+    adj_count: array of int      // count of neighbors
+}
+
+Example:
+0 → [1, 2]
+1 → [3]
+2 → [3]
+3 → []
+
+Visual:
+    0
+   / \
+  1   2
+   \ /
+    3</code></pre>
+
+                <h4 style="margin-top: var(--space-6);">Depth-First Search (DFS)</h4>
+                <p><strong>Idea:</strong> Go deep first, then backtrack.</p>
+                <pre><code>ALGORITHM DFS(graph, vertex, visited):
+    // Step 1: Mark current vertex as visited
+    visited[vertex] = true
+    print("Visiting", vertex)
+    
+    // Step 2: Visit all unvisited neighbors
+    FOR each neighbor IN graph.neighbors(vertex):
+        IF NOT visited[neighbor]:
+            DFS(graph, neighbor, visited)  // Recursive!</code></pre>
+
+                <h4 style="margin-top: var(--space-4);">DFS Trace</h4>
+                <pre><code>Graph: 0→[1,2], 1→[3], 2→[3], 3→[]
+
+Visit 0
+  └─ Visit 1 (neighbor of 0)
+       └─ Visit 3 (neighbor of 1)
+          Back to 1 (no more neighbors)
+     Back to 0
+  └─ Visit 2 (next neighbor of 0)
+       3 already visited, skip
+     Back to 0 (done)
+
+Order: 0, 1, 3, 2</code></pre>
+
+                <h4 style="margin-top: var(--space-6);">Breadth-First Search (BFS)</h4>
+                <p><strong>Idea:</strong> Visit all neighbors at current level before going deeper.</p>
+                <pre><code>ALGORITHM BFS(graph, start):
+    // Step 1: Initialize
+    visited = all false
+    queue = empty queue
+    
+    // Step 2: Start with first vertex
+    visited[start] = true
+    queue.enqueue(start)
+    
+    // Step 3: Process queue
+    WHILE queue is not empty:
+        vertex = queue.dequeue()
+        print("Visiting", vertex)
+        
+        FOR each neighbor IN graph.neighbors(vertex):
+            IF NOT visited[neighbor]:
+                visited[neighbor] = true
+                queue.enqueue(neighbor)</code></pre>
+
+                <h4 style="margin-top: var(--space-4);">BFS Trace</h4>
+                <pre><code>Queue: [0]
+Dequeue 0, visit neighbors 1, 2
+Queue: [1, 2]
+Dequeue 1, visit neighbor 3
+Queue: [2, 3]
+Dequeue 2, neighbor 3 already visited
+Queue: [3]
+Dequeue 3, no neighbors
+Queue: []
+
+Order: 0, 1, 2, 3  (level by level)</code></pre>
+
+                <h4 style="margin-top: var(--space-6);">DFS vs BFS</h4>
+                <table style="width: 100%; border-collapse: collapse; margin: var(--space-4) 0; font-size: 0.9rem;">
+                    <tr style="background: var(--bg-card);">
+                        <th style="padding: var(--space-2); text-align: left; border: 1px solid var(--border-default);">
+                            Aspect</th>
+                        <th style="padding: var(--space-2); text-align: left; border: 1px solid var(--border-default);">
+                            DFS</th>
+                        <th style="padding: var(--space-2); text-align: left; border: 1px solid var(--border-default);">
+                            BFS</th>
+                    </tr>
+                    <tr>
+                        <td style="padding: var(--space-2); border: 1px solid var(--border-default);">Order</td>
+                        <td style="padding: var(--space-2); border: 1px solid var(--border-default);">Go deep first</td>
+                        <td style="padding: var(--space-2); border: 1px solid var(--border-default);">Level by level
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding: var(--space-2); border: 1px solid var(--border-default);">Data Structure
+                        </td>
+                        <td style="padding: var(--space-2); border: 1px solid var(--border-default);">Stack (recursion)
+                        </td>
+                        <td style="padding: var(--space-2); border: 1px solid var(--border-default);">Queue</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: var(--space-2); border: 1px solid var(--border-default);">Use Case</td>
+                        <td style="padding: var(--space-2); border: 1px solid var(--border-default);">Cycle detection,
+                            topological sort</td>
+                        <td style="padding: var(--space-2); border: 1px solid var(--border-default);">Shortest path</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: var(--space-2); border: 1px solid var(--border-default);">Compiler Use</td>
+                        <td style="padding: var(--space-2); border: 1px solid var(--border-default);">Loop detection
+                        </td>
+                        <td style="padding: var(--space-2); border: 1px solid var(--border-default);">Basic block
+                            ordering</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+
+        <!-- Section 2: Dynamic Programming -->
+        <div class="section" id="section-dp">
+            <div class="section-header" onclick="toggleSection('section-dp')">
+                <h3 class="section-title">📊 Levenshtein Distance</h3>
+                <span class="section-toggle">▶</span>
+            </div>
+            <div class="section-content">
+                <p><strong>Problem:</strong> User types <code>pritf</code> instead of <code>printf</code>. How do we
+                    suggest the correct name?</p>
+                <p><strong>Solution:</strong> Calculate <em>edit distance</em> — minimum edits (insert, delete,
+                    substitute) to transform one string into another.</p>
+
+                <pre><code>"pritf" → "printf"
+1. Substitute 'i' with 'n': "prntf"
+2. Insert 'i': "printf"
+Edit distance: 2</code></pre>
+
+                <h4 style="margin-top: var(--space-6);">Algorithm (Pseudocode)</h4>
+                <pre><code>ALGORITHM levenshtein(A, B):
+    // Create DP table: dist[i][j] = distance between
+    // first i chars of A and first j chars of B
+    
+    // Base cases
+    FOR i = 0 TO len(A):
+        dist[i][0] = i    // Delete all of A
+    FOR j = 0 TO len(B):
+        dist[0][j] = j    // Insert all of B
+    
+    // Fill table
+    FOR i = 1 TO len(A):
+        FOR j = 1 TO len(B):
+            IF A[i-1] == B[j-1]:
+                dist[i][j] = dist[i-1][j-1]  // No edit
+            ELSE:
+                dist[i][j] = 1 + MIN(
+                    dist[i-1][j],     // Delete from A
+                    dist[i][j-1],     // Insert into A
+                    dist[i-1][j-1]    // Substitute
+                )
+    
+    RETURN dist[len(A)][len(B)]</code></pre>
+
+                <h4 style="margin-top: var(--space-6);">Example: "cat" vs "hat"</h4>
+                <pre><code>      ""  h  a  t
+""     0  1  2  3
+c      1  1  2  3
+a      2  2  1  2
+t      3  3  2  1   ← Answer: 1 (substitute c→h)</code></pre>
+
+                <h4 style="margin-top: var(--space-6);">Application: "Did you mean...?"</h4>
+                <pre><code>FUNCTION suggest_similar(typo, known_names):
+    FOR each name IN known_names:
+        dist = levenshtein(typo, name)
+        IF dist <= 2:
+            print("Did you mean:", name, "?")
+
+Output:
+Error: Unknown identifier 'pritf'
+Did you mean:
+  printf (distance: 2)
+  print (distance: 2)</code></pre>
+
+                <div
+                    style="background: rgba(16, 185, 129, 0.1); border: 1px solid var(--accent-green); border-radius: var(--radius-lg); padding: var(--space-4); margin: var(--space-6) 0;">
+                    <strong style="color: var(--accent-green);">💡 Complexity:</strong>
+                    <p style="margin-top: var(--space-2);">Time: O(m × n) | Space: O(m × n) where m, n are string
+                        lengths</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section 3: Complete Pipeline -->
+        <div class="section" id="section-pipeline">
+            <div class="section-header" onclick="toggleSection('section-pipeline')">
+                <h3 class="section-title">🔄 Complete Compiler Pipeline</h3>
+                <span class="section-toggle">▶</span>
+            </div>
+            <div class="section-content">
+                <pre><code>┌─────────────────────────────────────────────────────────────┐
+│                    YOUR JIVE COMPILER                       │
+├─────────────────────────────────────────────────────────────┤
+│                                                             │
+│  Source: fn main() -> int { let x: int = 5 + 3; return x }  │
+│       │                                                     │
+│       ▼                                                     │
+│  ┌─────────┐                                                │
+│  │  LEXER  │  → Tokens: [fn, main, (, ), ->, int, ...      │
+│  └────┬────┘                                                │
+│       ▼                                                     │
+│  ┌─────────┐      AST:     FN(main)                         │
+│  │ PARSER  │  →              └── let x =                    │
+│  └────┬────┘                       └── +(5, 3)              │
+│       ▼                                                     │
+│  ┌─────────────┐                                            │
+│  │ STACK MACH  │  → PUSH 5, PUSH 3, ADD, STORE x, ...       │
+│  │ GENERATOR   │                                            │
+│  └──────┬──────┘                                            │
+│         ▼                                                   │
+│  ┌─────────────┐                                            │
+│  │    CODE     │  → push 5; push 3; pop rcx; pop rax; ...   │
+│  │  GENERATOR  │                                            │
+│  └──────┬──────┘                                            │
+│         ▼                                                   │
+│  Assembly: main.asm                                         │
+│                                                             │
+└─────────────────────────────────────────────────────────────┘
+         │
+         ▼ nasm + ld
+┌─────────────────────────────────────────────────────────────┐
+│  Executable Binary: ./main                                  │
+└─────────────────────────────────────────────────────────────┘</code></pre>
+            </div>
+        </div>
+
+        <!-- Section 4: Common Exam Traps -->
+        <div class="section" id="section-traps">
+            <div class="section-header" onclick="toggleSection('section-traps')">
+                <h3 class="section-title">⚠️ Common Exam Traps</h3>
+                <span class="section-toggle">▶</span>
+            </div>
+            <div class="section-content">
+                <h4>1. Division: Forgetting cqo</h4>
+                <pre><code>// WRONG:
+idiv rcx         // Garbage in rdx!
+
+// CORRECT:
+cqo              // Sign-extend rax → rdx:rax
+idiv rcx</code></pre>
+
+                <h4 style="margin-top: var(--space-6);">2. Jump Condition Inversion</h4>
+                <pre><code>// "if x > 5" → jump if condition is FALSE
+// NOT(x > 5) = (x <= 5), so use jle
+
+cmp rax, 5
+jle .else_block   // Jump if x <= 5 (skip then)</code></pre>
+
+                <h4 style="margin-top: var(--space-6);">3. setCC Only Sets Low Byte</h4>
+                <pre><code>// WRONG:
+setg al
+push rax         // Upper 56 bits are garbage!
+
+// CORRECT:
+setg al
+movzx rax, al    // Zero-extend to 64 bits
+push rax</code></pre>
+
+                <h4 style="margin-top: var(--space-6);">4. Operand Order in Comparisons</h4>
+                <pre><code>// Stack: [a, b] where b is on top
+// For GREATER (a > b):
+
+// WRONG:
+pop rax      // rax = b
+pop rcx      // rcx = a
+cmp rax, rcx // Comparing b > a (backwards!)
+
+// CORRECT:
+pop rcx      // rcx = b
+pop rax      // rax = a
+cmp rax, rcx // Comparing a > b</code></pre>
+            </div>
+        </div>
+
+        <!-- Section 5: Quick Reference -->
+        <div class="section" id="section-reference">
+            <div class="section-header" onclick="toggleSection('section-reference')">
+                <h3 class="section-title">📋 Quick Reference</h3>
+                <span class="section-toggle">▶</span>
+            </div>
+            <div class="section-content">
+                <h4>Argument Registers</h4>
+                <pre><code>Arg 1 → RDI        Arg 4 → RCX
+Arg 2 → RSI        Arg 5 → R8
+Arg 3 → RDX        Arg 6 → R9
+
+Return → RAX</code></pre>
+
+                <h4 style="margin-top: var(--space-6);">Variable Offset Formula</h4>
+                <pre><code>offset = -(slot + 1) * 8
+
+slot 0 → [rbp - 8]
+slot 1 → [rbp - 16]
+slot 2 → [rbp - 24]</code></pre>
+
+                <h4 style="margin-top: var(--space-6);">Conditional Jumps</h4>
+                <pre><code>je   - Jump if equal (ZF=1)
+jne  - Jump if not equal
+jl   - Jump if less (signed)
+jle  - Jump if less or equal
+jg   - Jump if greater (signed)
+jge  - Jump if greater or equal</code></pre>
+            </div>
+        </div>
+
+        <!-- Quiz Section -->
+        <div class="section" id="section-quiz">
+            <div class="section-header" onclick="toggleSection('section-quiz')">
+                <h3 class="section-title">🧠 Final Quiz</h3>
+                <span class="section-toggle">▶</span>
+            </div>
+            <div class="section-content">
+                <div class="quiz" data-correct="0" data-quiz-id="q1" data-module-id="week-15"
+                    data-explanation="DFS uses a stack (via recursion), BFS uses a queue. This is the key difference in their implementation.">
+                    <div class="quiz-question">What data structure does BFS use?</div>
+                    <div class="quiz-options">
+                        <div class="quiz-option" data-value="0">
+                            <div class="quiz-radio"></div><span>Queue</span>
+                        </div>
+                        <div class="quiz-option" data-value="1">
+                            <div class="quiz-radio"></div><span>Stack</span>
+                        </div>
+                        <div class="quiz-option" data-value="2">
+                            <div class="quiz-radio"></div><span>Tree</span>
+                        </div>
+                        <div class="quiz-option" data-value="3">
+                            <div class="quiz-radio"></div><span>Hash table</span>
+                        </div>
+                    </div>
+                    <div class="quiz-feedback"></div>
+                </div>
+
+                <div class="quiz" data-correct="2" data-quiz-id="q2" data-module-id="week-15"
+                    data-explanation="Levenshtein distance: 'cat' to 'hat' requires 1 substitution (c→h).">
+                    <div class="quiz-question">What is the Levenshtein distance between "cat" and "hat"?</div>
+                    <div class="quiz-options">
+                        <div class="quiz-option" data-value="0">
+                            <div class="quiz-radio"></div><span>0</span>
+                        </div>
+                        <div class="quiz-option" data-value="1">
+                            <div class="quiz-radio"></div><span>2</span>
+                        </div>
+                        <div class="quiz-option" data-value="2">
+                            <div class="quiz-radio"></div><span>1</span>
+                        </div>
+                        <div class="quiz-option" data-value="3">
+                            <div class="quiz-radio"></div><span>3</span>
+                        </div>
+                    </div>
+                    <div class="quiz-feedback"></div>
+                </div>
+
+                <div class="quiz" data-correct="1" data-quiz-id="q3" data-module-id="week-15"
+                    data-explanation="JUMP_IF_FALSE inverts the condition. NOT(x > 5) = x <= 5, so use jle.">
+                    <div class="quiz-question">For <code>if x > 5</code>, what jump instruction skips the then-block?
+                    </div>
+                    <div class="quiz-options">
+                        <div class="quiz-option" data-value="0">
+                            <div class="quiz-radio"></div><span>jg</span>
+                        </div>
+                        <div class="quiz-option" data-value="1">
+                            <div class="quiz-radio"></div><span>jle</span>
+                        </div>
+                        <div class="quiz-option" data-value="2">
+                            <div class="quiz-radio"></div><span>jge</span>
+                        </div>
+                        <div class="quiz-option" data-value="3">
+                            <div class="quiz-radio"></div><span>jl</span>
+                        </div>
+                    </div>
+                    <div class="quiz-feedback"></div>
+                </div>
+
+                <div class="quiz" data-correct="3" data-quiz-id="q4" data-module-id="week-15"
+                    data-explanation="Post-order visits children first, then the node. This naturally produces operands before operators for stack machines.">
+                    <div class="quiz-question">Why post-order traversal for stack machine code?</div>
+                    <div class="quiz-options">
+                        <div class="quiz-option" data-value="0">
+                            <div class="quiz-radio"></div><span>It's the fastest</span>
+                        </div>
+                        <div class="quiz-option" data-value="1">
+                            <div class="quiz-radio"></div><span>Required by x86-64</span>
+                        </div>
+                        <div class="quiz-option" data-value="2">
+                            <div class="quiz-radio"></div><span>Matches token order</span>
+                        </div>
+                        <div class="quiz-option" data-value="3">
+                            <div class="quiz-radio"></div><span>Operands pushed before operators execute</span>
+                        </div>
+                    </div>
+                    <div class="quiz-feedback"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TA Section: Implementations -->
+        <div class="ta-only-content" id="ta-content-week-15" data-content-id="week-15-code">
+            <div class="ta-only-header"><span>💻</span>C Implementations</div>
+            <pre><code>// DFS Implementation
+void dfs(Graph *g, int vertex, bool *visited) {
+    visited[vertex] = true;
+    printf("Visiting %d\n", vertex);
+
+    for (int i = 0; i < g->adj_count[vertex]; i++) {
+        int neighbor = g->adj_list[vertex][i];
+        if (!visited[neighbor]) {
+            dfs(g, neighbor, visited);
+        }
+    }
+}
+
+// BFS Implementation
+void bfs(Graph *g, int start) {
+    bool visited[MAX_VERTICES] = {false};
+    int queue[MAX_VERTICES];
+    int front = 0, rear = 0;
+
+    visited[start] = true;
+    queue[rear++] = start;
+
+    while (front < rear) {
+        int vertex = queue[front++];
+        printf("Visiting %d\n", vertex);
+
+        for (int i = 0; i < g->adj_count[vertex]; i++) {
+            int neighbor = g->adj_list[vertex][i];
+            if (!visited[neighbor]) {
+                visited[neighbor] = true;
+                queue[rear++] = neighbor;
+            }
+        }
+    }
+}
+
+// Levenshtein Distance
+int levenshtein(const char *s1, int len1, const char *s2, int len2) {
+    int **dp = malloc((len1 + 1) * sizeof(int*));
+    for (int i = 0; i <= len1; i++) {
+        dp[i] = malloc((len2 + 1) * sizeof(int));
+    }
+
+    for (int i = 0; i <= len1; i++) dp[i][0] = i;
+    for (int j = 0; j <= len2; j++) dp[0][j] = j;
+
+    for (int i = 1; i <= len1; i++) {
+        for (int j = 1; j <= len2; j++) {
+            if (s1[i-1] == s2[j-1]) {
+                dp[i][j] = dp[i-1][j-1];
+            } else {
+                dp[i][j] = 1 + min3(
+                    dp[i-1][j],    // delete
+                    dp[i][j-1],    // insert
+                    dp[i-1][j-1]   // substitute
+                );
+            }
+        }
+    }
+
+    int result = dp[len1][len2];
+    for (int i = 0; i <= len1; i++) free(dp[i]);
+    free(dp);
+    return result;
+}</code></pre>
+        </div>
+
+        <!-- Congratulations -->
+        <div
+            style="background: rgba(16, 185, 129, 0.1); border: 1px solid var(--accent-green); border-radius: var(--radius-lg); padding: var(--space-6); margin: var(--space-8) 0; text-align: center;">
+            <h3 style="color: var(--accent-green); margin-bottom: var(--space-4);">🏆 Congratulations!</h3>
+            <p>You've built a <strong>complete, working compiler</strong> that can:</p>
+            <ul style="text-align: left; display: inline-block; margin: var(--space-4) 0;">
+                <li>✅ Tokenize source code</li>
+                <li>✅ Parse into an AST</li>
+                <li>✅ Handle operator precedence</li>
+                <li>✅ Manage variables & symbol tables</li>
+                <li>✅ Implement function calls</li>
+                <li>✅ Support if/else & while loops</li>
+                <li>✅ Work with arrays & dynamic memory</li>
+                <li>✅ Generate real x86-64 assembly</li>
+            </ul>
+            <p style="font-size: 1.1rem; margin-top: var(--space-4);">You now understand what happens when you run
+                <code>gcc main.c</code>! 🎉
+            </p>
+        </div>
+
+        <!-- Navigation -->
+        <div
+            style="display: flex; justify-content: space-between; align-items: center; padding: var(--space-6); background: var(--bg-card); border-radius: var(--radius-xl); border: 1px solid var(--border-default); margin-top: var(--space-10);">
+            <a href="#" onclick="event.preventDefault(); UnlockSystem.navigateToModule('week-14', 'week-14-arrays.html');"
+                style="display: flex; align-items: center; gap: var(--space-2); color: var(--text-secondary);">← Week
+                14</a>
+            <a href="../index.html"
+                style="display: flex; align-items: center; gap: var(--space-2); padding: var(--space-3) var(--space-5); background: var(--gradient-primary); color: white; border-radius: var(--radius-md); font-weight: 600;">
+                🏠 Back to Home
+            </a>
+        </div>
+    </main>
+
+    <script src="../js/modules-data.js"></script>
+    <script src="../js/unlock.js"></script>
+    <script src="../js/progress.js"></script>
+    <script src="../js/quiz.js"></script>
+    <script>
+        function toggleSection(sectionId) {
+            const section = document.getElementById(sectionId);
+            if (section) {
+                section.classList.toggle('open');
+                if (section.classList.contains('open') && window.ProgressTracker) {
+                    ProgressTracker.expandSection('week-15', sectionId);
+                    updateProgress();
+                }
+            }
+        }
+
+        function updateProgress() {
+            if (window.ProgressTracker) {
+                const progress = ProgressTracker.getModuleProgress('week-15');
+                const bar = document.getElementById('moduleProgress');
+                if (bar) bar.style.width = `${progress.percentComplete}%`;
+            }
+        }
+
+        function checkTAContent() {
+            if (window.UnlockSystem) {
+                document.querySelectorAll('.ta-only-content').forEach(el => {
+                    if (UnlockSystem.isTAContentUnlocked(el.dataset.contentId)) {
+                        el.classList.add('unlocked');
+                    }
+                });
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const toggle = document.getElementById('themeToggle');
+            const savedTheme = localStorage.getItem('cs5008_theme') || 'dark';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            toggle.textContent = savedTheme === 'dark' ? '🌙' : '☀️';
+
+            toggle.addEventListener('click', () => {
+                const current = document.documentElement.getAttribute('data-theme');
+                const next = current === 'dark' ? 'light' : 'dark';
+                document.documentElement.setAttribute('data-theme', next);
+                localStorage.setItem('cs5008_theme', next);
+                toggle.textContent = next === 'dark' ? '🌙' : '☀️';
+            });
+
+            if (window.UnlockSystem) { UnlockSystem.init(); checkTAContent(); }
+            if (window.ProgressTracker) { ProgressTracker.visitModule('week-15'); updateProgress(); }
+        });
+    </script>
+</body>
+
+</html>

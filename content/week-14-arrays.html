@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Week 14: Compiler 7 - Arrays & Strings | CS5008 Guide</title>
+    <link rel="stylesheet" href="../css/styles.css">
+    <link rel="icon"
+        href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>">
+</head>
+
+<body>
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+
+    <header class="header">
+        <div class="header-content">
+            <a href="../index.html" class="logo">
+                <span class="logo-icon">⚡</span>
+                <span>CS5008</span>
+            </a>
+            <div class="header-actions">
+                <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme">🌙</button>
+            </div>
+        </div>
+    </header>
+
+    <main class="main-container module-page">
+        <nav class="breadcrumb">
+            <a href="../index.html">← Back to modules</a>
+        </nav>
+
+        <div class="module-header">
+            <div class="module-badge">📊 Compiler 7 • +150 XP</div>
+            <h1>Arrays, Strings & <span class="text-gradient">Dynamic Memory</span></h1>
+            <p>Add string printing, array indexing, and dynamic memory allocation via mmap syscall.</p>
+        </div>
+
+        <div class="progress-bar mb-6">
+            <div class="progress-bar-fill" id="moduleProgress" style="width: 0%"></div>
+        </div>
+
+        <!-- Section 1: Overview -->
+        <div class="section open" id="section-overview">
+            <div class="section-header" onclick="toggleSection('section-overview')">
+                <h3 class="section-title">🎯 What Compiler 7 Adds</h3>
+                <span class="section-toggle">▶</span>
+            </div>
+            <div class="section-content">
+                <pre><code>fn main() -> int {
+    // String printing
+    call print("Hello, World!\n")
+    
+    // Array allocation and indexing
+    let arr: [int] = alloc(3)
+    set arr[0] = 10
+    set arr[1] = 20
+    set arr[2] = arr[0] + arr[1]
+    
+    call print_int(arr[2])   // Prints: 30
+    call print_nl()
+    
+    return 0
+}</code></pre>
+
+                <h4 style="margin-top: var(--space-6);">New Features</h4>
+                <table style="width: 100%; border-collapse: collapse; margin: var(--space-4) 0;">
+                    <tr style="background: var(--bg-card);">
+                        <th style="padding: var(--space-3); text-align: left; border: 1px solid var(--border-default);">
+                            Feature</th>
+                        <th style="padding: var(--space-3); text-align: left; border: 1px solid var(--border-default);">
+                            Syntax</th>
+                        <th style="padding: var(--space-3); text-align: left; border: 1px solid var(--border-default);">
+                            Description</th>
+                    </tr>
+                    <tr>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);">String literals
+                        </td>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);">
+                            <code>"Hello\n"</code>
+                        </td>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);">Stored in .data
+                            section</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);">Array type</td>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);"><code>[int]</code>
+                        </td>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);">Pointer to int
+                            array</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);">Allocation</td>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);">
+                            <code>alloc(n)</code>
+                        </td>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);">Allocate n
+                            elements via mmap</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);">Read element</td>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);">
+                            <code>arr[i]</code>
+                        </td>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);">Load base + i*8
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);">Write element</td>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);">
+                            <code>set arr[i] = v</code>
+                        </td>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);">Store v at base +
+                            i*8</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+
+        <!-- Section 2: String Literals -->
+        <div class="section" id="section-strings">
+            <div class="section-header" onclick="toggleSection('section-strings')">
+                <h3 class="section-title">📝 String Literals</h3>
+                <span class="section-toggle">▶</span>
+            </div>
+            <div class="section-content">
+                <p>Strings are stored in the <code>.data</code> section with null termination:</p>
+
+                <pre><code>Source: "Hello\n"
+
+Assembly:
+section .data
+L_str_0: db "Hello", 10, 0
+         ;   H  e  l  l  o  \n  \0
+         ;  72 101 108 108 111 10  0</code></pre>
+
+                <h4 style="margin-top: var(--space-6);">Escape Sequences</h4>
+                <table style="width: 100%; border-collapse: collapse; margin: var(--space-4) 0;">
+                    <tr style="background: var(--bg-card);">
+                        <th style="padding: var(--space-3); text-align: left; border: 1px solid var(--border-default);">
+                            Escape</th>
+                        <th style="padding: var(--space-3); text-align: left; border: 1px solid var(--border-default);">
+                            ASCII</th>
+                        <th style="padding: var(--space-3); text-align: left; border: 1px solid var(--border-default);">
+                            Meaning</th>
+                    </tr>
+                    <tr>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);"><code>\n</code>
+                        </td>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);">10</td>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);">Newline</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);"><code>\t</code>
+                        </td>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);">9</td>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);">Tab</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);"><code>\\</code>
+                        </td>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);">92</td>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);">Backslash</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);"><code>\"</code>
+                        </td>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);">34</td>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);">Double quote</td>
+                    </tr>
+                </table>
+
+                <h4 style="margin-top: var(--space-6);">PUSH_STRING Instruction</h4>
+                <pre><code>ALGORITHM: Generate String Reference
+
+generate_string_literal(string):
+    label = "L_str_{unique_id}"
+    unique_id = unique_id + 1
+    
+    // Add to .data section
+    data_section.append("{label}: db {escaped_bytes}, 0")
+    
+    // Generate code to push address
+    emit "lea rax, [rel {label}]"
+    emit "push rax"</code></pre>
+            </div>
+        </div>
+
+        <!-- Section 3: Dynamic Memory -->
+        <div class="section" id="section-alloc">
+            <div class="section-header" onclick="toggleSection('section-alloc')">
+                <h3 class="section-title">💾 Dynamic Memory with alloc()</h3>
+                <span class="section-toggle">▶</span>
+            </div>
+            <div class="section-content">
+                <pre><code>let arr: [int] = alloc(5)   // Allocate 5 integers (40 bytes)</code></pre>
+
+                <h4 style="margin-top: var(--space-6);">🐍 YOU KNOW (Python)</h4>
+                <pre><code>arr = [0] * 5   # Python allocates automatically</code></pre>
+
+                <h4 style="margin-top: var(--space-4);">⚙️ IN JIVE: Use mmap syscall</h4>
+                <pre><code>ALGORITHM: alloc(count)
+
+    bytes = count * 8           // 8 bytes per int
+    
+    // mmap syscall (number 9)
+    rax = 9                     // syscall number
+    rdi = 0                     // addr: let kernel choose
+    rsi = bytes                 // length
+    rdx = 3                     // prot: PROT_READ | PROT_WRITE
+    r10 = 0x22                  // flags: MAP_PRIVATE | MAP_ANONYMOUS
+    r8 = -1                     // fd: -1 (no file)
+    r9 = 0                      // offset: 0
+    
+    syscall                     // Returns address in rax</code></pre>
+
+                <h4 style="margin-top: var(--space-6);">Memory Layout</h4>
+                <pre><code>After: let arr: [int] = alloc(3)
+
+Heap (from mmap):
+┌─────────────────────────────────────────┐
+│  addr    │  addr+8  │  addr+16          │
+│  arr[0]  │  arr[1]  │  arr[2]           │
+│ (8 bytes)│ (8 bytes)│ (8 bytes)         │
+└─────────────────────────────────────────┘
+     ↑
+     └── returned address stored in 'arr' variable</code></pre>
+            </div>
+        </div>
+
+        <!-- Section 4: Array Indexing -->
+        <div class="section" id="section-indexing">
+            <div class="section-header" onclick="toggleSection('section-indexing')">
+                <h3 class="section-title">🎯 Array Indexing (Pseudocode)</h3>
+                <span class="section-toggle">▶</span>
+            </div>
+            <div class="section-content">
+                <h4>Reading: <code>arr[i]</code></h4>
+                <pre><code>ALGORITHM: ARRAY_LOAD
+
+    // Stack has: [base_address, index]
+    
+    pop rax         // rax = index
+    pop rbx         // rbx = base address
+    
+    // Address = base + index * 8
+    mov rax, [rbx + rax*8]
+    
+    push rax        // Push loaded value</code></pre>
+
+                <h4 style="margin-top: var(--space-6);">Writing: <code>set arr[i] = value</code></h4>
+                <pre><code>ALGORITHM: ARRAY_STORE
+
+    // Stack has: [base_address, index, value]
+    
+    pop rcx         // rcx = value
+    pop rax         // rax = index
+    pop rbx         // rbx = base address
+    
+    // Store: *(base + index * 8) = value
+    mov [rbx + rax*8], rcx</code></pre>
+
+                <h4 style="margin-top: var(--space-6);">Why <code>index * 8</code>?</h4>
+                <pre><code>Each integer is 8 bytes (64-bit):
+
+arr[0] → base + 0*8 = base + 0
+arr[1] → base + 1*8 = base + 8
+arr[2] → base + 2*8 = base + 16
+arr[n] → base + n*8</code></pre>
+
+                <div
+                    style="background: rgba(239, 68, 68, 0.1); border: 1px solid var(--accent-red); border-radius: var(--radius-lg); padding: var(--space-5); margin: var(--space-6) 0;">
+                    <strong style="color: var(--accent-red);">⚠️ No Bounds Checking!</strong>
+                    <p style="margin-top: var(--space-2);">Unlike Python/Java, C and Jive do NOT check array bounds.
+                        <code>arr[100]</code> on a 3-element array will read/write garbage memory!
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section 5: Complete Example -->
+        <div class="section" id="section-example">
+            <div class="section-header" onclick="toggleSection('section-example')">
+                <h3 class="section-title">📝 Complete Example</h3>
+                <span class="section-toggle">▶</span>
+            </div>
+            <div class="section-content">
+                <h4>Source Code</h4>
+                <pre><code>fn main() -> int {
+    let arr: [int] = alloc(3)
+    set arr[0] = 10
+    set arr[1] = 20
+    set arr[2] = arr[0] + arr[1]
+    return arr[2]   // Returns 30
+}</code></pre>
+
+                <h4 style="margin-top: var(--space-6);">Stack Machine</h4>
+                <pre><code>FN main (0 params)
+  // let arr = alloc(3)
+  PUSH 3
+  CALL __builtin_alloc (1 args)
+  STORE arr (slot 0)
+  
+  // set arr[0] = 10
+  LOAD arr (slot 0)
+  PUSH 0
+  PUSH 10
+  ARRAY_STORE
+  
+  // set arr[1] = 20
+  LOAD arr (slot 0)
+  PUSH 1
+  PUSH 20
+  ARRAY_STORE
+  
+  // set arr[2] = arr[0] + arr[1]
+  LOAD arr (slot 0)
+  PUSH 2
+  LOAD arr (slot 0)
+  PUSH 0
+  ARRAY_LOAD
+  LOAD arr (slot 0)
+  PUSH 1
+  ARRAY_LOAD
+  ADD
+  ARRAY_STORE
+  
+  // return arr[2]
+  LOAD arr (slot 0)
+  PUSH 2
+  ARRAY_LOAD
+  RETURN
+END_FN (1 locals)</code></pre>
+            </div>
+        </div>
+
+        <!-- Quiz Section -->
+        <div class="section" id="section-quiz">
+            <div class="section-header" onclick="toggleSection('section-quiz')">
+                <h3 class="section-title">🧠 Check Your Understanding</h3>
+                <span class="section-toggle">▶</span>
+            </div>
+            <div class="section-content">
+                <div class="quiz" data-correct="2" data-quiz-id="q1" data-module-id="week-14"
+                    data-explanation="alloc(5) allocates 5 integers × 8 bytes each = 40 bytes.">
+                    <div class="quiz-question">How many bytes does <code>alloc(5)</code> allocate?</div>
+                    <div class="quiz-options">
+                        <div class="quiz-option" data-value="0">
+                            <div class="quiz-radio"></div><span>5 bytes</span>
+                        </div>
+                        <div class="quiz-option" data-value="1">
+                            <div class="quiz-radio"></div><span>20 bytes</span>
+                        </div>
+                        <div class="quiz-option" data-value="2">
+                            <div class="quiz-radio"></div><span>40 bytes</span>
+                        </div>
+                        <div class="quiz-option" data-value="3">
+                            <div class="quiz-radio"></div><span>64 bytes</span>
+                        </div>
+                    </div>
+                    <div class="quiz-feedback"></div>
+                </div>
+
+                <div class="quiz" data-correct="1" data-quiz-id="q2" data-module-id="week-14"
+                    data-explanation="mmap is syscall number 9 on Linux x86-64.">
+                    <div class="quiz-question">Which syscall allocates memory in the alloc() function?</div>
+                    <div class="quiz-options">
+                        <div class="quiz-option" data-value="0">
+                            <div class="quiz-radio"></div><span>malloc (not a syscall)</span>
+                        </div>
+                        <div class="quiz-option" data-value="1">
+                            <div class="quiz-radio"></div><span>mmap (syscall 9)</span>
+                        </div>
+                        <div class="quiz-option" data-value="2">
+                            <div class="quiz-radio"></div><span>brk (syscall 12)</span>
+                        </div>
+                        <div class="quiz-option" data-value="3">
+                            <div class="quiz-radio"></div><span>write (syscall 1)</span>
+                        </div>
+                    </div>
+                    <div class="quiz-feedback"></div>
+                </div>
+
+                <div class="quiz" data-correct="0" data-quiz-id="q3" data-module-id="week-14"
+                    data-explanation="arr[3] means address = base + 3*8 = base + 24 bytes offset.">
+                    <div class="quiz-question">What's the byte offset for <code>arr[3]</code>?</div>
+                    <div class="quiz-options">
+                        <div class="quiz-option" data-value="0">
+                            <div class="quiz-radio"></div><span>24</span>
+                        </div>
+                        <div class="quiz-option" data-value="1">
+                            <div class="quiz-radio"></div><span>3</span>
+                        </div>
+                        <div class="quiz-option" data-value="2">
+                            <div class="quiz-radio"></div><span>16</span>
+                        </div>
+                        <div class="quiz-option" data-value="3">
+                            <div class="quiz-radio"></div><span>32</span>
+                        </div>
+                    </div>
+                    <div class="quiz-feedback"></div>
+                </div>
+
+                <div class="quiz" data-correct="3" data-quiz-id="q4" data-module-id="week-14"
+                    data-explanation="Strings are stored in the .data section with ASCII bytes and null terminator.">
+                    <div class="quiz-question">Where are string literals stored in the executable?</div>
+                    <div class="quiz-options">
+                        <div class="quiz-option" data-value="0">
+                            <div class="quiz-radio"></div><span>Stack</span>
+                        </div>
+                        <div class="quiz-option" data-value="1">
+                            <div class="quiz-radio"></div><span>Heap</span>
+                        </div>
+                        <div class="quiz-option" data-value="2">
+                            <div class="quiz-radio"></div><span>.text section</span>
+                        </div>
+                        <div class="quiz-option" data-value="3">
+                            <div class="quiz-radio"></div><span>.data section</span>
+                        </div>
+                    </div>
+                    <div class="quiz-feedback"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TA-Only: Implementation -->
+        <div class="ta-only-content" id="ta-content-week-14" data-content-id="week-14-code">
+            <div class="ta-only-header"><span>💻</span>C & Assembly Implementation</div>
+            <pre><code>// Generate array read: arr[index]
+void gen_array_load(AST_Node *node, Symbol_Table *table, FILE *out) {
+    // Push base address
+    Symbol *arr = lookup_symbol(table, node->index.array_name);
+    fprintf(out, "    push qword [rbp%+d]\n", -(arr->slot + 1) * 8);
+    
+    // Generate index expression (pushes index)
+    gen_expr(node->index.expr, table, out);
+    
+    // ARRAY_LOAD: compute base + index*8
+    fprintf(out, "    pop rax\n");        // index
+    fprintf(out, "    pop rbx\n");        // base
+    fprintf(out, "    mov rax, [rbx + rax*8]\n");
+    fprintf(out, "    push rax\n");
+}
+
+// Generate array write: arr[index] = value
+void gen_array_store(AST_Node *node, Symbol_Table *table, FILE *out) {
+    // Push base address
+    Symbol *arr = lookup_symbol(table, node->array_set.array_name);
+    fprintf(out, "    push qword [rbp%+d]\n", -(arr->slot + 1) * 8);
+    
+    // Generate index
+    gen_expr(node->array_set.index, table, out);
+    
+    // Generate value
+    gen_expr(node->array_set.value, table, out);
+    
+    // ARRAY_STORE
+    fprintf(out, "    pop rcx\n");        // value
+    fprintf(out, "    pop rax\n");        // index
+    fprintf(out, "    pop rbx\n");        // base
+    fprintf(out, "    mov [rbx + rax*8], rcx\n");
+}
+
+// ============================================
+// builtins.asm - alloc function
+// ============================================
+
+; __builtin_alloc - Allocate array via mmap
+; Input: RDI = number of elements
+; Output: RAX = pointer to allocated memory
+__builtin_alloc:
+    push rbp
+    mov rbp, rsp
+    
+    ; Calculate bytes = elements * 8
+    mov rax, rdi
+    shl rax, 3              ; rax = rdi * 8
+    
+    ; mmap syscall
+    mov r8, rax             ; save length
+    mov rax, 9              ; mmap syscall number
+    xor rdi, rdi            ; addr = NULL
+    mov rsi, r8             ; length
+    mov rdx, 3              ; prot = READ | WRITE
+    mov r10, 0x22           ; flags = PRIVATE | ANONYMOUS
+    mov r8, -1              ; fd = -1
+    xor r9, r9              ; offset = 0
+    syscall
+    
+    ; rax = allocated address
+    pop rbp
+    ret</code></pre>
+        </div>
+
+        <!-- Navigation -->
+        <div
+            style="display: flex; justify-content: space-between; align-items: center; padding: var(--space-6); background: var(--bg-card); border-radius: var(--radius-xl); border: 1px solid var(--border-default); margin-top: var(--space-10);">
+            <a href="#" onclick="event.preventDefault(); UnlockSystem.navigateToModule('week-13', 'week-13-types.html');"
+                style="display: flex; align-items: center; gap: var(--space-2); color: var(--text-secondary);">← Week
+                13</a>
+            <a href="#" onclick="event.preventDefault(); UnlockSystem.navigateToModule('week-15', 'week-15-advanced.html');"
+                style="display: flex; align-items: center; gap: var(--space-2); padding: var(--space-3) var(--space-5); background: var(--gradient-primary); color: white; border-radius: var(--radius-md); font-weight: 600;">
+                Next: Advanced Topics →
+            </a>
+        </div>
+    </main>
+
+    <script src="../js/modules-data.js"></script>
+    <script src="../js/unlock.js"></script>
+    <script src="../js/progress.js"></script>
+    <script src="../js/quiz.js"></script>
+    <script>
+        function toggleSection(sectionId) {
+            const section = document.getElementById(sectionId);
+            if (section) {
+                section.classList.toggle('open');
+                if (section.classList.contains('open') && window.ProgressTracker) {
+                    ProgressTracker.expandSection('week-14', sectionId);
+                    updateProgress();
+                }
+            }
+        }
+
+        function updateProgress() {
+            if (window.ProgressTracker) {
+                const progress = ProgressTracker.getModuleProgress('week-14');
+                const bar = document.getElementById('moduleProgress');
+                if (bar) bar.style.width = `${progress.percentComplete}%`;
+            }
+        }
+
+        function checkTAContent() {
+            if (window.UnlockSystem) {
+                document.querySelectorAll('.ta-only-content').forEach(el => {
+                    if (UnlockSystem.isTAContentUnlocked(el.dataset.contentId)) {
+                        el.classList.add('unlocked');
+                    }
+                });
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const toggle = document.getElementById('themeToggle');
+            const savedTheme = localStorage.getItem('cs5008_theme') || 'dark';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            toggle.textContent = savedTheme === 'dark' ? '🌙' : '☀️';
+
+            toggle.addEventListener('click', () => {
+                const current = document.documentElement.getAttribute('data-theme');
+                const next = current === 'dark' ? 'light' : 'dark';
+                document.documentElement.setAttribute('data-theme', next);
+                localStorage.setItem('cs5008_theme', next);
+                toggle.textContent = next === 'dark' ? '🌙' : '☀️';
+            });
+
+            if (window.UnlockSystem) { UnlockSystem.init(); checkTAContent(); }
+            if (window.ProgressTracker) { ProgressTracker.visitModule('week-14'); updateProgress(); }
+        });
+    </script>
+</body>
+
+</html>

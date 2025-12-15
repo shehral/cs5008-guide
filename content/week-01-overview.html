@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Week 1: Course Overview | CS5008 Guide</title>
+    <link rel="stylesheet" href="../css/styles.css">
+    <link rel="icon"
+        href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>">
+</head>
+
+<body>
+    <!-- Animated Background Orbs -->
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+
+    <!-- Header -->
+    <header class="header">
+        <div class="header-content">
+            <a href="../index.html" class="logo">
+                <span class="logo-icon">⚡</span>
+                <span>CS5008</span>
+            </a>
+            <div class="header-actions">
+                <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme">🌙</button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-container module-page">
+        <!-- Breadcrumb -->
+        <nav class="breadcrumb">
+            <a href="../index.html">← Back to modules</a>
+        </nav>
+
+        <!-- Module Header -->
+        <div class="module-header">
+            <div class="module-badge">📚 Week 1 • +100 XP</div>
+            <h1>Course <span class="text-gradient">Overview</span></h1>
+            <p>Welcome to CS5008! Let's understand what you'll build this semester and why it matters.</p>
+            <div class="module-header-meta">
+                <span>⏱️ 20 min</span>
+                <span>🎯 5 sections</span>
+                <span>🧠 4 quizzes</span>
+            </div>
+        </div>
+
+        <!-- Progress Bar -->
+        <div class="progress-bar mb-6">
+            <div class="progress-bar-fill" id="moduleProgress" style="width: 0%"></div>
+        </div>
+
+        <!-- Section 1: Why This Guide Exists -->
+        <div class="section open" id="section-why">
+            <div class="section-header" onclick="toggleSection('section-why')">
+                <h3 class="section-title">🎯 Why This Guide Exists</h3>
+                <span class="section-toggle">▶</span>
+            </div>
+            <div class="section-content">
+                <p>You know how to program. You've written Python or Java. You understand variables, loops, functions,
+                    and objects.</p>
+
+                <p><strong>But C is different</strong>—and that difference matters.</p>
+
+                <div
+                    style="background: var(--bg-terminal); border-radius: var(--radius-lg); padding: var(--space-6); margin: var(--space-6) 0; border: 1px solid var(--border-default);">
+                    <div
+                        style="font-family: var(--font-display); font-weight: 600; margin-bottom: var(--space-4); color: var(--accent-cyan);">
+                        This guide will show you:</div>
+                    <ul style="list-style: none; display: flex; flex-direction: column; gap: var(--space-3);">
+                        <li style="display: flex; align-items: flex-start; gap: var(--space-3);">
+                            <span style="color: var(--accent-green);">✓</span>
+                            <span><strong>How to think in C</strong> using what you already know from Python/Java</span>
+                        </li>
+                        <li style="display: flex; align-items: flex-start; gap: var(--space-3);">
+                            <span style="color: var(--accent-green);">✓</span>
+                            <span><strong>How computers actually work</strong> beneath the abstraction layers</span>
+                        </li>
+                        <li style="display: flex; align-items: flex-start; gap: var(--space-3);">
+                            <span style="color: var(--accent-green);">✓</span>
+                            <span><strong>How to build a complete compiler</strong> from scratch in 7 steps</span>
+                        </li>
+                    </ul>
+                </div>
+
+                <h4>Mental Model: Python/Java vs C</h4>
+                <pre><code>🐍 Python (What it hides)        ⚙️ C (What you control)
+─────────────────────────        ─────────────────────────
+x = [1, 2, 3]                    int *x = malloc(3 * sizeof(int));
+# Auto-resizes                   // YOU allocate exact size
+
+y = x                            int *y = x;
+# Reference to same list         // Points to same memory
+
+x.append(4)                      // No auto-resize!
+# Automatic growth               // YOU must realloc()
+
+print(len(x))                    int len = 3;
+# Built-in tracking              // YOU track the length
+
+# Garbage collected              free(x);
+                                 // YOU free memory</code></pre>
+
+                <blockquote
+                    style="border-left: 4px solid var(--accent-purple); padding-left: var(--space-5); margin: var(--space-6) 0; font-style: normal;">
+                    <strong style="color: var(--accent-purple);">🎯 Goal:</strong> Take you from Python/Java → C →
+                    Assembly → Machine Code
+                </blockquote>
+            </div>
+        </div>
+
+        <!-- Section 2: The Journey -->
+        <div class="section" id="section-journey">
+            <div class="section-header" onclick="toggleSection('section-journey')">
+                <h3 class="section-title">🚀 The Journey: 7 Compilers</h3>
+                <span class="section-toggle">▶</span>
+            </div>
+            <div class="section-content">
+                <p>Over 15 weeks, you will build <strong>7 compilers</strong>, each adding new features:</p>
+
+                <div style="display: grid; gap: var(--space-4); margin: var(--space-6) 0;">
+                    <!-- Compiler Timeline Cards -->
+                    <div
+                        style="background: var(--bg-card); border: 1px solid var(--border-default); border-radius: var(--radius-lg); padding: var(--space-5); display: flex; gap: var(--space-4); align-items: flex-start;">
+                        <div
+                            style="width: 48px; height: 48px; background: var(--gradient-primary); border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center; font-weight: bold; flex-shrink: 0;">
+                            1</div>
+                        <div>
+                            <div style="font-weight: 600; margin-bottom: var(--space-1);">Lexer (Week 5)</div>
+                            <div style="font-size: 0.9rem; color: var(--text-secondary);">Break
+                                <code>"fn main() -> int { return 42 }"</code> into tokens
+                            </div>
+                        </div>
+                    </div>
+
+                    <div
+                        style="background: var(--bg-card); border: 1px solid var(--border-default); border-radius: var(--radius-lg); padding: var(--space-5); display: flex; gap: var(--space-4); align-items: flex-start;">
+                        <div
+                            style="width: 48px; height: 48px; background: var(--gradient-primary); border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center; font-weight: bold; flex-shrink: 0;">
+                            2</div>
+                        <div>
+                            <div style="font-weight: 600; margin-bottom: var(--space-1);">Parser & Codegen (Week 6)
+                            </div>
+                            <div style="font-size: 0.9rem; color: var(--text-secondary);">Build AST, generate x86-64
+                                assembly</div>
+                        </div>
+                    </div>
+
+                    <div
+                        style="background: var(--bg-card); border: 1px solid var(--border-default); border-radius: var(--radius-lg); padding: var(--space-5); display: flex; gap: var(--space-4); align-items: flex-start;">
+                        <div
+                            style="width: 48px; height: 48px; background: var(--gradient-primary); border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center; font-weight: bold; flex-shrink: 0;">
+                            3</div>
+                        <div>
+                            <div style="font-weight: 600; margin-bottom: var(--space-1);">Expressions (Week 7)</div>
+                            <div style="font-size: 0.9rem; color: var(--text-secondary);"><code>2 + 3 * 4</code> with
+                                correct precedence</div>
+                        </div>
+                    </div>
+
+                    <div
+                        style="background: var(--bg-card); border: 1px solid var(--border-default); border-radius: var(--radius-lg); padding: var(--space-5); display: flex; gap: var(--space-4); align-items: flex-start;">
+                        <div
+                            style="width: 48px; height: 48px; background: var(--gradient-primary); border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center; font-weight: bold; flex-shrink: 0;">
+                            4</div>
+                        <div>
+                            <div style="font-weight: 600; margin-bottom: var(--space-1);">Variables (Week 8)</div>
+                            <div style="font-size: 0.9rem; color: var(--text-secondary);"><code>let x: int = 5</code>
+                                with
+                                symbol tables & stack</div>
+                        </div>
+                    </div>
+
+                    <div
+                        style="background: var(--bg-card); border: 1px solid var(--border-default); border-radius: var(--radius-lg); padding: var(--space-5); display: flex; gap: var(--space-4); align-items: flex-start;">
+                        <div
+                            style="width: 48px; height: 48px; background: var(--gradient-primary); border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center; font-weight: bold; flex-shrink: 0;">
+                            5</div>
+                        <div>
+                            <div style="font-weight: 600; margin-bottom: var(--space-1);">Functions (Week 9)</div>
+                            <div style="font-size: 0.9rem; color: var(--text-secondary);">
+                                <code>fn add(a: int, b: int) -> int</code> with calling convention
+                            </div>
+                        </div>
+                    </div>
+
+                    <div
+                        style="background: var(--bg-card); border: 1px solid var(--border-default); border-radius: var(--radius-lg); padding: var(--space-5); display: flex; gap: var(--space-4); align-items: flex-start;">
+                        <div
+                            style="width: 48px; height: 48px; background: var(--gradient-primary); border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center; font-weight: bold; flex-shrink: 0;">
+                            6</div>
+                        <div>
+                            <div style="font-weight: 600; margin-bottom: var(--space-1);">Control Flow (Week 12)</div>
+                            <div style="font-size: 0.9rem; color: var(--text-secondary);"><code>if/else</code> and
+                                <code>while</code> with labels & jumps
+                            </div>
+                        </div>
+                    </div>
+
+                    <div
+                        style="background: rgba(124, 58, 237, 0.1); border: 1px solid var(--accent-purple); border-radius: var(--radius-lg); padding: var(--space-5); display: flex; gap: var(--space-4); align-items: flex-start;">
+                        <div
+                            style="width: 48px; height: 48px; background: var(--gradient-accent); border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center; font-weight: bold; flex-shrink: 0;">
+                            7</div>
+                        <div>
+                            <div style="font-weight: 600; margin-bottom: var(--space-1);">🚀 Arrays & Strings (Week 14)
+                            </div>
+                            <div style="font-size: 0.9rem; color: var(--text-secondary);">
+                                <code>let arr: [int] = alloc(10)</code> with mmap & dynamic memory
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <p style="margin-top: var(--space-6);"><strong>Each compiler builds on the previous one.</strong> By the
+                    end, you have a working compiler that translates Jive → x86-64 → executable.</p>
+            </div>
+        </div>
+
+        <!-- Section 3: The Compilation Pipeline -->
+        <div class="section" id="section-pipeline">
+            <div class="section-header" onclick="toggleSection('section-pipeline')">
+                <h3 class="section-title">⚙️ The Compilation Pipeline</h3>
+                <span class="section-toggle">▶</span>
+            </div>
+            <div class="section-content">
+                <p>When you compile <code>fn main() -> int { return 42 }</code>, here's what happens:</p>
+
+                <pre style="margin: var(--space-6) 0; font-size: 0.85rem;"><code>┌───────────────────────────────────────────────────────────────┐
+│ Step 1: LEXICAL ANALYSIS (Lexer)                              │
+│ Breaks source code into tokens                                │
+└───────────────────────────────────────────────────────────────┘
+    Input:   fn main() -> int { return 42 }
+    Output:  [fn, main, (, ), ->, int, {, return, 42, }]
+                                    │
+                                    ▼
+┌───────────────────────────────────────────────────────────────┐
+│ Step 2: PARSING (Parser)                                      │
+│ Builds Abstract Syntax Tree (AST) from tokens                 │
+└───────────────────────────────────────────────────────────────┘
+    Output:  PROGRAM
+               └── FN("main")
+                     └── RETURN
+                           └── INTEGER(42)
+                                    │
+                                    ▼
+┌───────────────────────────────────────────────────────────────┐
+│ Step 3: STACK MACHINE GENERATION                              │
+│ Converts AST to stack-based instructions                      │
+└───────────────────────────────────────────────────────────────┘
+    Output:  FN main
+             PUSH 42
+             RETURN
+             END_FN
+                                    │
+                                    ▼
+┌───────────────────────────────────────────────────────────────┐
+│ Step 4: CODE GENERATION (Assembly)                            │
+│ Translates stack machine to x86-64 assembly                   │
+└───────────────────────────────────────────────────────────────┘
+    Output:  main:
+                 push 42
+                 pop rax
+                 ret
+                                    │
+                                    ▼
+┌───────────────────────────────────────────────────────────────┐
+│ Step 5: ASSEMBLING & LINKING (nasm + ld)                      │
+│ Creates executable binary                                     │
+└───────────────────────────────────────────────────────────────┘
+    Output:  ./main (executable file)</code></pre>
+
+                <div
+                    style="background: var(--bg-terminal); border-radius: var(--radius-lg); padding: var(--space-5); margin-top: var(--space-6); font-family: var(--font-mono); font-size: 0.9rem;">
+                    <div style="color: var(--terminal-prompt);">$ </div>
+                    <div style="color: var(--terminal-green);">./jive main.jive && ./main; echo "Exit code: $?"</div>
+                    <div style="color: var(--text-secondary); margin-top: var(--space-2);">Exit code: 42</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section 4: Why Each Stage Exists -->
+        <div class="section" id="section-stages">
+            <div class="section-header" onclick="toggleSection('section-stages')">
+                <h3 class="section-title">🔍 Why Each Stage Exists</h3>
+                <span class="section-toggle">▶</span>
+            </div>
+            <div class="section-content">
+                <h4>🔤 Lexer: Characters → Tokens</h4>
+                <p><strong>Purpose:</strong> Simplify parsing by grouping characters into meaningful units.</p>
+                <pre><code>Why separate?
+─────────────
+Easier:  "if next token is RETURN keyword"
+Harder:  "if next 6 chars spell 'return' followed by whitespace"</code></pre>
+
+                <h4 style="margin-top: var(--space-6);">🌳 Parser: Tokens → Structure (AST)</h4>
+                <p><strong>Purpose:</strong> Understand the grammatical structure of the program.</p>
+                <pre><code>return 2 + 3 * 4
+
+Parser creates AST:
+      RETURN
+         │
+        ADD
+       /   \
+      2    MUL    ← MUL is deeper = higher precedence
+          /   \
+         3     4</code></pre>
+
+                <h4 style="margin-top: var(--space-6);">📚 Stack Machine: Bridge to Assembly</h4>
+                <p><strong>Purpose:</strong> Intermediate representation between AST and assembly.</p>
+                <pre><code>Like RPN calculators: 2 3 4 * + means "2 + (3 * 4)"
+
+PUSH 2       Stack: [2]
+PUSH 3       Stack: [2, 3]
+PUSH 4       Stack: [2, 3, 4]
+MUL          Stack: [2, 12]     (3 * 4 = 12)
+ADD          Stack: [14]        (2 + 12 = 14)
+RETURN       Return value: 14</code></pre>
+
+                <h4 style="margin-top: var(--space-6);">⚙️ Code Generator: Real Hardware</h4>
+                <p><strong>Purpose:</strong> Translate stack machine to actual CPU instructions.</p>
+                <pre><code>Stack Machine       x86-64 Assembly
+─────────────       ───────────────
+PUSH 2         →    push 2
+PUSH 3         →    push 3
+ADD            →    pop rcx
+                    pop rax
+                    add rax, rcx
+                    push rax</code></pre>
+            </div>
+        </div>
+
+        <!-- Quiz Section -->
+        <div class="section" id="section-quiz">
+            <div class="section-header" onclick="toggleSection('section-quiz')">
+                <h3 class="section-title">🧠 Check Your Understanding</h3>
+                <span class="section-toggle">▶</span>
+            </div>
+            <div class="section-content">
+                <div class="quiz" data-correct="1" data-quiz-id="q1" data-module-id="week-01"
+                    data-explanation="The lexer breaks source code into tokens. Think of it like breaking a sentence into words.">
+                    <div class="quiz-question">What does the lexer produce as output?</div>
+                    <div class="quiz-options">
+                        <div class="quiz-option" data-value="0">
+                            <div class="quiz-radio"></div><span>Abstract Syntax Tree (AST)</span>
+                        </div>
+                        <div class="quiz-option" data-value="1">
+                            <div class="quiz-radio"></div><span>Token stream</span>
+                        </div>
+                        <div class="quiz-option" data-value="2">
+                            <div class="quiz-radio"></div><span>Assembly code</span>
+                        </div>
+                        <div class="quiz-option" data-value="3">
+                            <div class="quiz-radio"></div><span>Executable binary</span>
+                        </div>
+                    </div>
+                    <div class="quiz-feedback"></div>
+                </div>
+
+                <div class="quiz" data-correct="2" data-quiz-id="q2" data-module-id="week-01"
+                    data-explanation="The parser takes tokens and builds a tree structure (AST) that represents the program's meaning.">
+                    <div class="quiz-question">Which compiler phase builds the Abstract Syntax Tree?</div>
+                    <div class="quiz-options">
+                        <div class="quiz-option" data-value="0">
+                            <div class="quiz-radio"></div><span>Lexer</span>
+                        </div>
+                        <div class="quiz-option" data-value="1">
+                            <div class="quiz-radio"></div><span>Code Generator</span>
+                        </div>
+                        <div class="quiz-option" data-value="2">
+                            <div class="quiz-radio"></div><span>Parser</span>
+                        </div>
+                        <div class="quiz-option" data-value="3">
+                            <div class="quiz-radio"></div><span>Assembler</span>
+                        </div>
+                    </div>
+                    <div class="quiz-feedback"></div>
+                </div>
+
+                <div class="quiz" data-correct="3" data-quiz-id="q3" data-module-id="week-01"
+                    data-explanation="The stack machine is an intermediate representation that makes it easier to generate assembly from the AST.">
+                    <div class="quiz-question">Why use a stack machine as an intermediate step?</div>
+                    <div class="quiz-options">
+                        <div class="quiz-option" data-value="0">
+                            <div class="quiz-radio"></div><span>It runs faster</span>
+                        </div>
+                        <div class="quiz-option" data-value="1">
+                            <div class="quiz-radio"></div><span>It uses less memory</span>
+                        </div>
+                        <div class="quiz-option" data-value="2">
+                            <div class="quiz-radio"></div><span>It's required by x86-64</span>
+                        </div>
+                        <div class="quiz-option" data-value="3">
+                            <div class="quiz-radio"></div><span>It simplifies translation to assembly</span>
+                        </div>
+                    </div>
+                    <div class="quiz-feedback"></div>
+                </div>
+
+                <div class="quiz" data-correct="0" data-quiz-id="q4" data-module-id="week-01"
+                    data-explanation="C gives you manual control over memory (malloc/free), no garbage collection, and explicit pointer manipulation.">
+                    <div class="quiz-question">What does C make you do that Python does automatically?</div>
+                    <div class="quiz-options">
+                        <div class="quiz-option" data-value="0">
+                            <div class="quiz-radio"></div><span>Manage memory manually</span>
+                        </div>
+                        <div class="quiz-option" data-value="1">
+                            <div class="quiz-radio"></div><span>Write loops</span>
+                        </div>
+                        <div class="quiz-option" data-value="2">
+                            <div class="quiz-radio"></div><span>Define functions</span>
+                        </div>
+                        <div class="quiz-option" data-value="3">
+                            <div class="quiz-radio"></div><span>Use variables</span>
+                        </div>
+                    </div>
+                    <div class="quiz-feedback"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Navigation -->
+        <div
+            style="display: flex; justify-content: space-between; align-items: center; padding: var(--space-6); background: var(--bg-card); border-radius: var(--radius-xl); border: 1px solid var(--border-default); margin-top: var(--space-10);">
+            <a href="../index.html"
+                style="display: flex; align-items: center; gap: var(--space-2); color: var(--text-secondary);">
+                ← All Modules
+            </a>
+            <a href="#" onclick="event.preventDefault(); UnlockSystem.navigateToModule('week-02', 'week-02-intro-c.html');"
+                style="display: flex; align-items: center; gap: var(--space-2); padding: var(--space-3) var(--space-5); background: var(--gradient-primary); color: white; border-radius: var(--radius-md); font-weight: 600;">
+                Next: Intro to C →
+            </a>
+        </div>
+    </main>
+
+    <!-- Scripts -->
+    <script src="../js/modules-data.js"></script>
+    <script src="../js/unlock.js"></script>
+    <script src="../js/progress.js"></script>
+    <script src="../js/quiz.js"></script>
+    <script>
+        function toggleSection(sectionId) {
+            const section = document.getElementById(sectionId);
+            if (section) {
+                section.classList.toggle('open');
+                if (section.classList.contains('open') && window.ProgressTracker) {
+                    ProgressTracker.expandSection('week-01', sectionId);
+                    updateProgress();
+                }
+            }
+        }
+
+        function updateProgress() {
+            if (window.ProgressTracker) {
+                const progress = ProgressTracker.getModuleProgress('week-01');
+                const bar = document.getElementById('moduleProgress');
+                if (bar) bar.style.width = `${progress.percentComplete}%`;
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const toggle = document.getElementById('themeToggle');
+            const savedTheme = localStorage.getItem('cs5008_theme') || 'dark';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            toggle.textContent = savedTheme === 'dark' ? '🌙' : '☀️';
+
+            toggle.addEventListener('click', () => {
+                const current = document.documentElement.getAttribute('data-theme');
+                const next = current === 'dark' ? 'light' : 'dark';
+                document.documentElement.setAttribute('data-theme', next);
+                localStorage.setItem('cs5008_theme', next);
+                toggle.textContent = next === 'dark' ? '🌙' : '☀️';
+            });
+
+            if (window.ProgressTracker) {
+                ProgressTracker.visitModule('week-01');
+                updateProgress();
+            }
+        });
+    </script>
+</body>
+
+</html>

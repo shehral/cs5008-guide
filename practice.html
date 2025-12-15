@@ -1,0 +1,884 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Practice Problems | CS5008 Study Guide</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <style>
+        .practice-container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: var(--space-6);
+        }
+
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: var(--space-2);
+            color: var(--text-secondary);
+            text-decoration: none;
+            margin-bottom: var(--space-6);
+            transition: color 0.2s;
+        }
+
+        .back-link:hover {
+            color: var(--accent-cyan);
+        }
+
+        .problem-set {
+            background: var(--bg-card);
+            border: 1px solid var(--border-default);
+            border-radius: var(--radius-xl);
+            margin-bottom: var(--space-6);
+            overflow: hidden;
+        }
+
+        .problem-set-header {
+            background: var(--bg-elevated);
+            padding: var(--space-4) var(--space-5);
+            border-bottom: 1px solid var(--border-default);
+            display: flex;
+            align-items: center;
+            gap: var(--space-3);
+        }
+
+        .problem-set-header h2 {
+            margin: 0;
+            font-size: 1.1rem;
+        }
+
+        .problem-set-content {
+            padding: var(--space-5);
+        }
+
+        .problem {
+            margin-bottom: var(--space-6);
+            padding-bottom: var(--space-6);
+            border-bottom: 1px solid var(--border-default);
+        }
+
+        .problem:last-child {
+            margin-bottom: 0;
+            padding-bottom: 0;
+            border-bottom: none;
+        }
+
+        .problem h3 {
+            color: var(--accent-purple);
+            margin-bottom: var(--space-3);
+            font-size: 1rem;
+        }
+
+        .problem-content {
+            margin-bottom: var(--space-4);
+        }
+
+        .solution-toggle {
+            background: var(--bg-elevated);
+            border: 1px solid var(--border-default);
+            border-radius: var(--radius-md);
+            padding: var(--space-3) var(--space-4);
+            color: var(--accent-cyan);
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+        }
+
+        .solution-toggle:hover {
+            background: var(--accent-cyan);
+            color: var(--bg-base);
+        }
+
+        .solution {
+            display: none;
+            margin-top: var(--space-4);
+            padding: var(--space-4);
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid var(--accent-green);
+            border-radius: var(--radius-md);
+        }
+
+        .solution.show {
+            display: block;
+        }
+
+        .solution h4 {
+            color: var(--accent-green);
+            margin-bottom: var(--space-3);
+        }
+
+        .code-block {
+            background: var(--bg-terminal);
+            padding: var(--space-4);
+            border-radius: var(--radius-md);
+            font-family: var(--font-mono);
+            font-size: 0.85rem;
+            overflow-x: auto;
+            margin: var(--space-3) 0;
+            line-height: 1.5;
+            color: #e6e6e6;
+        }
+
+        .trap-card {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid var(--accent-red);
+            border-radius: var(--radius-lg);
+            padding: var(--space-5);
+            margin-bottom: var(--space-4);
+        }
+
+        .trap-card h4 {
+            color: var(--accent-red);
+            margin-bottom: var(--space-3);
+        }
+
+        .trap-card .fix {
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid var(--accent-green);
+            border-radius: var(--radius-md);
+            padding: var(--space-3);
+            margin-top: var(--space-3);
+        }
+
+        .trap-card .fix h5 {
+            color: var(--accent-green);
+            margin-bottom: var(--space-2);
+            font-size: 0.9rem;
+        }
+
+        .stats-bar {
+            display: flex;
+            gap: var(--space-6);
+            padding: var(--space-4);
+            background: var(--bg-elevated);
+            border-radius: var(--radius-lg);
+            margin-bottom: var(--space-6);
+            flex-wrap: wrap;
+        }
+
+        .stat {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--accent-cyan);
+        }
+
+        .stat-label {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+        }
+
+        .toc {
+            background: var(--bg-elevated);
+            padding: var(--space-4);
+            border-radius: var(--radius-lg);
+            margin-bottom: var(--space-6);
+        }
+
+        .toc-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: var(--space-2);
+        }
+
+        .toc a {
+            color: var(--accent-purple);
+            text-decoration: none;
+        }
+
+        .toc a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="practice-container">
+        <!-- Header with theme toggle -->
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-4);">
+            <a href="index.html" class="back-link" style="margin-bottom: 0;">← Back to Guide</a>
+            <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme"
+                style="background: var(--bg-card); border: 1px solid var(--border-default); border-radius: 8px; padding: 8px 12px; cursor: pointer; font-size: 1.25rem;">🌙</button>
+        </div>
+
+        <h1 style="margin-bottom: var(--space-2);">📝 Practice Problems</h1>
+        <p style="color: var(--text-secondary); margin-bottom: var(--space-6);">Exam-style problems with solutions</p>
+
+        <div class="stats-bar">
+            <div class="stat">
+                <div class="stat-value">17</div>
+                <div class="stat-label">Problems</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value">5</div>
+                <div class="stat-label">Exam Traps</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value">4</div>
+                <div class="stat-label">Topics</div>
+            </div>
+        </div>
+
+        <div class="toc">
+            <div class="toc-grid">
+                <a href="#c-fundamentals">C Fundamentals</a>
+                <a href="#assembly">x86-64 Assembly</a>
+                <a href="#parsing">Expression Parsing</a>
+                <a href="#stack-machine">Stack Machine</a>
+                <a href="#traps">Common Exam Traps</a>
+            </div>
+        </div>
+
+        <!-- C Fundamentals -->
+        <div class="problem-set" id="c-fundamentals">
+            <div class="problem-set-header">
+                <span style="font-size: 1.25rem;">💻</span>
+                <h2>C Fundamentals</h2>
+            </div>
+            <div class="problem-set-content">
+
+                <!-- Problem 1 -->
+                <div class="problem">
+                    <h3>Problem 1: Pointer Arithmetic</h3>
+                    <div class="problem-content">
+                        <p>Given this code:</p>
+                        <div class="code-block">int arr[5] = {10, 20, 30, 40, 50};
+                            int *ptr = arr + 2;</div>
+                        <p>What is the value of:</p>
+                        <ul>
+                            <li>a) <code>*ptr</code></li>
+                            <li>b) <code>*(ptr + 1)</code></li>
+                            <li>c) <code>*(ptr - 1)</code></li>
+                            <li>d) <code>ptr[1]</code></li>
+                        </ul>
+                    </div>
+                    <button class="solution-toggle" onclick="toggleSolution(this)">Show Solution</button>
+                    <div class="solution">
+                        <h4>Solution</h4>
+                        <ul>
+                            <li><strong>a) <code>*ptr</code></strong>: <code>arr + 2</code> points to
+                                <code>arr[2]</code>, so <code>*ptr = 30</code>
+                            </li>
+                            <li><strong>b) <code>*(ptr + 1)</code></strong>: Points to <code>arr[3]</code>, so
+                                <code>*(ptr + 1) = 40</code>
+                            </li>
+                            <li><strong>c) <code>*(ptr - 1)</code></strong>: Points to <code>arr[1]</code>, so
+                                <code>*(ptr - 1) = 20</code>
+                            </li>
+                            <li><strong>d) <code>ptr[1]</code></strong>: Same as <code>*(ptr + 1)</code> =
+                                <code>40</code>
+                            </li>
+                        </ul>
+                        <p><strong>Key:</strong> <code>ptr + n</code> moves <code>n * sizeof(int)</code> bytes. Array
+                            indexing <code>ptr[n]</code> is syntactic sugar for <code>*(ptr + n)</code>.</p>
+                    </div>
+                </div>
+
+                <!-- Problem 2 -->
+                <div class="problem">
+                    <h3>Problem 2: Stack Frame Layout</h3>
+                    <div class="problem-content">
+                        <p>Draw the stack layout after this code executes:</p>
+                        <div class="code-block">void foo(int a, int b) {
+                            int x = 10;
+                            int y = 20;
+                            // Stack layout here?
+                            }
+
+                            int main() {
+                            foo(5, 15);
+                            return 0;
+                            }</div>
+                    </div>
+                    <button class="solution-toggle" onclick="toggleSolution(this)">Show Solution</button>
+                    <div class="solution">
+                        <h4>Solution</h4>
+                        <div class="code-block">Higher addresses
+                            +------------------+
+                            | main's stack |
+                            +------------------+
+                            | Return address | ← Pushed by call foo
+                            +------------------+
+                            | saved rbp | ← rbp after push rbp
+                            +------------------+
+                            | param a (slot 0) | ← [rbp - 8] (value: 5, from rdi)
+                            +------------------+
+                            | param b (slot 1) | ← [rbp - 16] (value: 15, from rsi)
+                            +------------------+
+                            | local x (slot 2) | ← [rbp - 24] (value: 10)
+                            +------------------+
+                            | local y (slot 3) | ← [rbp - 32] (value: 20)
+                            +------------------+ ← rsp
+                            Lower addresses</div>
+                        <p><strong>Key:</strong> Parameters saved from registers (rdi=a, rsi=b) to stack. Variables
+                            accessed via <code>[rbp - (slot+1)*8]</code>.</p>
+                    </div>
+                </div>
+
+                <!-- Problem 3 -->
+                <div class="problem">
+                    <h3>Problem 3: Struct Memory Alignment</h3>
+                    <div class="problem-content">
+                        <p>What is <code>sizeof(struct Point)</code> and why?</p>
+                        <div class="code-block">struct Point {
+                            char c; // 1 byte
+                            int x; // 4 bytes
+                            char d; // 1 byte
+                            int y; // 4 bytes
+                            };</div>
+                    </div>
+                    <button class="solution-toggle" onclick="toggleSolution(this)">Show Solution</button>
+                    <div class="solution">
+                        <h4>Solution: 16 bytes (not 10!)</h4>
+                        <div class="code-block">Offset Field Size Padding
+                            0 c 1 3 bytes padding (align next int)
+                            4 x 4 no padding
+                            8 d 1 3 bytes padding (align next int)
+                            12 y 4 no padding
+                            Total: 16 bytes</div>
+                        <p><strong>Why?</strong> <code>int</code> requires 4-byte alignment. After each
+                            <code>char</code>, 3 padding bytes are added.
+                        </p>
+                        <p><strong>Better layout (12 bytes):</strong></p>
+                        <div class="code-block">struct Point {
+                            int x; // 4 bytes at offset 0
+                            int y; // 4 bytes at offset 4
+                            char c; // 1 byte at offset 8
+                            char d; // 1 byte at offset 9
+                            // 2 bytes padding to align struct
+                            };</div>
+                    </div>
+                </div>
+
+                <!-- Problem: Swap Function Bug -->
+                <div class="problem">
+                    <h3>Problem: Fix the Swap Function</h3>
+                    <div class="problem-content">
+                        <p>This code doesn't swap the values. Why not, and how do you fix it?</p>
+                        <div class="code-block">void swap(int a, int b) {
+                            int temp = a;
+                            a = b;
+                            b = temp;
+                            }
+
+                            int main() {
+                            int x = 5, y = 10;
+                            swap(x, y);
+                            printf("%d %d\n", x, y); // Prints: 5 10 (not swapped!)
+                            }</div>
+                    </div>
+                    <button class="solution-toggle" onclick="toggleSolution(this)">Show Solution</button>
+                    <div class="solution">
+                        <h4>Problem: Pass-by-value</h4>
+                        <p><code>swap</code> receives <strong>copies</strong> of x and y, not the originals. Changes to
+                            a and b don't affect x and y.</p>
+                        <h4>Fix: Use pointers</h4>
+                        <div class="code-block">void swap(int *a, int *b) {
+                            int temp = *a;
+                            *a = *b;
+                            *b = temp;
+                            }
+
+                            int main() {
+                            int x = 5, y = 10;
+                            swap(&x, &y); // Pass addresses
+                            printf("%d %d\n", x, y); // Prints: 10 5 ✓
+                            }</div>
+                    </div>
+                </div>
+
+                <!-- Problem: Memory Leak -->
+                <div class="problem">
+                    <h3>Problem: Find the Memory Leak</h3>
+                    <div class="problem-content">
+                        <p>This code has a memory leak. Find and fix it:</p>
+                        <div class="code-block">void process_data(const char *filename) {
+                            FILE *f = fopen(filename, "r");
+                            if (f == NULL) return;
+
+                            char *buffer = malloc(1000);
+                            if (buffer == NULL) {
+                            fclose(f);
+                            return;
+                            }
+
+                            fread(buffer, 1, 1000, f);
+
+                            if (some_error_condition()) {
+                            return; // ← Is there a leak here?
+                            }
+
+                            free(buffer);
+                            fclose(f);
+                            }</div>
+                    </div>
+                    <button class="solution-toggle" onclick="toggleSolution(this)">Show Solution</button>
+                    <div class="solution">
+                        <h4>Yes! Memory leak on early return</h4>
+                        <p>If <code>some_error_condition()</code> is true, we return without freeing <code>buffer</code>
+                            or closing <code>f</code>!</p>
+                        <h4>Fix: Free resources before all returns</h4>
+                        <div class="code-block">if (some_error_condition()) {
+                            free(buffer); // ✓ Free before return
+                            fclose(f); // ✓ Close before return
+                            return;
+                            }</div>
+                        <p><strong>Better pattern:</strong> Use <code>goto cleanup</code> for centralized resource
+                            cleanup.</p>
+                    </div>
+                </div>
+
+                <!-- Problem: Returning Local Array -->
+                <div class="problem">
+                    <h3>Problem: Returning Local Array</h3>
+                    <div class="problem-content">
+                        <p>Is this code safe? Why or why not?</p>
+                        <div class="code-block">char *create_greeting() {
+                            char msg[] = "Hello";
+                            return msg;
+                            }
+
+                            int main() {
+                            char *greeting = create_greeting();
+                            printf("%s\n", greeting);
+                            }</div>
+                    </div>
+                    <button class="solution-toggle" onclick="toggleSolution(this)">Show Solution</button>
+                    <div class="solution">
+                        <h4>NO! Undefined behavior</h4>
+                        <p><code>msg</code> is a local array on the stack. When the function returns, that stack space
+                            is invalid. The returned pointer is <strong>dangling</strong>.</p>
+                        <h4>Fix #1: Return string literal</h4>
+                        <div class="code-block">char *create_greeting() {
+                            return "Hello"; // String literal lives forever
+                            }</div>
+                        <h4>Fix #2: Allocate on heap</h4>
+                        <div class="code-block">char *create_greeting() {
+                            char *msg = malloc(6);
+                            strcpy(msg, "Hello");
+                            return msg; // Caller must free!
+                            }</div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- x86-64 Assembly -->
+        <div class="problem-set" id="assembly">
+            <div class="problem-set-header">
+                <span style="font-size: 1.25rem;">⚙️</span>
+                <h2>x86-64 Assembly</h2>
+            </div>
+            <div class="problem-set-content">
+
+                <!-- Problem 4 -->
+                <div class="problem">
+                    <h3>Problem 4: Register Operations</h3>
+                    <div class="problem-content">
+                        <p>What is the value in <code>rax</code> after this sequence?</p>
+                        <div class="code-block">mov rax, 10
+                            mov rcx, 3
+                            imul rcx
+                            add rax, 5</div>
+                    </div>
+                    <button class="solution-toggle" onclick="toggleSolution(this)">Show Solution</button>
+                    <div class="solution">
+                        <h4>Solution: rax = 35</h4>
+                        <div class="code-block">1. mov rax, 10 → rax = 10
+                            2. mov rcx, 3 → rcx = 3
+                            3. imul rcx → rdx:rax = rax * rcx = 10 * 3 = 30 (rax = 30)
+                            4. add rax, 5 → rax = 30 + 5 = 35</div>
+                        <p><strong>Note:</strong> <code>imul</code> with one operand multiplies
+                            <code>rax × operand</code> and stores result in <code>rdx:rax</code>.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Problem 5 -->
+                <div class="problem">
+                    <h3>Problem 5: Conditional Jumps</h3>
+                    <div class="problem-content">
+                        <p>What does this code return?</p>
+                        <div class="code-block">mov rax, 5
+                            mov rcx, 10
+                            cmp rax, rcx
+                            jl .less
+                            mov rax, 0
+                            jmp .end
+                            .less:
+                            mov rax, 1
+                            .end:
+                            ret</div>
+                    </div>
+                    <button class="solution-toggle" onclick="toggleSolution(this)">Show Solution</button>
+                    <div class="solution">
+                        <h4>Solution: Returns 1</h4>
+                        <div class="code-block">1. rax = 5, rcx = 10
+                            2. cmp rax, rcx → 5 - 10 = -5 (negative)
+                            3. jl .less → Jump if less (5 < 10 is TRUE) 4. mov rax, 1 → rax=1 5. ret → Return 1</div>
+                                <p><strong>Pattern:</strong> This is how
+                                    <code>if (a < b) return 1; else return 0;</code> compiles.
+                                </p>
+                        </div>
+                    </div>
+
+                    <!-- Problem 6 -->
+                    <div class="problem">
+                        <h3>Problem 6: Stack Operations</h3>
+                        <div class="problem-content">
+                            <p>What's on the stack after this sequence? (Assume rsp starts at 0x1000)</p>
+                            <div class="code-block">push 10
+                                push 20
+                                pop rax
+                                push 30</div>
+                        </div>
+                        <button class="solution-toggle" onclick="toggleSolution(this)">Show Solution</button>
+                        <div class="solution">
+                            <h4>Solution</h4>
+                            <div class="code-block">After push 10: Stack = [10], rsp = 0x0FF8
+                                After push 20: Stack = [10, 20], rsp = 0x0FF0
+                                After pop rax: Stack = [10], rax = 20, rsp = 0x0FF8
+                                After push 30: Stack = [10, 30], rsp = 0x0FF0
+
+                                Final: Stack = [30 (top), 10], rax = 20</div>
+                            <p><strong>Key:</strong> Stack grows downward (push decrements rsp). Pop reads value then
+                                increments rsp.</p>
+                        </div>
+                    </div>
+
+                    <!-- Problem: Register Size Trap -->
+                    <div class="problem">
+                        <h3>Problem: Register Size Trap</h3>
+                        <div class="problem-content">
+                            <p>What is the value of <code>rax</code> after this sequence?</p>
+                            <div class="code-block">mov rax, 0xFFFFFFFFFFFFFFFF
+                                mov eax, 0x12345678
+                                ; What is rax now?</div>
+                        </div>
+                        <button class="solution-toggle" onclick="toggleSolution(this)">Show Solution</button>
+                        <div class="solution">
+                            <h4>Answer: 0x0000000012345678</h4>
+                            <div class="code-block">Before: rax = 0xFFFFFFFFFFFFFFFF
+                                After: rax = 0x0000000012345678
+                                └──────┘└──────┘
+                                upper 32 lower 32
+                                (zeroed) (eax)</div>
+                            <p><strong>Key insight:</strong> Writing to a 32-bit register (<code>eax</code>)
+                                <strong>zeros the upper 32 bits</strong> of the 64-bit register (<code>rax</code>)!
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Problem: Memory Operands -->
+                    <div class="problem">
+                        <h3>Problem: Memory Operand Rules</h3>
+                        <div class="problem-content">
+                            <p>Which of these x86-64 instructions are <strong>VALID</strong>?</p>
+                            <div class="code-block">A. mov rax, [rbx]
+                                B. mov [rax], [rbx]
+                                C. mov [rax], 42
+                                D. add rax, [rbx]
+                                E. add [rax], [rbx]</div>
+                        </div>
+                        <button class="solution-toggle" onclick="toggleSolution(this)">Show Solution</button>
+                        <div class="solution">
+                            <h4>Valid: A, C, D</h4>
+                            <h4>Invalid: B, E</h4>
+                            <p><strong>Rule:</strong> At most ONE operand can be a memory reference!</p>
+                            <div class="code-block">B invalid: mov [rax], [rbx] ← TWO memory refs
+                                E invalid: add [rax], [rbx] ← TWO memory refs</div>
+                            <h4>Fix for B:</h4>
+                            <div class="code-block">mov rcx, [rbx] ; Load to temp register
+                                mov [rax], rcx ; Store from temp</div>
+                        </div>
+                    </div>
+
+                    <!-- Problem: Two's Complement -->
+                    <div class="problem">
+                        <h3>Problem: Two's Complement Calculation</h3>
+                        <div class="problem-content">
+                            <p>What is the signed decimal value of this 8-bit binary: <code>0b11111101</code>?</p>
+                        </div>
+                        <button class="solution-toggle" onclick="toggleSolution(this)">Show Solution</button>
+                        <div class="solution">
+                            <h4>Answer: -3</h4>
+                            <div class="code-block">Bit: 7 6 5 4 3 2 1 0
+                                Value: 1 1 1 1 1 1 0 1
+
+                                = -1×128 + 1×64 + 1×32 + 1×16 + 1×8 + 1×4 + 0×2 + 1×1
+                                = -128 + 64 + 32 + 16 + 8 + 4 + 0 + 1
+                                = -128 + 125
+                                = -3</div>
+                            <p><strong>Quick trick:</strong> MSB (bit 7) contributes <strong>-128</strong>. Add
+                                remaining 1-bits as positive.</p>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- Expression Parsing -->
+            <div class="problem-set" id="parsing">
+                <div class="problem-set-header">
+                    <span style="font-size: 1.25rem;">🌳</span>
+                    <h2>Expression Parsing & AST</h2>
+                </div>
+                <div class="problem-set-content">
+
+                    <!-- Problem 7 -->
+                    <div class="problem">
+                        <h3>Problem 7: Operator Precedence</h3>
+                        <div class="problem-content">
+                            <p>Draw the AST for: <code>1 + 2 * 3 - 4 / 2</code></p>
+                        </div>
+                        <button class="solution-toggle" onclick="toggleSolution(this)">Show Solution</button>
+                        <div class="solution">
+                            <h4>Solution</h4>
+                            <div class="code-block"> -
+                                / \
+                                + /
+                                / \ / \
+                                1 * 4 2
+                                / \
+                                2 3</div>
+                            <p><strong>Evaluation (post-order):</strong></p>
+                            <ol>
+                                <li><code>2 * 3</code> = 6</li>
+                                <li><code>1 + 6</code> = 7</li>
+                                <li><code>4 / 2</code> = 2</li>
+                                <li><code>7 - 2</code> = 5</li>
+                            </ol>
+                            <p><strong>Result: 5</strong></p>
+                        </div>
+                    </div>
+
+                    <!-- Problem 8 -->
+                    <div class="problem">
+                        <h3>Problem 8: Parentheses Override</h3>
+                        <div class="problem-content">
+                            <p>Draw the AST for: <code>(1 + 2) * (3 - 4)</code></p>
+                        </div>
+                        <button class="solution-toggle" onclick="toggleSolution(this)">Show Solution</button>
+                        <div class="solution">
+                            <h4>Solution</h4>
+                            <div class="code-block"> *
+                                / \
+                                + -
+                                / \ / \
+                                1 2 3 4</div>
+                            <p><strong>Evaluation:</strong></p>
+                            <ol>
+                                <li><code>1 + 2</code> = 3</li>
+                                <li><code>3 - 4</code> = -1</li>
+                                <li><code>3 * (-1)</code> = -3</li>
+                            </ol>
+                            <p><strong>Result: -3</strong></p>
+                        </div>
+                    </div>
+
+                    <!-- Problem 9 -->
+                    <div class="problem">
+                        <h3>Problem 9: Left Associativity</h3>
+                        <div class="problem-content">
+                            <p>Draw the AST for: <code>10 - 5 - 2</code></p>
+                        </div>
+                        <button class="solution-toggle" onclick="toggleSolution(this)">Show Solution</button>
+                        <div class="solution">
+                            <h4>Solution (Left-Associative)</h4>
+                            <div class="code-block">CORRECT: WRONG (right-assoc):
+                                - -
+                                / \ / \
+                                - 2 10 -
+                                / \ / \
+                                10 5 5 2</div>
+                            <p><strong>Correct evaluation:</strong> <code>(10 - 5) - 2</code> = <code>5 - 2</code> =
+                                <code>3</code>
+                            </p>
+                            <p><strong>Wrong evaluation:</strong> <code>10 - (5 - 2)</code> = <code>10 - 3</code> =
+                                <code>7</code>
+                            </p>
+                            <p><strong>Key:</strong> Subtraction and division are left-associative!</p>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- Stack Machine -->
+            <div class="problem-set" id="stack-machine">
+                <div class="problem-set-header">
+                    <span style="font-size: 1.25rem;">📚</span>
+                    <h2>Stack Machine Execution</h2>
+                </div>
+                <div class="problem-set-content">
+
+                    <!-- Problem 10 -->
+                    <div class="problem">
+                        <h3>Problem 10: Stack Machine Trace</h3>
+                        <div class="problem-content">
+                            <p>Trace the stack for these instructions:</p>
+                            <div class="code-block">PUSH 5
+                                PUSH 3
+                                ADD
+                                PUSH 2
+                                MUL
+                                RETURN</div>
+                        </div>
+                        <button class="solution-toggle" onclick="toggleSolution(this)">Show Solution</button>
+                        <div class="solution">
+                            <h4>Solution</h4>
+                            <div class="code-block">PUSH 5: Stack = [5]
+                                PUSH 3: Stack = [5, 3]
+                                ADD: Pop 3, pop 5, push 5+3=8 → Stack = [8]
+                                PUSH 2: Stack = [8, 2]
+                                MUL: Pop 2, pop 8, push 8*2=16 → Stack = [16]
+                                RETURN: Pop 16, return 16 → Stack = []</div>
+                            <p><strong>Original expression:</strong> <code>(5 + 3) * 2</code> = 16</p>
+                        </div>
+                    </div>
+
+                    <!-- Problem 11 -->
+                    <div class="problem">
+                        <h3>Problem 11: Stack Machine with Variables</h3>
+                        <div class="problem-content">
+                            <p>Trace execution (a=slot 0, b=slot 1):</p>
+                            <div class="code-block">PUSH 10
+                                STORE a (slot 0)
+                                PUSH 5
+                                STORE b (slot 1)
+                                LOAD a
+                                LOAD b
+                                MUL
+                                RETURN</div>
+                        </div>
+                        <button class="solution-toggle" onclick="toggleSolution(this)">Show Solution</button>
+                        <div class="solution">
+                            <h4>Solution</h4>
+                            <div class="code-block">PUSH 10: Stack = [10]
+                                STORE a: Pop 10, a = 10 → Stack = []
+                                PUSH 5: Stack = [5]
+                                STORE b: Pop 5, b = 5 → Stack = []
+                                LOAD a: Push a=10 → Stack = [10]
+                                LOAD b: Push b=5 → Stack = [10, 5]
+                                MUL: Pop 5, pop 10, push 50 → Stack = [50]
+                                RETURN: Pop 50, return 50</div>
+                            <p><strong>Original code:</strong></p>
+                            <div class="code-block">let a: int = 10
+                                let b: int = 5
+                                return a * b</div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- Common Exam Traps -->
+            <div class="problem-set" id="traps">
+                <div class="problem-set-header">
+                    <span style="font-size: 1.25rem;">⚠️</span>
+                    <h2>Common Exam Traps</h2>
+                </div>
+                <div class="problem-set-content">
+
+                    <div class="trap-card">
+                        <h4>Trap 1: Off-by-One Errors</h4>
+                        <div class="code-block">int arr[5];
+                            for (int i = 0; i <= 5; i++) { // BUG: i <=5 arr[i]=i; // When i=5, out of bounds! }</div>
+                                <div class="fix">
+                                    <h5>✅ How to Avoid</h5>
+                                    <p>Array of size N has indices 0 to N-1. Use <code>i < N</code> not
+                                        <code>i <= N</code>.
+                                    </p>
+                                </div>
+                        </div>
+
+                        <div class="trap-card">
+                            <h4>Trap 2: Operator Precedence</h4>
+                            <p>What's <code>2 + 3 * 4</code>?</p>
+                            <ul>
+                                <li>❌ Wrong: <code>(2 + 3) * 4</code> = 20</li>
+                                <li>✅ Correct: <code>2 + (3 * 4)</code> = 14</li>
+                            </ul>
+                            <div class="fix">
+                                <h5>✅ How to Avoid</h5>
+                                <p>Memorize: <code>* / %</code> before <code>+ -</code>. When in doubt, use parentheses.
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="trap-card">
+                            <h4>Trap 3: Signed vs Unsigned Jumps</h4>
+                            <div class="code-block">mov rax, -5
+                                cmp rax, 0
+                                ja .positive ; WRONG! Uses unsigned comparison</div>
+                            <div class="fix">
+                                <h5>✅ How to Avoid</h5>
+                                <p><strong>Signed:</strong> <code>jl, jg, jle, jge</code> | <strong>Unsigned:</strong>
+                                    <code>jb, ja, jbe, jae</code>
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="trap-card">
+                            <h4>Trap 4: Forgetting cqo Before idiv</h4>
+                            <div class="code-block">mov rax, 23
+                                mov rcx, 4
+                                idiv rcx ; BUG: rdx contains garbage!</div>
+                            <div class="fix">
+                                <h5>✅ How to Avoid</h5>
+                                <p><strong>Always</strong> use <code>cqo</code> before <code>idiv</code> to sign-extend
+                                    rax into rdx:rax.</p>
+                            </div>
+                        </div>
+
+                        <div class="trap-card">
+                            <h4>Trap 5: Stack Offset Calculation</h4>
+                            <p>Variable at slot 0:</p>
+                            <ul>
+                                <li>❌ Wrong: <code>[rbp - 0]</code> = <code>[rbp]</code> (that's saved rbp!)</li>
+                                <li>✅ Correct: <code>[rbp - 8]</code></li>
+                            </ul>
+                            <div class="fix">
+                                <h5>✅ Formula</h5>
+                                <p>Variable at slot N → <code>[rbp - (N+1) * 8]</code></p>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+            </div>
+
+            <script>
+                function toggleSolution(button) {
+                    const solution = button.nextElementSibling;
+                    solution.classList.toggle('show');
+                    button.textContent = solution.classList.contains('show') ? 'Hide Solution' : 'Show Solution';
+                }
+
+                // Theme toggle
+                document.addEventListener('DOMContentLoaded', () => {
+                    const toggle = document.getElementById('themeToggle');
+                    const savedTheme = localStorage.getItem('cs5008_theme') || 'dark';
+                    document.documentElement.setAttribute('data-theme', savedTheme);
+                    toggle.textContent = savedTheme === 'dark' ? '🌙' : '☀️';
+
+                    toggle.addEventListener('click', () => {
+                        const current = document.documentElement.getAttribute('data-theme');
+                        const next = current === 'dark' ? 'light' : 'dark';
+                        document.documentElement.setAttribute('data-theme', next);
+                        localStorage.setItem('cs5008_theme', next);
+                        toggle.textContent = next === 'dark' ? '🌙' : '☀️';
+                    });
+                });
+            </script>
+</body>
+
+</html>

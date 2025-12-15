@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Week 10: Built-in Functions | CS5008 Guide</title>
+    <link rel="stylesheet" href="../css/styles.css">
+    <link rel="icon"
+        href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>">
+</head>
+
+<body>
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+
+    <header class="header">
+        <div class="header-content">
+            <a href="../index.html" class="logo">
+                <span class="logo-icon">⚡</span>
+                <span>CS5008</span>
+            </a>
+            <div class="header-actions">
+                <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme">🌙</button>
+            </div>
+        </div>
+    </header>
+
+    <main class="main-container module-page">
+        <nav class="breadcrumb">
+            <a href="../index.html">← Back to modules</a>
+        </nav>
+
+        <div class="module-header">
+            <div class="module-badge">🔧 Week 10 • +100 XP</div>
+            <h1>Built-in <span class="text-gradient">Functions</span></h1>
+            <p>Add print_int() and read_int() to interact with the outside world via Linux system calls.</p>
+        </div>
+
+        <div class="progress-bar mb-6">
+            <div class="progress-bar-fill" id="moduleProgress" style="width: 0%"></div>
+        </div>
+
+        <!-- Section 1: Overview -->
+        <div class="section open" id="section-what">
+            <div class="section-header" onclick="toggleSection('section-what')">
+                <h3 class="section-title">🔧 What Are Built-in Functions?</h3>
+                <span class="section-toggle">▶</span>
+            </div>
+            <div class="section-content">
+                <p>Programs need I/O! Your Jive compiler provides these built-in functions:</p>
+
+                <table style="width: 100%; border-collapse: collapse; margin: var(--space-4) 0;">
+                    <tr style="background: var(--bg-card);">
+                        <th style="padding: var(--space-3); text-align: left; border: 1px solid var(--border-default);">
+                            Function</th>
+                        <th style="padding: var(--space-3); text-align: left; border: 1px solid var(--border-default);">
+                            Purpose</th>
+                        <th style="padding: var(--space-3); text-align: left; border: 1px solid var(--border-default);">
+                            Returns</th>
+                    </tr>
+                    <tr>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);">
+                            <code>print_int(n)</code>
+                        </td>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);">Print integer to
+                            stdout</td>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);">0 (always)</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);">
+                            <code>read_int()</code>
+                        </td>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);">Read integer from
+                            stdin</td>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);">The integer read
+                        </td>
+                    </tr>
+                </table>
+
+                <h4 style="margin-top: var(--space-6);">Usage Example</h4>
+                <pre><code>fn main() -> int {
+    print_int(42)              // Prints: 42
+    
+    let x: int = read_int()    // Wait for user input
+    print_int(x * 2)           // Print double the input
+    
+    return 0
+}</code></pre>
+            </div>
+        </div>
+
+        <!-- Section 2: System Calls -->
+        <div class="section" id="section-syscall">
+            <div class="section-header" onclick="toggleSection('section-syscall')">
+                <h3 class="section-title">📡 Linux System Calls</h3>
+                <span class="section-toggle">▶</span>
+            </div>
+            <div class="section-content">
+                <p>To interact with the OS, we use <strong>system calls</strong> (syscalls).</p>
+
+                <h4>Syscall Convention</h4>
+                <table style="width: 100%; border-collapse: collapse; margin: var(--space-4) 0;">
+                    <tr style="background: var(--bg-card);">
+                        <th style="padding: var(--space-3); text-align: left; border: 1px solid var(--border-default);">
+                            Register</th>
+                        <th style="padding: var(--space-3); text-align: left; border: 1px solid var(--border-default);">
+                            Purpose</th>
+                    </tr>
+                    <tr>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);"><code>RAX</code>
+                        </td>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);">Syscall number
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);"><code>RDI</code>
+                        </td>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);">1st argument</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);"><code>RSI</code>
+                        </td>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);">2nd argument</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);"><code>RDX</code>
+                        </td>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);">3rd argument</td>
+                    </tr>
+                </table>
+
+                <h4 style="margin-top: var(--space-6);">Common Syscalls</h4>
+                <pre><code>Syscall 0: read(fd, buffer, count)
+Syscall 1: write(fd, buffer, count)
+Syscall 60: exit(status)
+
+File Descriptors:
+  0 = stdin
+  1 = stdout
+  2 = stderr</code></pre>
+
+                <h4 style="margin-top: var(--space-6);">Write Syscall Example</h4>
+                <pre><code>; Print "Hello" (5 bytes) to stdout
+mov rax, 1         ; syscall number for write
+mov rdi, 1         ; file descriptor (1 = stdout)
+mov rsi, buffer    ; pointer to data
+mov rdx, 5         ; number of bytes
+syscall            ; invoke the kernel</code></pre>
+            </div>
+        </div>
+
+        <!-- Section 3: print_int Algorithm -->
+        <div class="section" id="section-print">
+            <div class="section-header" onclick="toggleSection('section-print')">
+                <h3 class="section-title">🖨️ print_int Algorithm (Pseudocode)</h3>
+                <span class="section-toggle">▶</span>
+            </div>
+            <div class="section-content">
+                <p>Converting an integer to string is non-trivial. We build the string backwards!</p>
+
+                <pre><code>ALGORITHM: print_int(number)
+
+    // Step 1: Handle sign
+    is_negative = (number < 0)
+    IF is_negative:
+        number = -number    // Work with positive value
+    
+    // Step 2: Extract digits (backwards!)
+    buffer[32]              // Stack buffer for digits
+    index = 31              // Start from end
+    buffer[31] = '\n'       // Newline at end
+    index = 30
+    
+    REPEAT:
+        digit = number % 10
+        ascii_char = digit + '0'     // '0' = 48
+        buffer[index] = ascii_char
+        index = index - 1
+        number = number / 10
+    UNTIL number == 0
+    
+    // Step 3: Add minus sign if needed
+    IF is_negative:
+        buffer[index] = '-'
+        index = index - 1
+    
+    // Step 4: Write to stdout
+    start = index + 1
+    length = 32 - start
+    syscall_write(stdout, buffer + start, length)</code></pre>
+
+                <h4 style="margin-top: var(--space-6);">Example: print_int(42)</h4>
+                <pre><code>Initial: number = 42
+
+Round 1: 42 % 10 = 2, 42 / 10 = 4
+         buffer[30] = '2'
+Round 2: 4 % 10 = 4, 4 / 10 = 0
+         buffer[29] = '4'
+Done (number = 0)
+
+Buffer: [...,'4','2','\n']
+Output: "42\n"</code></pre>
+            </div>
+        </div>
+
+        <!-- Section 4: read_int Algorithm -->
+        <div class="section" id="section-read">
+            <div class="section-header" onclick="toggleSection('section-read')">
+                <h3 class="section-title">📥 read_int Algorithm (Pseudocode)</h3>
+                <span class="section-toggle">▶</span>
+            </div>
+            <div class="section-content">
+                <pre><code>ALGORITHM: read_int() -> int
+
+    // Step 1: Read input from stdin
+    buffer[32]
+    bytes_read = syscall_read(stdin, buffer, 32)
+    
+    // Step 2: Check for negative sign
+    index = 0
+    is_negative = false
+    IF buffer[0] == '-':
+        is_negative = true
+        index = 1
+    
+    // Step 3: Convert ASCII digits to integer
+    result = 0
+    WHILE buffer[index] is a digit:
+        digit = buffer[index] - '0'    // '3' - '0' = 3
+        result = result * 10 + digit
+        index = index + 1
+    
+    // Step 4: Apply sign
+    IF is_negative:
+        result = -result
+    
+    RETURN result</code></pre>
+
+                <h4 style="margin-top: var(--space-6);">Example: read_int() with "123\n"</h4>
+                <pre><code>Input buffer: ['1', '2', '3', '\n']
+
+Round 1: result = 0 * 10 + 1 = 1
+Round 2: result = 1 * 10 + 2 = 12
+Round 3: result = 12 * 10 + 3 = 123
+Stop at '\n' (not a digit)
+
+Return: 123</code></pre>
+            </div>
+        </div>
+
+        <!-- Section 5: Linking -->
+        <div class="section" id="section-linking">
+            <div class="section-header" onclick="toggleSection('section-linking')">
+                <h3 class="section-title">🔗 Linking Built-ins with Your Program</h3>
+                <span class="section-toggle">▶</span>
+            </div>
+            <div class="section-content">
+                <p>Built-in functions are in a separate assembly file. Link them together:</p>
+
+                <pre><code># Compile your program
+./jive program.jive -o program.asm
+
+# Assemble both files
+nasm -f elf64 program.asm -o program.o
+nasm -f elf64 builtins.asm -o builtins.o
+
+# Link together
+ld program.o builtins.o -o program
+
+# Run!
+./program</code></pre>
+
+                <h4 style="margin-top: var(--space-6);">Declaring External Functions</h4>
+                <pre><code>; In your program.asm, declare extern:
+extern print_int
+extern read_int
+
+; In builtins.asm, declare global:
+global print_int
+global read_int</code></pre>
+            </div>
+        </div>
+
+        <!-- Quiz Section -->
+        <div class="section" id="section-quiz">
+            <div class="section-header" onclick="toggleSection('section-quiz')">
+                <h3 class="section-title">🧠 Check Your Understanding</h3>
+                <span class="section-toggle">▶</span>
+            </div>
+            <div class="section-content">
+                <div class="quiz" data-correct="1" data-quiz-id="q1" data-module-id="week-10"
+                    data-explanation="RAX holds the syscall number. For write syscall, RAX = 1.">
+                    <div class="quiz-question">Which register holds the syscall number?</div>
+                    <div class="quiz-options">
+                        <div class="quiz-option" data-value="0">
+                            <div class="quiz-radio"></div><span>RDI</span>
+                        </div>
+                        <div class="quiz-option" data-value="1">
+                            <div class="quiz-radio"></div><span>RAX</span>
+                        </div>
+                        <div class="quiz-option" data-value="2">
+                            <div class="quiz-radio"></div><span>RSI</span>
+                        </div>
+                        <div class="quiz-option" data-value="3">
+                            <div class="quiz-radio"></div><span>RDX</span>
+                        </div>
+                    </div>
+                    <div class="quiz-feedback"></div>
+                </div>
+
+                <div class="quiz" data-correct="0" data-quiz-id="q2" data-module-id="week-10"
+                    data-explanation="We extract digits using modulo 10, which gives the last digit. This means we build the string backwards (right to left).">
+                    <div class="quiz-question">Why do we build the output string backwards in print_int?</div>
+                    <div class="quiz-options">
+                        <div class="quiz-option" data-value="0">
+                            <div class="quiz-radio"></div><span>Modulo 10 gives the last digit first</span>
+                        </div>
+                        <div class="quiz-option" data-value="1">
+                            <div class="quiz-radio"></div><span>It's faster</span>
+                        </div>
+                        <div class="quiz-option" data-value="2">
+                            <div class="quiz-radio"></div><span>The syscall requires it</span>
+                        </div>
+                        <div class="quiz-option" data-value="3">
+                            <div class="quiz-radio"></div><span>Memory grows backwards</span>
+                        </div>
+                    </div>
+                    <div class="quiz-feedback"></div>
+                </div>
+
+                <div class="quiz" data-correct="2" data-quiz-id="q3" data-module-id="week-10"
+                    data-explanation="To convert ASCII digit to integer, subtract '0' (48). For example, '5' - '0' = 53 - 48 = 5.">
+                    <div class="quiz-question">How do you convert ASCII '5' to integer 5?</div>
+                    <div class="quiz-options">
+                        <div class="quiz-option" data-value="0">
+                            <div class="quiz-radio"></div><span>Multiply by 10</span>
+                        </div>
+                        <div class="quiz-option" data-value="1">
+                            <div class="quiz-radio"></div><span>Add '0'</span>
+                        </div>
+                        <div class="quiz-option" data-value="2">
+                            <div class="quiz-radio"></div><span>Subtract '0'</span>
+                        </div>
+                        <div class="quiz-option" data-value="3">
+                            <div class="quiz-radio"></div><span>Use syscall</span>
+                        </div>
+                    </div>
+                    <div class="quiz-feedback"></div>
+                </div>
+
+                <div class="quiz" data-correct="1" data-quiz-id="q4" data-module-id="week-10"
+                    data-explanation="File descriptor 1 is stdout. 0 is stdin, 2 is stderr.">
+                    <div class="quiz-question">What file descriptor represents stdout?</div>
+                    <div class="quiz-options">
+                        <div class="quiz-option" data-value="0">
+                            <div class="quiz-radio"></div><span>0</span>
+                        </div>
+                        <div class="quiz-option" data-value="1">
+                            <div class="quiz-radio"></div><span>1</span>
+                        </div>
+                        <div class="quiz-option" data-value="2">
+                            <div class="quiz-radio"></div><span>2</span>
+                        </div>
+                        <div class="quiz-option" data-value="3">
+                            <div class="quiz-radio"></div><span>3</span>
+                        </div>
+                    </div>
+                    <div class="quiz-feedback"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TA-Only: Implementation -->
+        <div class="ta-only-content" id="ta-content-week-10" data-content-id="week-10-code">
+            <div class="ta-only-header"><span>💻</span>Assembly Implementation</div>
+            <pre><code>; builtins.asm - Built-in functions for Jive compiler
+; Assemble with: nasm -f elf64 builtins.asm -o builtins.o
+
+section .bss
+    input_buffer: resb 32
+
+section .text
+global print_int
+global read_int
+
+; print_int - Print signed 64-bit integer to stdout
+; Input: RDI = integer to print
+print_int:
+    push rbp
+    mov rbp, rsp
+    sub rsp, 32              ; Buffer for digits
+    
+    mov rax, rdi             ; Number to print
+    mov r10, 10              ; Divisor
+    lea rsi, [rsp+31]        ; End of buffer
+    mov byte [rsi], 10       ; Newline at end
+    dec rsi
+    
+    ; Check for negative
+    test rax, rax
+    jns .positive
+    neg rax                  ; Make positive
+    push 1                   ; Remember negative
+    jmp .loop
+.positive:
+    push 0                   ; Not negative
+    
+.loop:
+    xor rdx, rdx
+    div r10                  ; RAX / 10, remainder in RDX
+    add dl, '0'              ; Convert to ASCII
+    mov [rsi], dl
+    dec rsi
+    test rax, rax
+    jnz .loop
+    
+    ; Add minus sign if negative
+    pop rax
+    test rax, rax
+    jz .print
+    mov byte [rsi], '-'
+    dec rsi
+    
+.print:
+    inc rsi
+    lea rdx, [rsp+32]
+    sub rdx, rsi             ; Length
+    mov rdi, 1               ; stdout
+    mov rax, 1               ; write syscall
+    syscall
+    
+    mov rsp, rbp
+    pop rbp
+    xor rax, rax             ; Return 0
+    ret
+
+; read_int - Read signed integer from stdin
+; Returns: RAX = integer read
+read_int:
+    push rbp
+    mov rbp, rsp
+    
+    ; Read from stdin
+    mov rax, 0               ; read syscall
+    mov rdi, 0               ; stdin
+    lea rsi, [rel input_buffer]
+    mov rdx, 32
+    syscall
+    
+    ; Parse integer
+    lea rsi, [rel input_buffer]
+    xor rax, rax             ; Result = 0
+    xor r10, r10             ; Negative flag
+    
+    ; Check for minus sign
+    cmp byte [rsi], '-'
+    jne .parse_loop
+    inc r10                  ; Set negative flag
+    inc rsi
+    
+.parse_loop:
+    movzx rcx, byte [rsi]
+    cmp cl, '0'
+    jl .done
+    cmp cl, '9'
+    jg .done
+    
+    sub cl, '0'              ; ASCII to digit
+    imul rax, 10
+    add rax, rcx
+    inc rsi
+    jmp .parse_loop
+    
+.done:
+    ; Apply negative if needed
+    test r10, r10
+    jz .return
+    neg rax
+    
+.return:
+    pop rbp
+    ret</code></pre>
+        </div>
+
+        <!-- Navigation -->
+        <div
+            style="display: flex; justify-content: space-between; align-items: center; padding: var(--space-6); background: var(--bg-card); border-radius: var(--radius-xl); border: 1px solid var(--border-default); margin-top: var(--space-10);">
+            <a href="#" onclick="event.preventDefault(); UnlockSystem.navigateToModule('week-09', 'week-09-functions.html');"
+                style="display: flex; align-items: center; gap: var(--space-2); color: var(--text-secondary);">← Week
+                9</a>
+            <a href="#" onclick="event.preventDefault(); UnlockSystem.navigateToModule('week-11', 'week-11-review.html');"
+                style="display: flex; align-items: center; gap: var(--space-2); padding: var(--space-3) var(--space-5); background: var(--gradient-primary); color: white; border-radius: var(--radius-md); font-weight: 600;">
+                Next: Midterm Review →
+            </a>
+        </div>
+    </main>
+
+    <script src="../js/modules-data.js"></script>
+    <script src="../js/unlock.js"></script>
+    <script src="../js/progress.js"></script>
+    <script src="../js/quiz.js"></script>
+    <script>
+        function toggleSection(sectionId) {
+            const section = document.getElementById(sectionId);
+            if (section) {
+                section.classList.toggle('open');
+                if (section.classList.contains('open') && window.ProgressTracker) {
+                    ProgressTracker.expandSection('week-10', sectionId);
+                    updateProgress();
+                }
+            }
+        }
+
+        function updateProgress() {
+            if (window.ProgressTracker) {
+                const progress = ProgressTracker.getModuleProgress('week-10');
+                const bar = document.getElementById('moduleProgress');
+                if (bar) bar.style.width = `${progress.percentComplete}%`;
+            }
+        }
+
+        function checkTAContent() {
+            if (window.UnlockSystem) {
+                document.querySelectorAll('.ta-only-content').forEach(el => {
+                    if (UnlockSystem.isTAContentUnlocked(el.dataset.contentId)) {
+                        el.classList.add('unlocked');
+                    }
+                });
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const toggle = document.getElementById('themeToggle');
+            const savedTheme = localStorage.getItem('cs5008_theme') || 'dark';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            toggle.textContent = savedTheme === 'dark' ? '🌙' : '☀️';
+
+            toggle.addEventListener('click', () => {
+                const current = document.documentElement.getAttribute('data-theme');
+                const next = current === 'dark' ? 'light' : 'dark';
+                document.documentElement.setAttribute('data-theme', next);
+                localStorage.setItem('cs5008_theme', next);
+                toggle.textContent = next === 'dark' ? '🌙' : '☀️';
+            });
+
+            if (window.UnlockSystem) { UnlockSystem.init(); checkTAContent(); }
+            if (window.ProgressTracker) { ProgressTracker.visitModule('week-10'); updateProgress(); }
+        });
+    </script>
+</body>
+
+</html>

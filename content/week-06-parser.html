@@ -1,0 +1,941 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Week 6: Compiler 2 - Parser | CS5008 Guide</title>
+    <link rel="stylesheet" href="../css/styles.css">
+    <link rel="icon"
+        href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>">
+</head>
+
+<body>
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+
+    <header class="header">
+        <div class="header-content">
+            <a href="../index.html" class="logo">
+                <span class="logo-icon">⚡</span>
+                <span>CS5008</span>
+            </a>
+            <div class="header-actions">
+                <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme">🌙</button>
+            </div>
+        </div>
+    </header>
+
+    <main class="main-container module-page">
+        <nav class="breadcrumb">
+            <a href="../index.html">← Back to modules</a>
+        </nav>
+
+        <div class="module-header">
+            <div class="module-badge green">🌳 Compiler 2 • +100 XP</div>
+            <h1>The <span class="text-gradient">Parser</span></h1>
+            <p>Transform a flat token stream into a structured Abstract Syntax Tree (AST) that captures the program's
+                meaning.</p>
+        </div>
+
+        <div class="progress-bar mb-6">
+            <div class="progress-bar-fill" id="moduleProgress" style="width: 0%"></div>
+        </div>
+
+        <!-- Section 1: Pipeline Context -->
+        <div class="section open" id="section-pipeline">
+            <div class="section-header" onclick="toggleSection('section-pipeline')">
+                <h3 class="section-title">🔧 Where the Parser Fits</h3>
+                <span class="section-toggle">▶</span>
+            </div>
+            <div class="section-content">
+                <pre><code>Source → [LEXER] → Tokens → [PARSER] → AST → [CODEGEN] → Assembly
+                              │
+                              ▼
+                     ┌────────────────┐
+                     │    PARSER      │ ◄── YOU ARE HERE
+                     └────────────────┘
+                              │
+                              ▼
+                     Abstract Syntax Tree</code></pre>
+
+                <h4 style="margin-top: var(--space-8);">Example Transformation</h4>
+                <div style="display: grid; gap: var(--space-4); margin: var(--space-6) 0;">
+                    <div
+                        style="background: var(--bg-card); border-left: 4px solid var(--accent-yellow); padding: var(--space-4); border-radius: var(--radius-md);">
+                        <strong>Tokens (Input):</strong>
+                        <pre style="margin-top: var(--space-2);"><code>[return] [2] [+] [3] [*] [4]</code></pre>
+                    </div>
+                    <div style="text-align: center; color: var(--accent-green); font-size: 1.5rem;">↓</div>
+                    <div
+                        style="background: var(--bg-card); border-left: 4px solid var(--accent-green); padding: var(--space-4); border-radius: var(--radius-md);">
+                        <strong>AST (Output):</strong>
+                        <pre style="margin-top: var(--space-2);"><code>RETURN
+└── BINARY_OP +
+    ├── INTEGER 2
+    └── BINARY_OP *    ← Multiplication grouped first!
+        ├── INTEGER 3
+        └── INTEGER 4</code></pre>
+                    </div>
+                </div>
+                <p><strong>Key insight:</strong> The tree structure encodes operator precedence. <code>3 * 4</code> is a
+                    subtree, so it evaluates first!</p>
+            </div>
+        </div>
+
+        <!-- Section 2: EBNF Notation -->
+        <div class="section" id="section-ebnf">
+            <div class="section-header" onclick="toggleSection('section-ebnf')">
+                <h3 class="section-title">📜 EBNF: Grammar Notation</h3>
+                <span class="section-toggle">▶</span>
+            </div>
+            <div class="section-content">
+                <p><strong>EBNF</strong> (Extended Backus-Naur Form) describes valid syntax. <strong>Heavily tested on
+                        exams!</strong></p>
+
+                <h4 style="margin-top: var(--space-6);">EBNF Symbols</h4>
+                <table style="width: 100%; border-collapse: collapse; margin: var(--space-4) 0;">
+                    <tr style="background: var(--bg-card);">
+                        <th style="padding: var(--space-3); text-align: left; border: 1px solid var(--border-default);">
+                            Symbol</th>
+                        <th style="padding: var(--space-3); text-align: left; border: 1px solid var(--border-default);">
+                            Meaning</th>
+                        <th style="padding: var(--space-3); text-align: left; border: 1px solid var(--border-default);">
+                            Example</th>
+                    </tr>
+                    <tr>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);"><code>=</code>
+                        </td>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);">is defined as</td>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);">
+                            <code>digit = "0" | "1" | ...</code>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);"><code>|</code>
+                        </td>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);">choice (OR)</td>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);">
+                            <code>type = "int" | "bool"</code>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);">
+                            <code>{ ... }</code>
+                        </td>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);">repetition (0 or
+                            more)</td>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);">
+                            <code>program = { fn }</code>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);">
+                            <code>[ ... ]</code>
+                        </td>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);">optional (0 or 1)
+                        </td>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);">
+                            <code>fn_def = "fn", name, [ "->", type ]</code>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);"><code>,</code>
+                        </td>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);">sequence</td>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);">
+                            <code>"if", "(", expr, ")"</code>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);">
+                            <code>" ... "</code>
+                        </td>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);">literal text</td>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);"><code>"fn"</code>,
+                            <code>"return"</code>
+                        </td>
+                    </tr>
+                </table>
+
+                <div
+                    style="background: rgba(239, 68, 68, 0.1); border: 1px solid var(--accent-red); border-radius: var(--radius-lg); padding: var(--space-5); margin: var(--space-6) 0;">
+                    <strong style="color: var(--accent-red);">⚠️ CRITICAL:</strong> Don't confuse EBNF <code>{}</code>
+                    (repetition) with C's <code>{}</code> (block delimiters)!
+                </div>
+
+                <h4 style="margin-top: var(--space-8);">Jive Grammar (Simplified)</h4>
+                <pre><code>program = { fn_definition } ;
+
+fn_definition = "fn", IDENT, "(", [ params ], ")", [ "->", type ], block ;
+params = param, { ",", param } ;
+param = IDENT, ":", type ;
+
+block = "{", { statement }, "}" ;
+statement = let_stmt | set_stmt | return_stmt | call_stmt ;
+
+let_stmt = "let", IDENT, ":", type, [ "=", expr ] ;
+set_stmt = "set", IDENT, "=", expr ;
+return_stmt = "return", expr ;
+
+(* Expression precedence - lower in grammar = lower precedence *)
+expr = additive ;
+additive = multiplicative, { ("+" | "-"), multiplicative } ;
+multiplicative = primary, { ("*" | "/" | "%"), primary } ;
+primary = INTEGER | IDENT | "(", expr, ")" ;</code></pre>
+
+                <h4 style="margin-top: var(--space-8);">Exam Pattern: Valid or Invalid?</h4>
+                <pre><code>Given: expr = number, { "+", number }
+
+A) 5       ✓ (one number, no repetition)
+B) 5+      ✗ (missing second number after +)
+C) +5      ✗ (doesn't start with number)
+D) 5+3+1   ✓ (number, then "+3" repeated, then "+1" repeated)</code></pre>
+            </div>
+        </div>
+
+        <!-- Section 3: Recursive Descent -->
+        <div class="section" id="section-recursive">
+            <div class="section-header" onclick="toggleSection('section-recursive')">
+                <h3 class="section-title">🔄 Recursive Descent Parsing</h3>
+                <span class="section-toggle">▶</span>
+            </div>
+            <div class="section-content">
+                <p>Each grammar rule becomes a parsing function!</p>
+
+                <pre><code>EBNF Rule:          return_stmt = "return", expr ;
+
+Parser Function:
+AST_Node* parse_return_stmt(Parser *p) {
+    expect(p, KEYWORD_RETURN);      // Consume "return"
+    AST_Node *value = parse_expr(p); // Parse the expression
+    return make_return_node(value);  // Build AST node
+}</code></pre>
+
+                <h4 style="margin-top: var(--space-8);">Pattern: EBNF → Code</h4>
+                <table style="width: 100%; border-collapse: collapse; margin: var(--space-4) 0;">
+                    <tr style="background: var(--bg-card);">
+                        <th style="padding: var(--space-3); text-align: left; border: 1px solid var(--border-default);">
+                            EBNF</th>
+                        <th style="padding: var(--space-3); text-align: left; border: 1px solid var(--border-default);">
+                            C Code</th>
+                    </tr>
+                    <tr>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);"><code>"fn"</code>
+                        </td>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);">
+                            <code>expect(p, KEYWORD_FN);</code>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);"><code>IDENT</code>
+                        </td>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);">
+                            <code>Token name = consume(p, TOKEN_IDENT);</code>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);"><code>expr</code>
+                        </td>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);">
+                            <code>AST_Node *e = parse_expr(p);</code>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);">
+                            <code>[ "->", type ]</code>
+                        </td>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);">
+                            <code>if (match(p, TOKEN_ARROW)) { ... }</code>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);">
+                            <code>{ statement }</code>
+                        </td>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);">
+                            <code>while (is_statement_start(peek(p))) { ... }</code>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);">
+                            <code>"+" | "-"</code>
+                        </td>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);">
+                            <code>if (match(p, TOKEN_PLUS)) ... else if (match(p, TOKEN_MINUS)) ...</code>
+                        </td>
+                    </tr>
+                </table>
+
+                <h4 style="margin-top: var(--space-8);">Expression Parsing with Precedence</h4>
+                <pre><code>// Lower precedence operators call higher precedence functions!
+AST_Node* parse_additive(Parser *p) {
+    AST_Node *left = parse_multiplicative(p);  // Higher precedence first
+    
+    while (peek(p) == TOKEN_PLUS || peek(p) == TOKEN_MINUS) {
+        Token op = advance(p);
+        AST_Node *right = parse_multiplicative(p);
+        left = make_binary_op(op.kind, left, right);
+    }
+    
+    return left;
+}
+
+AST_Node* parse_multiplicative(Parser *p) {
+    AST_Node *left = parse_primary(p);  // Highest precedence
+    
+    while (peek(p) == TOKEN_STAR || peek(p) == TOKEN_SLASH) {
+        Token op = advance(p);
+        AST_Node *right = parse_primary(p);
+        left = make_binary_op(op.kind, left, right);
+    }
+    
+    return left;
+}
+
+AST_Node* parse_primary(Parser *p) {
+    if (peek(p) == TOKEN_INTEGER) {
+        Token t = advance(p);
+        return make_integer_node(t.long_value);
+    }
+    if (peek(p) == TOKEN_IDENT) {
+        return parse_identifier(p);
+    }
+    if (match(p, TOKEN_LPAREN)) {
+        AST_Node *expr = parse_expr(p);
+        expect(p, TOKEN_RPAREN);
+        return expr;
+    }
+    error("Expected expression");
+}</code></pre>
+            </div>
+        </div>
+
+        <!-- Section 4: AST Structure -->
+        <div class="section" id="section-ast">
+            <div class="section-header" onclick="toggleSection('section-ast')">
+                <h3 class="section-title">📦 The AST Node Struct</h3>
+                <span class="section-toggle">▶</span>
+            </div>
+            <div class="section-content">
+                <pre><code>typedef struct AST_Node {
+    AST_Kind kind;              // What type of node (FN, RETURN, INTEGER...)
+    struct AST_Node *prev;      // Previous sibling (doubly-linked)
+    struct AST_Node *next;      // Next sibling
+    
+    union {                     // Kind-specific data:
+        // For INTEGER
+        long int_value;
+        
+        // For BINARY_OP
+        struct {
+            AST_Node *left;
+            AST_Node *right;
+            Binop_Kind op;
+        } binop;
+        
+        // For FUNCTION
+        struct {
+            String name;
+            AST_List params;
+            AST_List body;
+            Type return_type;
+        } fn;
+        
+        // For RETURN, CALL, etc.
+        AST_Node *child;
+    };
+} AST_Node;</code></pre>
+
+                <h4 style="margin-top: var(--space-8);">AST Visualization:
+                    <code>fn main() -> int { return 2 + 3 * 4 }</code>
+                </h4>
+                <pre><code>PROGRAM
+└── FN "main" -> int
+    └── BODY
+        └── RETURN
+            └── BINOP +
+                ├── INT 2
+                └── BINOP *
+                    ├── INT 3
+                    └── INT 4</code></pre>
+            </div>
+        </div>
+
+        <!-- Section 5: Helper Functions -->
+        <div class="section" id="section-helpers">
+            <div class="section-header" onclick="toggleSection('section-helpers')">
+                <h3 class="section-title">🔧 Parser Helper Functions</h3>
+                <span class="section-toggle">▶</span>
+            </div>
+            <div class="section-content">
+                <pre><code>// Look at current token without consuming it
+Token* peek_token(Parser *p, long offset) {
+    long idx = p->tok_index + offset;
+    if (idx >= p->tokens.count) {
+        return &p->tokens.items[p->tokens.count - 1]; // EOF
+    }
+    return &p->tokens.items[idx];
+}
+
+// Consume current token and move to next
+Token consume(Parser *p) {
+    return p->tokens.items[p->tok_index++];
+}
+
+// Consume if current token matches, otherwise error
+void expect(Parser *p, Token_Kind kind) {
+    if (peek_token(p, 0)->kind != kind) {
+        error_at(peek_token(p, 0)->loc, 
+                 "Expected %s, got %s",
+                 token_kind_name(kind),
+                 token_kind_name(peek_token(p, 0)->kind));
+    }
+    consume(p);
+}
+
+// Consume if matches, return true; else return false
+bool match(Parser *p, Token_Kind kind) {
+    if (peek_token(p, 0)->kind == kind) {
+        consume(p);
+        return true;
+    }
+    return false;
+}</code></pre>
+            </div>
+        </div>
+
+        <!-- Quiz Section -->
+        <div class="section" id="section-quiz">
+            <div class="section-header" onclick="toggleSection('section-quiz')">
+                <h3 class="section-title">🧠 Check Your Understanding</h3>
+                <span class="section-toggle">▶</span>
+            </div>
+            <div class="section-content">
+                <div class="quiz" data-correct="2" data-quiz-id="q1" data-module-id="week-06"
+                    data-explanation="The parser transforms a flat token stream into a structured Abstract Syntax Tree (AST).">
+                    <div class="quiz-question">What does the parser produce?</div>
+                    <div class="quiz-options">
+                        <div class="quiz-option" data-value="0">
+                            <div class="quiz-radio"></div>
+                            <span>Token stream</span>
+                        </div>
+                        <div class="quiz-option" data-value="1">
+                            <div class="quiz-radio"></div>
+                            <span>Assembly code</span>
+                        </div>
+                        <div class="quiz-option" data-value="2">
+                            <div class="quiz-radio"></div>
+                            <span>Abstract Syntax Tree</span>
+                        </div>
+                        <div class="quiz-option" data-value="3">
+                            <div class="quiz-radio"></div>
+                            <span>Machine code</span>
+                        </div>
+                    </div>
+                    <div class="quiz-feedback"></div>
+                </div>
+
+                <div class="quiz" data-correct="1" data-quiz-id="q2" data-module-id="week-06"
+                    data-explanation="In EBNF, curly braces {} mean 'zero or more repetitions' of the enclosed pattern.">
+                    <div class="quiz-question">In EBNF, what does <code>{ statement }</code> mean?</div>
+                    <div class="quiz-options">
+                        <div class="quiz-option" data-value="0">
+                            <div class="quiz-radio"></div>
+                            <span>Exactly one statement</span>
+                        </div>
+                        <div class="quiz-option" data-value="1">
+                            <div class="quiz-radio"></div>
+                            <span>Zero or more statements</span>
+                        </div>
+                        <div class="quiz-option" data-value="2">
+                            <div class="quiz-radio"></div>
+                            <span>A block delimited by braces</span>
+                        </div>
+                        <div class="quiz-option" data-value="3">
+                            <div class="quiz-radio"></div>
+                            <span>Optional statement</span>
+                        </div>
+                    </div>
+                    <div class="quiz-feedback"></div>
+                </div>
+
+                <div class="quiz" data-correct="0" data-quiz-id="q3" data-module-id="week-06"
+                    data-explanation="Lower precedence operators are higher in the grammar. parse_additive calls parse_multiplicative, which calls parse_primary, ensuring * binds tighter than +.">
+                    <div class="quiz-question">How does the parser enforce that * has higher precedence than +?</div>
+                    <div class="quiz-options">
+                        <div class="quiz-option" data-value="0">
+                            <div class="quiz-radio"></div>
+                            <span>parse_additive calls parse_multiplicative (lower calls higher)</span>
+                        </div>
+                        <div class="quiz-option" data-value="1">
+                            <div class="quiz-radio"></div>
+                            <span>A priority number in the token</span>
+                        </div>
+                        <div class="quiz-option" data-value="2">
+                            <div class="quiz-radio"></div>
+                            <span>Parentheses are added automatically</span>
+                        </div>
+                        <div class="quiz-option" data-value="3">
+                            <div class="quiz-radio"></div>
+                            <span>The lexer orders them correctly</span>
+                        </div>
+                    </div>
+                    <div class="quiz-feedback"></div>
+                </div>
+
+                <div class="quiz" data-correct="3" data-quiz-id="q4" data-module-id="week-06"
+                    data-explanation="The expression '5+3+1' is valid. It starts with a number (5), then has '+3' repeated (first repetition), then '+1' (second repetition).">
+                    <div class="quiz-question">Given EBNF <code>expr = number, { "+", number }</code>, which is valid?
+                    </div>
+                    <div class="quiz-options">
+                        <div class="quiz-option" data-value="0">
+                            <div class="quiz-radio"></div>
+                            <span>+5</span>
+                        </div>
+                        <div class="quiz-option" data-value="1">
+                            <div class="quiz-radio"></div>
+                            <span>5+</span>
+                        </div>
+                        <div class="quiz-option" data-value="2">
+                            <div class="quiz-radio"></div>
+                            <span>5++3</span>
+                        </div>
+                        <div class="quiz-option" data-value="3">
+                            <div class="quiz-radio"></div>
+                            <span>5+3+1</span>
+                        </div>
+                    </div>
+                    <div class="quiz-feedback"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TA-Only Content -->
+        <div class="ta-only-content" id="ta-content-week-06" data-content-id="week-06-code">
+            <div class="ta-only-header">
+                <span>💡</span>
+                Complete Parser Implementation Pattern
+            </div>
+            <pre><code>// Core parser function for a complete function definition
+AST_Node* parse_function(Parser *p) {
+    expect(p, KEYWORD_FN);
+    Token name_tok = consume(p);  // Get function name
+    
+    expect(p, TOKEN_LPAREN);
+    AST_List params = parse_params(p);
+    expect(p, TOKEN_RPAREN);
+    
+    Type return_type = TYPE_VOID;
+    if (match(p, TOKEN_ARROW)) {
+        return_type = parse_type(p);
+    }
+    
+    expect(p, TOKEN_LBRACE);
+    AST_List body = parse_statements(p);
+    expect(p, TOKEN_RBRACE);
+    
+    return make_function_node(name_tok.source, params, return_type, body);
+}
+
+AST_List parse_statements(Parser *p) {
+    AST_List stmts = {0};
+    
+    while (!is_at_end(p) && peek(p)->kind != TOKEN_RBRACE) {
+        AST_Node *stmt = parse_statement(p);
+        ast_list_append(&stmts, stmt);
+    }
+    
+    return stmts;
+}
+
+AST_Node* parse_statement(Parser *p) {
+    Token *tok = peek_token(p, 0);
+    
+    if (tok->kind == TOKEN_KEYWORD) {
+        switch (tok->keyword) {
+            case KEYWORD_RETURN: return parse_return_stmt(p);
+            case KEYWORD_LET:    return parse_let_stmt(p);
+            case KEYWORD_SET:    return parse_set_stmt(p);
+            case KEYWORD_IF:     return parse_if_stmt(p);
+            case KEYWORD_WHILE:  return parse_while_stmt(p);
+            case KEYWORD_CALL:   return parse_call_stmt(p);
+        }
+    }
+    
+    error_at(tok->loc, "Expected statement");
+}</code></pre>
+        </div>
+
+        <!-- Section: Recursive Descent Patterns -->
+        <div class="section" id="section-patterns">
+            <div class="section-header" onclick="toggleSection('section-patterns')">
+                <h3 class="section-title">🔄 Recursive Descent Patterns</h3>
+                <span class="section-toggle">▶</span>
+            </div>
+            <div class="section-content">
+                <p><strong>Key Principle:</strong> Each grammar rule becomes a function.</p>
+
+                <h4>Pattern 1: Terminal Matching</h4>
+                <p>Grammar: <code>number</code></p>
+                <pre><code>FUNCTION parse_number(parser):
+    tok = expect_token(parser, TOKEN_INTEGER)
+    IF parser.has_error: RETURN null
+    
+    node = make_ast_node(AST_INTEGER)
+    node.value = tok.long_value
+    RETURN node</code></pre>
+
+                <h4 style="margin-top: var(--space-6);">Pattern 2: Sequence (A B C)</h4>
+                <p>Grammar: <code>return expression</code></p>
+                <pre><code>FUNCTION parse_return_statement(parser):
+    expect_keyword(parser, KEYWORD_RETURN)
+    IF parser.has_error: RETURN null
+    
+    expr = parse_expression(parser)
+    IF parser.has_error: RETURN null
+    
+    node = make_ast_node(AST_RETURN)
+    node.expr = expr
+    RETURN node</code></pre>
+
+                <h4 style="margin-top: var(--space-6);">Pattern 3: Choice (A | B | C)</h4>
+                <p>Grammar: <code>statement = let | set | return | if | while</code></p>
+                <pre><code>FUNCTION parse_statement(parser):
+    tok = peek_token(parser)
+    
+    IF tok is KEYWORD:
+        SWITCH tok.keyword:
+            KEYWORD_LET:    RETURN parse_let_statement(parser)
+            KEYWORD_SET:    RETURN parse_set_statement(parser)
+            KEYWORD_RETURN: RETURN parse_return_statement(parser)
+            KEYWORD_IF:     RETURN parse_if_statement(parser)
+            KEYWORD_WHILE:  RETURN parse_while_statement(parser)
+    
+    report_error(parser, "Expected statement")</code></pre>
+
+                <h4 style="margin-top: var(--space-6);">Pattern 4: Repetition (A*)</h4>
+                <p>Grammar: <code>{ statement* }</code></p>
+                <pre><code>FUNCTION parse_block(parser):
+    result = empty_list
+    
+    expect_token(parser, TOKEN_OPEN_BRACE)
+    
+    // Parse zero or more statements
+    WHILE peek(parser) != TOKEN_CLOSE_BRACE AND
+          peek(parser) != TOKEN_EOF:
+        stmt = parse_statement(parser)
+        IF parser.has_error: BREAK
+        result.append(stmt)
+    
+    expect_token(parser, TOKEN_CLOSE_BRACE)
+    RETURN result</code></pre>
+
+                <h4 style="margin-top: var(--space-6);">Pattern 5: Optional (A?)</h4>
+                <p>Grammar: <code>let identifier: type [= expression]</code></p>
+                <pre><code>FUNCTION parse_let_statement(parser):
+    // ... parse 'let', identifier, ':', type ...
+    
+    // Optional initialization
+    IF peek(parser) == TOKEN_EQ:
+        advance(parser)
+        result.init_expr = parse_expression(parser)
+    ELSE:
+        result.init_expr = null  // No initialization
+    
+    RETURN result</code></pre>
+
+                <h4 style="margin-top: var(--space-6);">Pattern 6: Left-Associative Binary Operators</h4>
+                <p>Grammar: <code>expression = term (('+' | '-') term)*</code></p>
+                <pre><code>FUNCTION parse_expression(parser):
+    left = parse_term(parser)  // Parse first operand
+    
+    // Parse zero or more (operator term) pairs
+    WHILE true:
+        tok = peek(parser)
+        
+        IF tok == TOKEN_PLUS:
+            op = BINOP_ADD
+        ELSE IF tok == TOKEN_MINUS:
+            op = BINOP_SUB
+        ELSE:
+            BREAK  // Not an additive operator
+        
+        advance(parser)
+        right = parse_term(parser)
+        
+        // Build left-associative tree
+        left = make_binop(op, left, right)
+    
+    RETURN left</code></pre>
+
+                <div
+                    style="background: rgba(16, 185, 129, 0.1); border: 1px solid var(--accent-green); border-radius: var(--radius-lg); padding: var(--space-4); margin: var(--space-6) 0;">
+                    <strong style="color: var(--accent-green);">💡 Key Insight:</strong>
+                    <p style="margin-top: var(--space-2);">The while loop in Pattern 6 naturally creates
+                        left-associative trees. For <code>1-2-3</code>, it builds <code>((1-2)-3)</code>, not
+                        <code>(1-(2-3))</code>.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Common Mistakes Section -->
+        <div class="accordion-item" id="section-mistakes">
+            <button class="accordion-toggle" onclick="toggleSection('section-mistakes')">
+                <span>⚠️ Common Mistakes to Avoid</span>
+                <span class="toggle-icon">▼</span>
+            </button>
+            <div class="accordion-content">
+                <div style="display: flex; flex-direction: column; gap: var(--space-4);">
+
+                    <div
+                        style="padding: var(--space-4); background: rgba(239, 68, 68, 0.1); border-left: 4px solid var(--accent-red); border-radius: var(--radius-md);">
+                        <h4 style="color: var(--accent-red); margin-bottom: var(--space-2);">Mistake 1: Not Checking
+                            has_error</h4>
+                        <p style="color: var(--text-secondary); margin-bottom: var(--space-3);">
+                            After each expect call, check if an error occurred before continuing.
+                        </p>
+                        <pre><code>// ❌ WRONG - Ignoring errors
+expect_keyword(parser, KEYWORD_FN);
+Token *name = expect_token(parser, TOKEN_IDENT);  // May fail!
+
+// ✅ CORRECT - Check after each expect
+expect_keyword(parser, KEYWORD_FN);
+if (parser->has_error) return result;
+
+Token *name = expect_token(parser, TOKEN_IDENT);
+if (parser->has_error) return result;</code></pre>
+                    </div>
+
+                    <div
+                        style="padding: var(--space-4); background: rgba(239, 68, 68, 0.1); border-left: 4px solid var(--accent-red); border-radius: var(--radius-md);">
+                        <h4 style="color: var(--accent-red); margin-bottom: var(--space-2);">Mistake 2: Forgetting to
+                            Advance Parser</h4>
+                        <p style="color: var(--text-secondary); margin-bottom: var(--space-3);">
+                            Using peek without advancing causes infinite loops.
+                        </p>
+                        <pre><code>// ❌ WRONG - Peeking without advancing
+Token *tok = peek_token(parser, 0);
+// ... use tok ...
+// Forgot to advance! Infinite loop!
+
+// ✅ CORRECT - expect_token advances automatically
+Token *tok = expect_token(parser, TOKEN_KEYWORD);</code></pre>
+                    </div>
+
+                    <div
+                        style="padding: var(--space-4); background: rgba(239, 68, 68, 0.1); border-left: 4px solid var(--accent-red); border-radius: var(--radius-md);">
+                        <h4 style="color: var(--accent-red); margin-bottom: var(--space-2);">Mistake 3: Wrong Union
+                            Field Access</h4>
+                        <p style="color: var(--text-secondary); margin-bottom: var(--space-3);">
+                            Access the union field that matches the AST node kind.
+                        </p>
+                        <pre><code>// ❌ WRONG - Mismatched union field
+AST_Node *node = make_ast_node(AST_FN);
+node->int_value = 42;  // Wrong! Kind is AST_FN, not AST_INTEGER
+
+// ✅ CORRECT - Use matching field
+AST_Node *node = make_ast_node(AST_FN);
+node->fn.name = str_lit("main");  // Correct field for AST_FN</code></pre>
+                    </div>
+
+                    <div
+                        style="padding: var(--space-4); background: rgba(239, 68, 68, 0.1); border-left: 4px solid var(--accent-red); border-radius: var(--radius-md);">
+                        <h4 style="color: var(--accent-red); margin-bottom: var(--space-2);">Mistake 4: NULL Pointer
+                            Dereference</h4>
+                        <p style="color: var(--text-secondary); margin-bottom: var(--space-3);">
+                            Always check for NULL before using parsed results.
+                        </p>
+                        <pre><code>// ❌ WRONG - No NULL check
+AST_Node *stmt = parse_statement(parser);
+fprintf(out, "Kind: %d\n", stmt->kind);  // May be NULL!
+
+// ✅ CORRECT - Check for NULL
+AST_Node *stmt = parse_statement(parser);
+if (stmt == NULL || parser->has_error) return;
+fprintf(out, "Kind: %d\n", stmt->kind);</code></pre>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <!-- Practice Problems Section -->
+        <div class="accordion-item" id="section-practice">
+            <button class="accordion-toggle" onclick="toggleSection('section-practice')">
+                <span>📝 Practice Problems</span>
+                <span class="toggle-icon">▼</span>
+            </button>
+            <div class="accordion-content">
+                <div style="display: flex; flex-direction: column; gap: var(--space-6);">
+
+                    <!-- Problem 1 -->
+                    <div
+                        style="background: var(--bg-card); border: 1px solid var(--border-default); border-radius: var(--radius-lg); padding: var(--space-5);">
+                        <h4 style="color: var(--accent-cyan); margin-bottom: var(--space-3);">Problem 1: AST Structure
+                        </h4>
+                        <p style="margin-bottom: var(--space-3);">Draw the AST for this program:</p>
+                        <pre><code>fn main() -> int { return 5 }
+fn helper() -> int { return 10 }</code></pre>
+                        <details style="margin-top: var(--space-4);">
+                            <summary style="cursor: pointer; color: var(--accent-purple); font-weight: 600;">Click to
+                                reveal solution</summary>
+                            <div
+                                style="margin-top: var(--space-3); padding: var(--space-4); background: rgba(16, 185, 129, 0.1); border-radius: var(--radius-md);">
+                                <pre><code>PROGRAM
+├── FN "main"
+│   ├── return_type: TYPE_INT
+│   └── body:
+│       └── RETURN
+│           └── INTEGER 5
+└── FN "helper"
+    ├── return_type: TYPE_INT
+    └── body:
+        └── RETURN
+            └── INTEGER 10</code></pre>
+                                <p style="margin-top: var(--space-3);"><strong>Key points:</strong></p>
+                                <ul style="padding-left: var(--space-5);">
+                                    <li>PROGRAM node has 2 children (both functions)</li>
+                                    <li>Each function has name, return type, and body</li>
+                                    <li>Body contains one RETURN statement</li>
+                                    <li>RETURN points to INTEGER expression</li>
+                                </ul>
+                            </div>
+                        </details>
+                    </div>
+
+                    <!-- Problem 2 -->
+                    <div
+                        style="background: var(--bg-card); border: 1px solid var(--border-default); border-radius: var(--radius-lg); padding: var(--space-5);">
+                        <h4 style="color: var(--accent-cyan); margin-bottom: var(--space-3);">Problem 2: Assembly Output
+                        </h4>
+                        <p style="margin-bottom: var(--space-3);">What assembly is generated for:</p>
+                        <pre><code>fn test() -> int { return 99 }</code></pre>
+                        <details style="margin-top: var(--space-4);">
+                            <summary style="cursor: pointer; color: var(--accent-purple); font-weight: 600;">Click to
+                                reveal solution</summary>
+                            <div
+                                style="margin-top: var(--space-3); padding: var(--space-4); background: rgba(16, 185, 129, 0.1); border-radius: var(--radius-md);">
+                                <pre><code>test:
+    mov rax, 99
+    ret</code></pre>
+                                <p style="margin-top: var(--space-3);"><strong>Explanation:</strong></p>
+                                <ol style="padding-left: var(--space-5);">
+                                    <li>Label with function name</li>
+                                    <li>Move return value (99) to rax register</li>
+                                    <li>Return instruction</li>
+                                </ol>
+                                <p><strong>Note:</strong> Preamble is separate and generated once for the whole program.
+                                </p>
+                            </div>
+                        </details>
+                    </div>
+
+                    <!-- Problem 3 -->
+                    <div
+                        style="background: var(--bg-card); border: 1px solid var(--border-default); border-radius: var(--radius-lg); padding: var(--space-5);">
+                        <h4 style="color: var(--accent-cyan); margin-bottom: var(--space-3);">Problem 3: Parser Error
+                            Detection</h4>
+                        <p style="margin-bottom: var(--space-3);">At what stage does this error get detected?</p>
+                        <pre><code>fn main() - int { return 42 }</code></pre>
+                        <details style="margin-top: var(--space-4);">
+                            <summary style="cursor: pointer; color: var(--accent-purple); font-weight: 600;">Click to
+                                reveal solution</summary>
+                            <div
+                                style="margin-top: var(--space-3); padding: var(--space-4); background: rgba(16, 185, 129, 0.1); border-radius: var(--radius-md);">
+                                <p><strong>Answer: Parser stage</strong> (not lexer)</p>
+                                <ol style="margin-top: var(--space-2); padding-left: var(--space-5);">
+                                    <li>Lexer produces: <code>fn</code>, <code>main</code>, <code>(</code>,
+                                        <code>)</code>, <code>-</code>, <code>int</code>, ...</li>
+                                    <li>All tokens are valid (lexer succeeds)</li>
+                                    <li>Parser expects <code>-></code> after <code>)</code></li>
+                                    <li>Parser gets <code>-</code> token instead</li>
+                                    <li>Parser reports: "Expected ARROW, got MINUS"</li>
+                                </ol>
+                                <p style="margin-top: var(--space-3);"><strong>Lesson:</strong> Lexer checks individual
+                                    tokens, parser checks grammar rules.</p>
+                            </div>
+                        </details>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <!-- Navigation -->
+        <div
+            style="display: flex; justify-content: space-between; align-items: center; padding: var(--space-6); background: var(--bg-card); border-radius: var(--radius-xl); border: 1px solid var(--border-default); margin-top: var(--space-10);">
+            <a href="#" onclick="event.preventDefault(); UnlockSystem.navigateToModule('week-05', 'week-05-lexer.html');"
+                style="display: flex; align-items: center; gap: var(--space-2); color: var(--text-secondary);">
+                ← Week 5
+            </a>
+            <a href="#" onclick="event.preventDefault(); UnlockSystem.navigateToModule('week-07', 'week-07-expressions.html');"
+                style="display: flex; align-items: center; gap: var(--space-2); padding: var(--space-3) var(--space-5); background: var(--gradient-primary); color: white; border-radius: var(--radius-md); font-weight: 600;">
+                Next: Compiler 3 - Expressions →
+            </a>
+        </div>
+    </main>
+
+    <script src="../js/modules-data.js"></script>
+    <script src="../js/unlock.js"></script>
+    <script src="../js/progress.js"></script>
+    <script src="../js/quiz.js"></script>
+    <script>
+        function toggleSection(sectionId) {
+            const section = document.getElementById(sectionId);
+            if (section) {
+                section.classList.toggle('open');
+                if (section.classList.contains('open') && window.ProgressTracker) {
+                    ProgressTracker.expandSection('week-06', sectionId);
+                    updateProgress();
+                }
+            }
+        }
+
+        function updateProgress() {
+            if (window.ProgressTracker) {
+                const progress = ProgressTracker.getModuleProgress('week-06');
+                const bar = document.getElementById('moduleProgress');
+                if (bar) bar.style.width = `${progress.percentComplete}%`;
+            }
+        }
+
+        function checkTAContent() {
+            if (window.UnlockSystem) {
+                document.querySelectorAll('.ta-only-content').forEach(el => {
+                    if (UnlockSystem.isTAContentUnlocked(el.dataset.contentId)) {
+                        el.classList.add('unlocked');
+                    }
+                });
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const toggle = document.getElementById('themeToggle');
+            const savedTheme = localStorage.getItem('cs5008_theme') || 'dark';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            toggle.textContent = savedTheme === 'dark' ? '🌙' : '☀️';
+
+            toggle.addEventListener('click', () => {
+                const current = document.documentElement.getAttribute('data-theme');
+                const next = current === 'dark' ? 'light' : 'dark';
+                document.documentElement.setAttribute('data-theme', next);
+                localStorage.setItem('cs5008_theme', next);
+                toggle.textContent = next === 'dark' ? '🌙' : '☀️';
+            });
+
+            if (window.UnlockSystem) {
+                UnlockSystem.init();
+                checkTAContent();
+            }
+
+            if (window.ProgressTracker) {
+                ProgressTracker.visitModule('week-06');
+                updateProgress();
+            }
+        });
+    </script>
+</body>
+
+</html>

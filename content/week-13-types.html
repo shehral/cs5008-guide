@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Week 13: Type Checking | CS5008 Guide</title>
+    <link rel="stylesheet" href="../css/styles.css">
+    <link rel="icon"
+        href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>">
+</head>
+
+<body>
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+
+    <header class="header">
+        <div class="header-content">
+            <a href="../index.html" class="logo">
+                <span class="logo-icon">⚡</span>
+                <span>CS5008</span>
+            </a>
+            <div class="header-actions">
+                <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme">🌙</button>
+            </div>
+        </div>
+    </header>
+
+    <main class="main-container module-page">
+        <nav class="breadcrumb">
+            <a href="../index.html">← Back to modules</a>
+        </nav>
+
+        <div class="module-header">
+            <div class="module-badge">🔍 Type System • +100 XP</div>
+            <h1>Type <span class="text-gradient">Checking</span></h1>
+            <p>Add static type checking to catch errors at compile time, not runtime.</p>
+        </div>
+
+        <div class="progress-bar mb-6">
+            <div class="progress-bar-fill" id="moduleProgress" style="width: 0%"></div>
+        </div>
+
+        <!-- Section 1: Why Type Checking -->
+        <div class="section open" id="section-why">
+            <div class="section-header" onclick="toggleSection('section-why')">
+                <h3 class="section-title">🎯 Why Type Checking?</h3>
+                <span class="section-toggle">▶</span>
+            </div>
+            <div class="section-content">
+                <p>Catch errors <strong>at compile time</strong> instead of runtime crashes:</p>
+
+                <pre><code>// Without type checking:
+let x: int = 5
+let y: bool = true
+return x + y        // Runtime crash or garbage!
+
+// With type checking:
+let x: int = 5
+let y: bool = true
+return x + y        // COMPILE ERROR: Can't add int and bool!</code></pre>
+
+                <h4 style="margin-top: var(--space-6);">🐍 YOU KNOW (Python)</h4>
+                <pre><code>x = 5
+y = True
+print(x + y)   # Works! (Python converts True → 1)
+               # But this hides bugs!</code></pre>
+
+                <h4 style="margin-top: var(--space-4);">⚙️ IN C/JIVE: Static Type Checking</h4>
+                <pre><code>// Types are checked at compile time
+// No implicit conversions
+// Errors caught before running</code></pre>
+
+                <div
+                    style="background: rgba(16, 185, 129, 0.1); border: 1px solid var(--accent-green); border-radius: var(--radius-lg); padding: var(--space-5); margin: var(--space-6) 0;">
+                    <strong style="color: var(--accent-green);">💡 Key Benefit:</strong>
+                    <p style="margin-top: var(--space-2);">Type errors are caught <em>before</em> the program runs,
+                        saving debugging time and preventing runtime crashes.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section 2: Jive Types -->
+        <div class="section" id="section-types">
+            <div class="section-header" onclick="toggleSection('section-types')">
+                <h3 class="section-title">📋 Jive Type System</h3>
+                <span class="section-toggle">▶</span>
+            </div>
+            <div class="section-content">
+                <table style="width: 100%; border-collapse: collapse; margin: var(--space-4) 0;">
+                    <tr style="background: var(--bg-card);">
+                        <th style="padding: var(--space-3); text-align: left; border: 1px solid var(--border-default);">
+                            Type</th>
+                        <th style="padding: var(--space-3); text-align: left; border: 1px solid var(--border-default);">
+                            Size</th>
+                        <th style="padding: var(--space-3); text-align: left; border: 1px solid var(--border-default);">
+                            Values</th>
+                    </tr>
+                    <tr>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);"><code>int</code>
+                        </td>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);">8 bytes</td>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);">64-bit signed
+                            integers</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);"><code>bool</code>
+                        </td>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);">8 bytes</td>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);">true (1) or false
+                            (0)</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);"><code>str</code>
+                        </td>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);">8 bytes (pointer)
+                        </td>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);">Pointer to string
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);"><code>[int]</code>
+                        </td>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);">8 bytes (pointer)
+                        </td>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);">Pointer to int
+                            array</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+
+        <!-- Section 3: Typing Rules -->
+        <div class="section" id="section-rules">
+            <div class="section-header" onclick="toggleSection('section-rules')">
+                <h3 class="section-title">📏 Typing Rules (Pseudocode)</h3>
+                <span class="section-toggle">▶</span>
+            </div>
+            <div class="section-content">
+                <pre><code>ALGORITHM: Type Check Expression
+
+check_expr(node) -> Type:
+    SWITCH node.kind:
+    
+    CASE INTEGER_LITERAL:
+        RETURN TYPE_INT
+    
+    CASE BOOL_LITERAL:
+        RETURN TYPE_BOOL
+    
+    CASE STRING_LITERAL:
+        RETURN TYPE_STR
+    
+    CASE IDENTIFIER:
+        symbol = lookup_symbol(node.name)
+        RETURN symbol.type
+    
+    CASE BINARY_OP:
+        left_type = check_expr(node.left)
+        right_type = check_expr(node.right)
+        
+        IF node.op IN [+, -, *, /, %]:
+            // Arithmetic requires int operands
+            REQUIRE left_type == TYPE_INT
+            REQUIRE right_type == TYPE_INT
+            RETURN TYPE_INT
+        
+        IF node.op IN [==, !=]:
+            // Equality requires matching types
+            REQUIRE left_type == right_type
+            RETURN TYPE_BOOL
+        
+        IF node.op IN [<, <=, >, >=]:
+            // Comparison requires int operands
+            REQUIRE left_type == TYPE_INT
+            REQUIRE right_type == TYPE_INT
+            RETURN TYPE_BOOL
+        
+        IF node.op IN [&&, ||]:
+            // Logical requires bool operands
+            REQUIRE left_type == TYPE_BOOL
+            REQUIRE right_type == TYPE_BOOL
+            RETURN TYPE_BOOL
+    
+    CASE FUNCTION_CALL:
+        fn = lookup_function(node.fn_name)
+        FOR i, arg IN node.arguments:
+            arg_type = check_expr(arg)
+            REQUIRE arg_type == fn.param_types[i]
+        RETURN fn.return_type</code></pre>
+            </div>
+        </div>
+
+        <!-- Section 4: Statement Checking -->
+        <div class="section" id="section-statements">
+            <div class="section-header" onclick="toggleSection('section-statements')">
+                <h3 class="section-title">📝 Statement Type Checking</h3>
+                <span class="section-toggle">▶</span>
+            </div>
+            <div class="section-content">
+                <pre><code>ALGORITHM: Type Check Statements
+
+check_statement(stmt, expected_return_type):
+    SWITCH stmt.kind:
+    
+    CASE LET:
+        // Check initializer matches declared type
+        init_type = check_expr(stmt.init_value)
+        REQUIRE init_type == stmt.declared_type
+        add_to_symbol_table(stmt.name, stmt.declared_type)
+    
+    CASE SET:
+        // Check value matches variable type
+        symbol = lookup_symbol(stmt.name)
+        value_type = check_expr(stmt.value)
+        REQUIRE value_type == symbol.type
+    
+    CASE IF:
+        // Condition must be bool
+        cond_type = check_expr(stmt.condition)
+        REQUIRE cond_type == TYPE_BOOL
+        check_statement(stmt.then_body, expected_return_type)
+        IF stmt.else_body:
+            check_statement(stmt.else_body, expected_return_type)
+    
+    CASE WHILE:
+        // Condition must be bool
+        cond_type = check_expr(stmt.condition)
+        REQUIRE cond_type == TYPE_BOOL
+        check_statement(stmt.body, expected_return_type)
+    
+    CASE RETURN:
+        // Return type must match function signature
+        return_type = check_expr(stmt.value)
+        REQUIRE return_type == expected_return_type</code></pre>
+            </div>
+        </div>
+
+        <!-- Section 5: Error Messages -->
+        <div class="section" id="section-errors">
+            <div class="section-header" onclick="toggleSection('section-errors')">
+                <h3 class="section-title">🚨 Good Error Messages</h3>
+                <span class="section-toggle">▶</span>
+            </div>
+            <div class="section-content">
+                <p>Good error messages include <strong>location</strong> and <strong>context</strong>:</p>
+
+                <pre><code>// BAD:
+"Type error"
+
+// BETTER:
+"Type mismatch: expected int, got bool"
+
+// BEST:
+"test.jive:5:12: Type error in '+' expression:
+    left operand has type 'int'
+    right operand has type 'bool'
+    '+' requires both operands to be 'int'"</code></pre>
+
+                <h4 style="margin-top: var(--space-6);">Error Structure</h4>
+                <pre><code>STRUCTURE TypeError:
+    location: (file, line, column)
+    expected_type: Type
+    actual_type: Type
+    context: string    // "in '+' expression"
+
+FUNCTION report_error(error):
+    print("{file}:{line}:{col}: Type error {context}")
+    print("  expected: {expected_type}")
+    print("  actual:   {actual_type}")</code></pre>
+            </div>
+        </div>
+
+        <!-- Quiz Section -->
+        <div class="section" id="section-quiz">
+            <div class="section-header" onclick="toggleSection('section-quiz')">
+                <h3 class="section-title">🧠 Check Your Understanding</h3>
+                <span class="section-toggle">▶</span>
+            </div>
+            <div class="section-content">
+                <div class="quiz" data-correct="1" data-quiz-id="q1" data-module-id="week-13"
+                    data-explanation="Comparison operators like < take two int operands and return a bool result (true or false).">
+                    <div class="quiz-question">What type does <code>5 < 10</code> produce?</div>
+                    <div class="quiz-options">
+                        <div class="quiz-option" data-value="0">
+                            <div class="quiz-radio"></div><span>int</span>
+                        </div>
+                        <div class="quiz-option" data-value="1">
+                            <div class="quiz-radio"></div><span>bool</span>
+                        </div>
+                        <div class="quiz-option" data-value="2">
+                            <div class="quiz-radio"></div><span>str</span>
+                        </div>
+                        <div class="quiz-option" data-value="3">
+                            <div class="quiz-radio"></div><span>void</span>
+                        </div>
+                    </div>
+                    <div class="quiz-feedback"></div>
+                </div>
+
+                <div class="quiz" data-correct="2" data-quiz-id="q2" data-module-id="week-13"
+                    data-explanation="The + operator requires both operands to be int. Adding an int and bool is a type error.">
+                    <div class="quiz-question">Is <code>5 + true</code> valid in a typed language?</div>
+                    <div class="quiz-options">
+                        <div class="quiz-option" data-value="0">
+                            <div class="quiz-radio"></div><span>Yes, result is 6</span>
+                        </div>
+                        <div class="quiz-option" data-value="1">
+                            <div class="quiz-radio"></div><span>Yes, result is true</span>
+                        </div>
+                        <div class="quiz-option" data-value="2">
+                            <div class="quiz-radio"></div><span>No, type error</span>
+                        </div>
+                        <div class="quiz-option" data-value="3">
+                            <div class="quiz-radio"></div><span>Depends on runtime</span>
+                        </div>
+                    </div>
+                    <div class="quiz-feedback"></div>
+                </div>
+
+                <div class="quiz" data-correct="0" data-quiz-id="q3" data-module-id="week-13"
+                    data-explanation="if/while conditions must be boolean expressions. An integer value alone is not bool.">
+                    <div class="quiz-question">What type must an <code>if</code> condition be?</div>
+                    <div class="quiz-options">
+                        <div class="quiz-option" data-value="0">
+                            <div class="quiz-radio"></div><span>bool</span>
+                        </div>
+                        <div class="quiz-option" data-value="1">
+                            <div class="quiz-radio"></div><span>int</span>
+                        </div>
+                        <div class="quiz-option" data-value="2">
+                            <div class="quiz-radio"></div><span>Any type</span>
+                        </div>
+                        <div class="quiz-option" data-value="3">
+                            <div class="quiz-radio"></div><span>str</span>
+                        </div>
+                    </div>
+                    <div class="quiz-feedback"></div>
+                </div>
+
+                <div class="quiz" data-correct="3" data-quiz-id="q4" data-module-id="week-13"
+                    data-explanation="The symbol table stores information about each variable, including its type, which is used for type checking.">
+                    <div class="quiz-question">Where does the type checker find variable types?</div>
+                    <div class="quiz-options">
+                        <div class="quiz-option" data-value="0">
+                            <div class="quiz-radio"></div><span>Token stream</span>
+                        </div>
+                        <div class="quiz-option" data-value="1">
+                            <div class="quiz-radio"></div><span>AST root</span>
+                        </div>
+                        <div class="quiz-option" data-value="2">
+                            <div class="quiz-radio"></div><span>Assembly output</span>
+                        </div>
+                        <div class="quiz-option" data-value="3">
+                            <div class="quiz-radio"></div><span>Symbol table</span>
+                        </div>
+                    </div>
+                    <div class="quiz-feedback"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TA-Only: Implementation -->
+        <div class="ta-only-content" id="ta-content-week-13" data-content-id="week-13-code">
+            <div class="ta-only-header"><span>💻</span>C Implementation</div>
+            <pre><code>typedef enum Type {
+    TYPE_INT,
+    TYPE_BOOL,
+    TYPE_STR,
+    TYPE_VOID,
+    TYPE_ARRAY_INT,
+    TYPE_ERROR
+} Type;
+
+Type check_expr(AST_Node *node, Symbol_Table *table) {
+    switch (node->kind) {
+        case AST_INTEGER:
+            return TYPE_INT;
+        
+        case AST_BOOL:
+            return TYPE_BOOL;
+        
+        case AST_STRING:
+            return TYPE_STR;
+        
+        case AST_IDENTIFIER: {
+            Symbol *sym = lookup_symbol(table, node->ident.name);
+            if (!sym) {
+                type_error(node, "Undeclared variable '%.*s'",
+                          PRINT_STRING(node->ident.name));
+                return TYPE_ERROR;
+            }
+            return sym->type;
+        }
+        
+        case AST_BINARY_OP: {
+            Type left = check_expr(node->binop.left, table);
+            Type right = check_expr(node->binop.right, table);
+            
+            switch (node->binop.op) {
+                case BINOP_ADD: case BINOP_SUB:
+                case BINOP_MUL: case BINOP_DIV: case BINOP_MOD:
+                    if (left != TYPE_INT) {
+                        type_error(node->binop.left,
+                            "Expected int, got %s", type_name(left));
+                    }
+                    if (right != TYPE_INT) {
+                        type_error(node->binop.right,
+                            "Expected int, got %s", type_name(right));
+                    }
+                    return TYPE_INT;
+                
+                case BINOP_EQ: case BINOP_NE:
+                    if (left != right) {
+                        type_error(node,
+                            "Cannot compare %s with %s",
+                            type_name(left), type_name(right));
+                    }
+                    return TYPE_BOOL;
+                
+                case BINOP_LT: case BINOP_LE:
+                case BINOP_GT: case BINOP_GE:
+                    if (left != TYPE_INT || right != TYPE_INT) {
+                        type_error(node,
+                            "Comparison requires int operands");
+                    }
+                    return TYPE_BOOL;
+                
+                case BINOP_AND: case BINOP_OR:
+                    if (left != TYPE_BOOL || right != TYPE_BOOL) {
+                        type_error(node,
+                            "Logical operators require bool operands");
+                    }
+                    return TYPE_BOOL;
+            }
+        }
+    }
+    return TYPE_ERROR;
+}</code></pre>
+        </div>
+
+        <!-- Navigation -->
+        <div
+            style="display: flex; justify-content: space-between; align-items: center; padding: var(--space-6); background: var(--bg-card); border-radius: var(--radius-xl); border: 1px solid var(--border-default); margin-top: var(--space-10);">
+            <a href="#" onclick="event.preventDefault(); UnlockSystem.navigateToModule('week-12', 'week-12-control-flow.html');"
+                style="display: flex; align-items: center; gap: var(--space-2); color: var(--text-secondary);">← Week
+                12</a>
+            <a href="#" onclick="event.preventDefault(); UnlockSystem.navigateToModule('week-14', 'week-14-arrays.html');"
+                style="display: flex; align-items: center; gap: var(--space-2); padding: var(--space-3) var(--space-5); background: var(--gradient-primary); color: white; border-radius: var(--radius-md); font-weight: 600;">
+                Next: Arrays & Strings →
+            </a>
+        </div>
+    </main>
+
+    <script src="../js/modules-data.js"></script>
+    <script src="../js/unlock.js"></script>
+    <script src="../js/progress.js"></script>
+    <script src="../js/quiz.js"></script>
+    <script>
+        function toggleSection(sectionId) {
+            const section = document.getElementById(sectionId);
+            if (section) {
+                section.classList.toggle('open');
+                if (section.classList.contains('open') && window.ProgressTracker) {
+                    ProgressTracker.expandSection('week-13', sectionId);
+                    updateProgress();
+                }
+            }
+        }
+
+        function updateProgress() {
+            if (window.ProgressTracker) {
+                const progress = ProgressTracker.getModuleProgress('week-13');
+                const bar = document.getElementById('moduleProgress');
+                if (bar) bar.style.width = `${progress.percentComplete}%`;
+            }
+        }
+
+        function checkTAContent() {
+            if (window.UnlockSystem) {
+                document.querySelectorAll('.ta-only-content').forEach(el => {
+                    if (UnlockSystem.isTAContentUnlocked(el.dataset.contentId)) {
+                        el.classList.add('unlocked');
+                    }
+                });
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const toggle = document.getElementById('themeToggle');
+            const savedTheme = localStorage.getItem('cs5008_theme') || 'dark';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            toggle.textContent = savedTheme === 'dark' ? '🌙' : '☀️';
+
+            toggle.addEventListener('click', () => {
+                const current = document.documentElement.getAttribute('data-theme');
+                const next = current === 'dark' ? 'light' : 'dark';
+                document.documentElement.setAttribute('data-theme', next);
+                localStorage.setItem('cs5008_theme', next);
+                toggle.textContent = next === 'dark' ? '🌙' : '☀️';
+            });
+
+            if (window.UnlockSystem) { UnlockSystem.init(); checkTAContent(); }
+            if (window.ProgressTracker) { ProgressTracker.visitModule('week-13'); updateProgress(); }
+        });
+    </script>
+</body>
+
+</html>

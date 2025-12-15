@@ -1,0 +1,789 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Week 8: Compiler 4 - Variables | CS5008 Guide</title>
+    <link rel="stylesheet" href="../css/styles.css">
+    <link rel="icon"
+        href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>">
+</head>
+
+<body>
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+
+    <header class="header">
+        <div class="header-content">
+            <a href="../index.html" class="logo">
+                <span class="logo-icon">⚡</span>
+                <span>CS5008</span>
+            </a>
+            <div class="header-actions">
+                <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme">🌙</button>
+            </div>
+        </div>
+    </header>
+
+    <main class="main-container module-page">
+        <nav class="breadcrumb">
+            <a href="../index.html">← Back to modules</a>
+        </nav>
+
+        <div class="module-header">
+            <div class="module-badge green">💾 Compiler 4 • +100 XP</div>
+            <h1>Variables & <span class="text-gradient">Symbol Tables</span></h1>
+            <p>Track variable declarations and store them on the stack. The symbol table maps names to memory locations.
+            </p>
+        </div>
+
+        <div class="progress-bar mb-6">
+            <div class="progress-bar-fill" id="moduleProgress" style="width: 0%"></div>
+        </div>
+
+        <!-- Section 1: Variables in Jive -->
+        <div class="section open" id="section-what">
+            <div class="section-header" onclick="toggleSection('section-what')">
+                <h3 class="section-title">📦 Variables in Jive</h3>
+                <span class="section-toggle">▶</span>
+            </div>
+            <div class="section-content">
+                <p>Jive uses explicit <code>let</code> for declaration and <code>set</code> for assignment:</p>
+
+                <pre><code>fn main() -> int {
+    let x: int = 5       // Declare and initialize
+    let y: int = 10      // Another variable
+    
+    set x = x + 1        // Modify x (now 6)
+    
+    return x + y         // Returns 16
+}</code></pre>
+
+                <h4 style="margin-top: var(--space-6);">🐍 YOU KNOW (Python)</h4>
+                <pre><code>x = 5       # Declaration and assignment combined
+x = x + 1   # Modification uses same syntax</code></pre>
+
+                <h4 style="margin-top: var(--space-4);">⚙️ IN JIVE: Explicit keywords</h4>
+                <pre><code>let x: int = 5   // Declaration (first time)
+set x = x + 1    // Assignment (after declaration)</code></pre>
+
+                <p style="margin-top: var(--space-4);"><strong>Why?</strong> Explicit keywords make parsing easier and
+                    prevent accidental redeclaration bugs.</p>
+            </div>
+        </div>
+
+        <!-- Section 2: Symbol Tables -->
+        <div class="section" id="section-symbol">
+            <div class="section-header" onclick="toggleSection('section-symbol')">
+                <h3 class="section-title">📊 Symbol Tables</h3>
+                <span class="section-toggle">▶</span>
+            </div>
+            <div class="section-content">
+                <p>A <strong>symbol table</strong> maps variable names to their storage locations.</p>
+
+                <pre><code>Symbol Table for main():
+┌──────────┬──────┬──────────────┬────────────┐
+│   Name   │ Type │     Slot     │   Offset   │
+├──────────┼──────┼──────────────┼────────────┤
+│    x     │ int  │      0       │ [rbp - 8]  │
+│    y     │ int  │      1       │ [rbp - 16] │
+└──────────┴──────┴──────────────┴────────────┘
+
+Offset formula: [rbp - (slot + 1) * 8]</code></pre>
+
+                <h4 style="margin-top: var(--space-8);">Symbol Table Operations (Pseudocode)</h4>
+                <pre><code>ALGORITHM: Symbol Table Operations
+
+STRUCTURE Symbol:
+    name: string
+    type: Type
+    slot: integer      // Which stack slot (0, 1, 2, ...)
+
+STRUCTURE SymbolTable:
+    entries: map of (name → Symbol)
+    next_slot: integer = 0
+
+FUNCTION declare_variable(table, name, type):
+    IF name already exists in table:
+        ERROR "Variable already declared"
+    
+    symbol = new Symbol(name, type, table.next_slot)
+    table.entries[name] = symbol
+    table.next_slot = table.next_slot + 1
+    RETURN symbol
+
+FUNCTION lookup_variable(table, name):
+    IF name NOT in table.entries:
+        ERROR "Undeclared variable"
+    RETURN table.entries[name]
+
+FUNCTION get_offset(slot):
+    RETURN -(slot + 1) * 8    // First variable at -8</code></pre>
+
+                <div
+                    style="background: rgba(16, 185, 129, 0.1); border: 1px solid var(--accent-green); border-radius: var(--radius-lg); padding: var(--space-5); margin: var(--space-6) 0;">
+                    <strong style="color: var(--accent-green);">💡 Key Insight:</strong>
+                    <p style="margin-top: var(--space-2);">Symbol tables are typically implemented as <strong>hash
+                            tables</strong> for O(1) lookup. The slot number determines the stack offset.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section 3: Stack Layout -->
+        <div class="section" id="section-stack">
+            <div class="section-header" onclick="toggleSection('section-stack')">
+                <h3 class="section-title">📚 Stack Layout with Variables</h3>
+                <span class="section-toggle">▶</span>
+            </div>
+            <div class="section-content">
+                <pre><code>Memory Layout During Function Execution:
+
+┌──────────────────────────────────────────────────────────────┐
+│                                                   Higher Addr │
+├──────────────────┬───────────────────────────────────────────┤
+│ return address   │  (pushed by CALL instruction)             │
+├──────────────────┼───────────────────────────────────────────┤
+│ saved rbp        │  ← RBP points here                        │
+├──────────────────┼───────────────────────────────────────────┤
+│ x (slot 0)       │  ← [rbp - 8]                              │
+├──────────────────┼───────────────────────────────────────────┤
+│ y (slot 1)       │  ← [rbp - 16]                             │
+├──────────────────┼───────────────────────────────────────────┤
+│ z (slot 2)       │  ← [rbp - 24]                             │
+├──────────────────┼───────────────────────────────────────────┤
+│ ...              │  ← RSP (stack grows down)                 │
+└──────────────────┴───────────────────────────────────────────┘
+                                                    Lower Addr</code></pre>
+
+                <h4 style="margin-top: var(--space-8);">Why RBP-relative Addressing?</h4>
+                <ul style="margin-top: var(--space-3);">
+                    <li><strong>RBP is stable</strong> - doesn't change during function execution</li>
+                    <li><strong>RSP changes</strong> - every push/pop moves it</li>
+                    <li><strong>Consistent offsets</strong> - slot 0 is always [rbp - 8]</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Section 4: Stack Machine Instructions -->
+        <div class="section" id="section-instructions">
+            <div class="section-header" onclick="toggleSection('section-instructions')">
+                <h3 class="section-title">🎯 New Stack Machine Instructions</h3>
+                <span class="section-toggle">▶</span>
+            </div>
+            <div class="section-content">
+                <table style="width: 100%; border-collapse: collapse; margin: var(--space-4) 0;">
+                    <tr style="background: var(--bg-card);">
+                        <th style="padding: var(--space-3); text-align: left; border: 1px solid var(--border-default);">
+                            Instruction</th>
+                        <th style="padding: var(--space-3); text-align: left; border: 1px solid var(--border-default);">
+                            Effect</th>
+                        <th style="padding: var(--space-3); text-align: left; border: 1px solid var(--border-default);">
+                            Example</th>
+                    </tr>
+                    <tr>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);">
+                            <code>LOAD slot</code>
+                        </td>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);">Push variable's
+                            value onto stack</td>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);">
+                            <code>LOAD x (slot 0)</code>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);">
+                            <code>STORE slot</code>
+                        </td>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);">Pop value from
+                            stack, store in variable</td>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);">
+                            <code>STORE y (slot 1)</code>
+                        </td>
+                    </tr>
+                </table>
+
+                <h4 style="margin-top: var(--space-8);">Example: Compile <code>let x: int = 5</code></h4>
+                <pre><code>Stack Machine:
+PUSH 5
+STORE x (slot 0)
+
+Execution:
+[Step 1] PUSH 5    → Stack: [5]
+[Step 2] STORE 0   → Stack: [], x = 5</code></pre>
+
+                <h4 style="margin-top: var(--space-8);">Example: Compile <code>return x + y</code></h4>
+                <pre><code>Stack Machine:
+LOAD x (slot 0)     // Push x's value
+LOAD y (slot 1)     // Push y's value
+ADD                 // Add them
+RETURN              // Return result
+
+Execution (x=5, y=10):
+[Step 1] LOAD 0    → Stack: [5]
+[Step 2] LOAD 1    → Stack: [5, 10]
+[Step 3] ADD       → Stack: [15]
+[Step 4] RETURN    → Returns 15</code></pre>
+            </div>
+        </div>
+
+        <!-- Section 5: Assembly Generation -->
+        <div class="section" id="section-codegen">
+            <div class="section-header" onclick="toggleSection('section-codegen')">
+                <h3 class="section-title">⚙️ Code Generation (Pseudocode)</h3>
+                <span class="section-toggle">▶</span>
+            </div>
+            <div class="section-content">
+                <pre><code>ALGORITHM: Generate Code for Variables
+
+// Function prologue - reserve space for locals
+generate_function_prologue(num_variables):
+    emit "push rbp"
+    emit "mov rbp, rsp"
+    IF num_variables > 0:
+        emit "sub rsp, {num_variables * 8}"
+
+// Let statement: let x: int = expr
+generate_let(stmt, symbol_table):
+    // Add variable to symbol table
+    symbol = declare_variable(symbol_table, stmt.name, stmt.type)
+    
+    // Generate code for initial value
+    generate_expression(stmt.initial_value)
+    
+    // Store in variable's slot
+    offset = get_offset(symbol.slot)
+    emit "pop qword [rbp{offset}]"
+
+// Set statement: set x = expr
+generate_set(stmt, symbol_table):
+    symbol = lookup_variable(symbol_table, stmt.name)
+    
+    generate_expression(stmt.value)
+    
+    offset = get_offset(symbol.slot)
+    emit "pop qword [rbp{offset}]"
+
+// Variable reference in expression
+generate_var_reference(name, symbol_table):
+    symbol = lookup_variable(symbol_table, name)
+    offset = get_offset(symbol.slot)
+    emit "push qword [rbp{offset}]"
+
+// Function epilogue
+generate_function_epilogue():
+    emit "mov rsp, rbp"   // Deallocate locals
+    emit "pop rbp"        // Restore caller's rbp
+    emit "ret"</code></pre>
+            </div>
+        </div>
+
+        <!-- Section 6: Complete Example -->
+        <div class="section" id="section-example">
+            <div class="section-header" onclick="toggleSection('section-example')">
+                <h3 class="section-title">📝 Complete Example</h3>
+                <span class="section-toggle">▶</span>
+            </div>
+            <div class="section-content">
+                <h4>Source Code</h4>
+                <pre><code>fn main() -> int {
+    let x: int = 5
+    let y: int = 10
+    set x = x + y
+    return x
+}</code></pre>
+
+                <h4 style="margin-top: var(--space-6);">Symbol Table</h4>
+                <pre><code>x → slot 0 → [rbp - 8]
+y → slot 1 → [rbp - 16]</code></pre>
+
+                <h4 style="margin-top: var(--space-6);">Stack Machine Instructions</h4>
+                <pre><code>FN main
+  PUSH 5
+  STORE x (slot 0)      // let x = 5
+  
+  PUSH 10
+  STORE y (slot 1)      // let y = 10
+  
+  LOAD x (slot 0)       // set x = x + y
+  LOAD y (slot 1)
+  ADD
+  STORE x (slot 0)
+  
+  LOAD x (slot 0)       // return x
+  RETURN
+END_FN</code></pre>
+
+                <h4 style="margin-top: var(--space-6);">Generated Assembly</h4>
+                <pre><code>main:
+    push rbp
+    mov rbp, rsp
+    sub rsp, 16         ; Space for 2 variables
+    
+    ; let x = 5
+    push 5
+    pop qword [rbp-8]
+    
+    ; let y = 10
+    push 10
+    pop qword [rbp-16]
+    
+    ; set x = x + y
+    push qword [rbp-8]   ; Load x
+    push qword [rbp-16]  ; Load y
+    pop rcx
+    pop rax
+    add rax, rcx
+    push rax
+    pop qword [rbp-8]    ; Store back to x
+    
+    ; return x
+    push qword [rbp-8]
+    pop rax
+    
+    mov rsp, rbp
+    pop rbp
+    ret</code></pre>
+            </div>
+        </div>
+
+        <!-- Quiz Section -->
+        <div class="section" id="section-quiz">
+            <div class="section-header" onclick="toggleSection('section-quiz')">
+                <h3 class="section-title">🧠 Check Your Understanding</h3>
+                <span class="section-toggle">▶</span>
+            </div>
+            <div class="section-content">
+                <div class="quiz" data-correct="0" data-quiz-id="q1" data-module-id="week-08"
+                    data-explanation="The symbol table maps variable names to their storage locations (stack slots and memory offsets).">
+                    <div class="quiz-question">What does the symbol table store?</div>
+                    <div class="quiz-options">
+                        <div class="quiz-option" data-value="0">
+                            <div class="quiz-radio"></div><span>Variable names → stack locations</span>
+                        </div>
+                        <div class="quiz-option" data-value="1">
+                            <div class="quiz-radio"></div><span>Token types</span>
+                        </div>
+                        <div class="quiz-option" data-value="2">
+                            <div class="quiz-radio"></div><span>Assembly instructions</span>
+                        </div>
+                        <div class="quiz-option" data-value="3">
+                            <div class="quiz-radio"></div><span>Function return values</span>
+                        </div>
+                    </div>
+                    <div class="quiz-feedback"></div>
+                </div>
+
+                <div class="quiz" data-correct="2" data-quiz-id="q2" data-module-id="week-08"
+                    data-explanation="Using the formula [rbp - (slot+1)*8]: slot 2 gives [rbp - 3*8] = [rbp - 24].">
+                    <div class="quiz-question">What's the memory offset for a variable in slot 2?</div>
+                    <div class="quiz-options">
+                        <div class="quiz-option" data-value="0">
+                            <div class="quiz-radio"></div><span>[rbp - 8]</span>
+                        </div>
+                        <div class="quiz-option" data-value="1">
+                            <div class="quiz-radio"></div><span>[rbp - 16]</span>
+                        </div>
+                        <div class="quiz-option" data-value="2">
+                            <div class="quiz-radio"></div><span>[rbp - 24]</span>
+                        </div>
+                        <div class="quiz-option" data-value="3">
+                            <div class="quiz-radio"></div><span>[rbp - 2]</span>
+                        </div>
+                    </div>
+                    <div class="quiz-feedback"></div>
+                </div>
+
+                <div class="quiz" data-correct="1" data-quiz-id="q3" data-module-id="week-08"
+                    data-explanation="LOAD pushes a variable's value onto the stack. STORE pops a value and saves it to a variable.">
+                    <div class="quiz-question">What does the LOAD instruction do?</div>
+                    <div class="quiz-options">
+                        <div class="quiz-option" data-value="0">
+                            <div class="quiz-radio"></div><span>Stores a value in a variable</span>
+                        </div>
+                        <div class="quiz-option" data-value="1">
+                            <div class="quiz-radio"></div><span>Pushes a variable's value onto the stack</span>
+                        </div>
+                        <div class="quiz-option" data-value="2">
+                            <div class="quiz-radio"></div><span>Creates a new variable</span>
+                        </div>
+                        <div class="quiz-option" data-value="3">
+                            <div class="quiz-radio"></div><span>Adds two numbers</span>
+                        </div>
+                    </div>
+                    <div class="quiz-feedback"></div>
+                </div>
+
+                <div class="quiz" data-correct="0" data-quiz-id="q4" data-module-id="week-08"
+                    data-explanation="We use RBP (base pointer) because it stays constant during function execution. RSP changes with every push/pop.">
+                    <div class="quiz-question">Why use RBP-relative addressing instead of RSP?</div>
+                    <div class="quiz-options">
+                        <div class="quiz-option" data-value="0">
+                            <div class="quiz-radio"></div><span>RBP is stable; RSP changes with push/pop</span>
+                        </div>
+                        <div class="quiz-option" data-value="1">
+                            <div class="quiz-radio"></div><span>RSP is read-only</span>
+                        </div>
+                        <div class="quiz-option" data-value="2">
+                            <div class="quiz-radio"></div><span>RBP is faster to access</span>
+                        </div>
+                        <div class="quiz-option" data-value="3">
+                            <div class="quiz-radio"></div><span>Convention requires it</span>
+                        </div>
+                    </div>
+                    <div class="quiz-feedback"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TA-Only: C Implementation -->
+        <div class="ta-only-content" id="ta-content-week-08" data-content-id="week-08-code">
+            <div class="ta-only-header"><span>💻</span>C Implementation</div>
+            <pre><code>// Symbol table using hash table with chaining
+
+typedef struct Symbol {
+    String name;
+    Type type;
+    long slot;              // Stack slot number
+    struct Symbol *next;    // For hash chain
+} Symbol;
+
+typedef struct {
+    Symbol **buckets;
+    long capacity;
+    long next_slot;         // Next available slot
+} Symbol_Table;
+
+// FNV-1a hash function
+static long hash_string(String s) {
+    long h = 2166136261u;
+    for (long i = 0; i < s.count; i++) {
+        h ^= (unsigned char)s.data[i];
+        h *= 16777619;
+    }
+    return h;
+}
+
+// Declare a new variable
+Symbol* declare_variable(Symbol_Table *table, String name, Type type) {
+    long idx = hash_string(name) % table->capacity;
+    
+    // Check for duplicate
+    for (Symbol *s = table->buckets[idx]; s; s = s->next) {
+        if (strings_equal(s->name, name)) {
+            return NULL;  // Already declared!
+        }
+    }
+    
+    // Create new symbol
+    Symbol *sym = malloc(sizeof(Symbol));
+    sym->name = name;
+    sym->type = type;
+    sym->slot = table->next_slot++;
+    sym->next = table->buckets[idx];
+    table->buckets[idx] = sym;
+    
+    return sym;
+}
+
+// Look up a variable
+Symbol* lookup_variable(Symbol_Table *table, String name) {
+    long idx = hash_string(name) % table->capacity;
+    
+    for (Symbol *s = table->buckets[idx]; s; s = s->next) {
+        if (strings_equal(s->name, name)) {
+            return s;
+        }
+    }
+    return NULL;  // Not found
+}
+
+// Code generation for variable access
+void gen_load(Symbol *sym, FILE *out) {
+    long offset = -(sym->slot + 1) * 8;
+    fprintf(out, "    push qword [rbp%+ld]\n", offset);
+}
+
+void gen_store(Symbol *sym, FILE *out) {
+    long offset = -(sym->slot + 1) * 8;
+    fprintf(out, "    pop qword [rbp%+ld]\n", offset);
+}
+
+// Generate let statement
+void gen_let_stmt(AST_Node *stmt, Symbol_Table *table, FILE *out) {
+    // Add to symbol table
+    Symbol *sym = declare_variable(table, stmt->let.name, stmt->let.type);
+    if (!sym) {
+        error("Variable already declared");
+        return;
+    }
+    
+    // Generate initial value
+    gen_expr(stmt->let.init_expr, table, out);
+    
+    // Store in variable
+    gen_store(sym, out);
+}</code></pre>
+        </div>
+
+        <!-- Common Mistakes Section -->
+        <div class="accordion-item" id="section-mistakes">
+            <button class="accordion-toggle" onclick="toggleSection('section-mistakes')">
+                <span>⚠️ Common Mistakes to Avoid</span>
+                <span class="toggle-icon">▼</span>
+            </button>
+            <div class="accordion-content">
+                <div style="display: flex; flex-direction: column; gap: var(--space-4);">
+
+                    <div
+                        style="padding: var(--space-4); background: rgba(239, 68, 68, 0.1); border-left: 4px solid var(--accent-red); border-radius: var(--radius-md);">
+                        <h4 style="color: var(--accent-red); margin-bottom: var(--space-2);">Mistake 1: Forgetting to
+                            Check for NULL</h4>
+                        <p style="color: var(--text-secondary); margin-bottom: var(--space-3);">
+                            <code>lookup_symbol</code> returns NULL for undeclared variables. Always check before use.
+                        </p>
+                        <pre><code>// ❌ WRONG - Crashes on undeclared variables
+Symbol_Data *sym = lookup_symbol(table, name);
+int slot = sym->variable_slot;  // CRASH if sym is NULL!
+
+// ✅ CORRECT - Check for NULL first
+Symbol_Data *sym = lookup_symbol(table, name);
+if (sym == NULL) {
+    printf("ERROR: Undeclared variable\n");
+    return;
+}
+int slot = sym->variable_slot;  // Safe</code></pre>
+                    </div>
+
+                    <div
+                        style="padding: var(--space-4); background: rgba(239, 68, 68, 0.1); border-left: 4px solid var(--accent-red); border-radius: var(--radius-md);">
+                        <h4 style="color: var(--accent-red); margin-bottom: var(--space-2);">Mistake 2: Wrong Stack
+                            Offset Calculation</h4>
+                        <p style="color: var(--text-secondary); margin-bottom: var(--space-3);">
+                            Formula is <code>[rbp - (slot + 1) * 8]</code>. The +1 is because saved rbp uses the first 8
+                            bytes!
+                        </p>
+                        <pre><code>; ❌ WRONG - Off by one
+mov rax, [rbp - 0]   ; slot 0
+mov rax, [rbp - 8]   ; slot 1
+mov rax, [rbp - 16]  ; slot 2
+
+; ✅ CORRECT - Use (slot + 1) * 8
+mov rax, [rbp - 8]   ; slot 0 → (0+1)*8 = 8
+mov rax, [rbp - 16]  ; slot 1 → (1+1)*8 = 16
+mov rax, [rbp - 24]  ; slot 2 → (2+1)*8 = 24</code></pre>
+                    </div>
+
+                    <div
+                        style="padding: var(--space-4); background: rgba(239, 68, 68, 0.1); border-left: 4px solid var(--accent-red); border-radius: var(--radius-md);">
+                        <h4 style="color: var(--accent-red); margin-bottom: var(--space-2);">Mistake 3: Not Growing Hash
+                            Table</h4>
+                        <p style="color: var(--text-secondary); margin-bottom: var(--space-3);">
+                            Hash tables become slow with too many collisions. Grow when load factor exceeds threshold.
+                        </p>
+                        <pre><code>// ❌ WRONG - Never grows, becomes O(n) lookup
+bool insert_symbol(...) {
+    table->entry_count++;
+    return true;  // Never checks load factor!
+}
+
+// ✅ CORRECT - Check and grow if needed
+bool insert_symbol(...) {
+    table->entry_count++;
+    if (table->entry_count > table->capacity * 0.75) {
+        grow_table(table);  // Rehash to larger table
+    }
+    return true;
+}</code></pre>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <!-- Practice Problems Section -->
+        <div class="accordion-item" id="section-practice">
+            <button class="accordion-toggle" onclick="toggleSection('section-practice')">
+                <span>📝 Practice Problems</span>
+                <span class="toggle-icon">▼</span>
+            </button>
+            <div class="accordion-content">
+                <div style="display: flex; flex-direction: column; gap: var(--space-6);">
+
+                    <!-- Problem 1 -->
+                    <div
+                        style="background: var(--bg-card); border: 1px solid var(--border-default); border-radius: var(--radius-lg); padding: var(--space-5);">
+                        <h4 style="color: var(--accent-cyan); margin-bottom: var(--space-3);">Problem 1: Symbol Table
+                        </h4>
+                        <p style="margin-bottom: var(--space-3);">Draw the symbol table after this code executes:</p>
+                        <pre><code>fn foo() -> int {
+    let x: int = 1
+    let y: int = 2
+    let sum: int = x + y
+    return sum
+}</code></pre>
+                        <details style="margin-top: var(--space-4);">
+                            <summary style="cursor: pointer; color: var(--accent-purple); font-weight: 600;">Click to
+                                reveal solution</summary>
+                            <div
+                                style="margin-top: var(--space-3); padding: var(--space-4); background: rgba(16, 185, 129, 0.1); border-radius: var(--radius-md);">
+                                <pre><code>Symbol Table:
+Name    Slot    Type
+----    ----    ----
+"x"     0       int
+"y"     1       int
+"sum"   2       int
+
+Entry count: 3
+Load factor: 3/16 = 0.1875 (no growth needed)</code></pre>
+                            </div>
+                        </details>
+                    </div>
+
+                    <!-- Problem 2 -->
+                    <div
+                        style="background: var(--bg-card); border: 1px solid var(--border-default); border-radius: var(--radius-lg); padding: var(--space-5);">
+                        <h4 style="color: var(--accent-cyan); margin-bottom: var(--space-3);">Problem 2: Variable Copy
+                            Behavior</h4>
+                        <p style="margin-bottom: var(--space-3);">What is the output of this program?</p>
+                        <pre><code>fn main() -> int {
+    let a: int = 10
+    let b: int = a
+    set a = 20
+    return b
+}</code></pre>
+                        <details style="margin-top: var(--space-4);">
+                            <summary style="cursor: pointer; color: var(--accent-purple); font-weight: 600;">Click to
+                                reveal solution</summary>
+                            <div
+                                style="margin-top: var(--space-3); padding: var(--space-4); background: rgba(16, 185, 129, 0.1); border-radius: var(--radius-md);">
+                                <p><strong>Answer: Exit code 10</strong> (not 20!)</p>
+                                <ol style="margin-top: var(--space-2); padding-left: var(--space-5);">
+                                    <li><code>let a = 10</code> → a's slot contains 10</li>
+                                    <li><code>let b = a</code> → b's slot gets <strong>COPY</strong> of a's value (10)
+                                    </li>
+                                    <li><code>set a = 20</code> → a's slot now 20</li>
+                                    <li><code>return b</code> → b still 10 (unchanged!)</li>
+                                </ol>
+                                <p style="margin-top: var(--space-3);"><strong>Key:</strong> Variables have independent
+                                    storage!</p>
+                            </div>
+                        </details>
+                    </div>
+
+                    <!-- Problem 3 -->
+                    <div
+                        style="background: var(--bg-card); border: 1px solid var(--border-default); border-radius: var(--radius-lg); padding: var(--space-5);">
+                        <h4 style="color: var(--accent-cyan); margin-bottom: var(--space-3);">Problem 3: Stack Machine
+                            Code</h4>
+                        <p style="margin-bottom: var(--space-3);">Generate assembly for:</p>
+                        <pre><code>fn main() -> int {
+    let x: int = 5
+    set x = x * 2
+    return x
+}</code></pre>
+                        <details style="margin-top: var(--space-4);">
+                            <summary style="cursor: pointer; color: var(--accent-purple); font-weight: 600;">Click to
+                                reveal solution</summary>
+                            <div
+                                style="margin-top: var(--space-3); padding: var(--space-4); background: rgba(16, 185, 129, 0.1); border-radius: var(--radius-md);">
+                                <pre><code>main:
+    push rbp
+    mov rbp, rsp
+    sub rsp, 8           ; 1 variable
+
+    ; let x = 5
+    mov rax, 5
+    mov [rbp - 8], rax   ; store in slot 0
+
+    ; set x = x * 2
+    mov rax, [rbp - 8]   ; load x
+    push rax
+    mov rax, 2
+    push rax
+    pop rcx
+    pop rax
+    imul rax, rcx        ; x * 2
+    mov [rbp - 8], rax   ; store back
+
+    ; return x
+    mov rax, [rbp - 8]
+    mov rsp, rbp
+    pop rbp
+    ret</code></pre>
+                            </div>
+                        </details>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <!-- Navigation -->
+        <div
+            style="display: flex; justify-content: space-between; align-items: center; padding: var(--space-6); background: var(--bg-card); border-radius: var(--radius-xl); border: 1px solid var(--border-default); margin-top: var(--space-10);">
+            <a href="#" onclick="event.preventDefault(); UnlockSystem.navigateToModule('week-07', 'week-07-expressions.html');"
+                style="display: flex; align-items: center; gap: var(--space-2); color: var(--text-secondary);">← Week
+                7</a>
+            <a href="#" onclick="event.preventDefault(); UnlockSystem.navigateToModule('week-09', 'week-09-functions.html');"
+                style="display: flex; align-items: center; gap: var(--space-2); padding: var(--space-3) var(--space-5); background: var(--gradient-primary); color: white; border-radius: var(--radius-md); font-weight: 600;">
+                Next: Compiler 5 - Functions →
+            </a>
+        </div>
+    </main>
+
+    <script src="../js/modules-data.js"></script>
+    <script src="../js/unlock.js"></script>
+    <script src="../js/progress.js"></script>
+    <script src="../js/quiz.js"></script>
+    <script>
+        function toggleSection(sectionId) {
+            const section = document.getElementById(sectionId);
+            if (section) {
+                section.classList.toggle('open');
+                if (section.classList.contains('open') && window.ProgressTracker) {
+                    ProgressTracker.expandSection('week-08', sectionId);
+                    updateProgress();
+                }
+            }
+        }
+
+        function updateProgress() {
+            if (window.ProgressTracker) {
+                const progress = ProgressTracker.getModuleProgress('week-08');
+                const bar = document.getElementById('moduleProgress');
+                if (bar) bar.style.width = `${progress.percentComplete}%`;
+            }
+        }
+
+        function checkTAContent() {
+            if (window.UnlockSystem) {
+                document.querySelectorAll('.ta-only-content').forEach(el => {
+                    if (UnlockSystem.isTAContentUnlocked(el.dataset.contentId)) {
+                        el.classList.add('unlocked');
+                    }
+                });
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const toggle = document.getElementById('themeToggle');
+            const savedTheme = localStorage.getItem('cs5008_theme') || 'dark';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            toggle.textContent = savedTheme === 'dark' ? '🌙' : '☀️';
+
+            toggle.addEventListener('click', () => {
+                const current = document.documentElement.getAttribute('data-theme');
+                const next = current === 'dark' ? 'light' : 'dark';
+                document.documentElement.setAttribute('data-theme', next);
+                localStorage.setItem('cs5008_theme', next);
+                toggle.textContent = next === 'dark' ? '🌙' : '☀️';
+            });
+
+            if (window.UnlockSystem) { UnlockSystem.init(); checkTAContent(); }
+            if (window.ProgressTracker) { ProgressTracker.visitModule('week-08'); updateProgress(); }
+        });
+    </script>
+</body>
+
+</html>

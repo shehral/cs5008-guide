@@ -1,0 +1,862 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Week 7: Compiler 3 - Expressions | CS5008 Guide</title>
+    <link rel="stylesheet" href="../css/styles.css">
+    <link rel="icon"
+        href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>">
+</head>
+
+<body>
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+
+    <header class="header">
+        <div class="header-content">
+            <a href="../index.html" class="logo">
+                <span class="logo-icon">⚡</span>
+                <span>CS5008</span>
+            </a>
+            <div class="header-actions">
+                <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme">🌙</button>
+            </div>
+        </div>
+    </header>
+
+    <main class="main-container module-page">
+        <nav class="breadcrumb">
+            <a href="../index.html">← Back to modules</a>
+        </nav>
+
+        <div class="module-header">
+            <div class="module-badge green">➕ Compiler 3 • +100 XP</div>
+            <h1>Expressions & <span class="text-gradient">Stack Machine</span></h1>
+            <p>Evaluate arithmetic with correct operator precedence using a stack-based model.</p>
+        </div>
+
+        <div class="progress-bar mb-6">
+            <div class="progress-bar-fill" id="moduleProgress" style="width: 0%"></div>
+        </div>
+
+        <!-- Section 1: Operator Precedence -->
+        <div class="section open" id="section-precedence">
+            <div class="section-header" onclick="toggleSection('section-precedence')">
+                <h3 class="section-title">🎯 Operator Precedence</h3>
+                <span class="section-toggle">▶</span>
+            </div>
+            <div class="section-content">
+                <p>The expression <code>2 + 3 * 4</code> should equal <strong>14</strong>, not 20!</p>
+
+                <div
+                    style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4); margin: var(--space-6) 0;">
+                    <div
+                        style="background: var(--bg-card); border: 2px solid var(--accent-red); border-radius: var(--radius-lg); padding: var(--space-5);">
+                        <div style="font-weight: 600; color: var(--accent-red); margin-bottom: var(--space-3);">❌ Wrong:
+                            Left-to-right</div>
+                        <pre style="margin: 0;"><code>(2 + 3) * 4 = 20</code></pre>
+                    </div>
+                    <div
+                        style="background: var(--bg-card); border: 2px solid var(--accent-green); border-radius: var(--radius-lg); padding: var(--space-5);">
+                        <div style="font-weight: 600; color: var(--accent-green); margin-bottom: var(--space-3);">✓
+                            Correct: Precedence</div>
+                        <pre style="margin: 0;"><code>2 + (3 * 4) = 14</code></pre>
+                    </div>
+                </div>
+
+                <h4>Precedence Table (High to Low)</h4>
+                <table style="width: 100%; border-collapse: collapse; margin: var(--space-4) 0;">
+                    <tr style="background: var(--bg-card);">
+                        <th style="padding: var(--space-3); text-align: left; border: 1px solid var(--border-default);">
+                            Level</th>
+                        <th style="padding: var(--space-3); text-align: left; border: 1px solid var(--border-default);">
+                            Operators</th>
+                        <th style="padding: var(--space-3); text-align: left; border: 1px solid var(--border-default);">
+                            Associativity</th>
+                    </tr>
+                    <tr>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);">1 (highest)</td>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);"><code>( )</code>
+                            grouping</td>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);">N/A</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);">2</td>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);"><code>-</code>
+                            <code>!</code> unary
+                        </td>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);">Right</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);">3</td>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);"><code>*</code>
+                            <code>/</code> <code>%</code>
+                        </td>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);">Left</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);">4</td>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);"><code>+</code>
+                            <code>-</code>
+                        </td>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);">Left</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);">5</td>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);"><code>&lt;</code>
+                            <code>&gt;</code> <code>&lt;=</code> <code>&gt;=</code>
+                        </td>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);">Left</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);">6</td>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);"><code>==</code>
+                            <code>!=</code>
+                        </td>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);">Left</td>
+                    </tr>
+                </table>
+
+                <h4 style="margin-top: var(--space-8);">AST Captures Precedence</h4>
+                <pre><code>Expression: 2 + 3 * 4
+
+AST Structure:
+        +
+       / \
+      2   *      ← Multiplication is a subtree
+         / \
+        3   4
+
+Post-order traversal: 2, 3, 4, *, +
+This naturally evaluates 3*4 first!</code></pre>
+            </div>
+        </div>
+
+        <!-- Section 2: Stack Machine -->
+        <div class="section" id="section-stack">
+            <div class="section-header" onclick="toggleSection('section-stack')">
+                <h3 class="section-title">📚 Stack Machine Model</h3>
+                <span class="section-toggle">▶</span>
+            </div>
+            <div class="section-content">
+                <p>We evaluate expressions using a <strong>stack</strong>. Values are pushed on, operations pop operands
+                    and push results.</p>
+
+                <h4>Stack Machine Execution: <code>2 + 3 * 4</code></h4>
+                <pre><code>Instruction    Stack (top on right)    Notes
+───────────────────────────────────────────────────────
+PUSH 2         [2]                     Push first operand
+PUSH 3         [2, 3]                  Push second operand
+PUSH 4         [2, 3, 4]               Push third operand
+MUL            [2, 12]                 Pop 3, 4 → Push 3*4=12
+ADD            [14]                    Pop 2, 12 → Push 2+12=14
+RETURN         → 14                    Pop and return result</code></pre>
+
+                <div
+                    style="background: rgba(16, 185, 129, 0.1); border: 1px solid var(--accent-green); border-radius: var(--radius-lg); padding: var(--space-5); margin: var(--space-6) 0;">
+                    <strong style="color: var(--accent-green);">💡 Key Insight:</strong>
+                    <p style="margin-top: var(--space-2);">Post-order tree traversal (left → right → root) naturally
+                        produces correct stack machine code!</p>
+                </div>
+
+                <h4 style="margin-top: var(--space-8);">Stack Machine Instructions</h4>
+                <table style="width: 100%; border-collapse: collapse; margin: var(--space-4) 0;">
+                    <tr style="background: var(--bg-card);">
+                        <th style="padding: var(--space-3); text-align: left; border: 1px solid var(--border-default);">
+                            Instruction</th>
+                        <th style="padding: var(--space-3); text-align: left; border: 1px solid var(--border-default);">
+                            Effect</th>
+                    </tr>
+                    <tr>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);">
+                            <code>PUSH n</code>
+                        </td>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);">Push constant onto
+                            stack</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);"><code>ADD</code>
+                        </td>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);">Pop a, b → Push a
+                            + b</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);"><code>SUB</code>
+                        </td>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);">Pop a, b → Push a
+                            - b</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);"><code>MUL</code>
+                        </td>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);">Pop a, b → Push a
+                            * b</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);"><code>DIV</code>
+                        </td>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);">Pop a, b → Push a
+                            / b</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);"><code>MOD</code>
+                        </td>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);">Pop a, b → Push a
+                            % b</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);">
+                            <code>RETURN</code>
+                        </td>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);">Pop value, return
+                            from function</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+
+        <!-- Section 3: Precedence Climbing -->
+        <div class="section" id="section-parsing">
+            <div class="section-header" onclick="toggleSection('section-parsing')">
+                <h3 class="section-title">🔄 Precedence Climbing (Pseudocode)</h3>
+                <span class="section-toggle">▶</span>
+            </div>
+            <div class="section-content">
+                <p>Use separate parsing functions for each precedence level. <strong>Lower precedence functions call
+                        higher ones.</strong></p>
+
+                <pre><code>ALGORITHM: Precedence Climbing
+
+parse_expression():
+    return parse_additive()      // Start at lowest precedence
+
+parse_additive():                // Handles + and -
+    left = parse_multiplicative()    // Call higher first!
+    
+    WHILE current token is '+' or '-':
+        operator = consume token
+        right = parse_multiplicative()
+        left = create BinaryOp(operator, left, right)
+    
+    return left
+
+parse_multiplicative():          // Handles * / %
+    left = parse_unary()
+    
+    WHILE current token is '*' or '/' or '%':
+        operator = consume token
+        right = parse_unary()
+        left = create BinaryOp(operator, left, right)
+    
+    return left
+
+parse_unary():                   // Handles - (negation)
+    IF current token is '-':
+        consume '-'
+        operand = parse_unary()      // Recursive for --x
+        return create UnaryOp(NEGATE, operand)
+    
+    return parse_primary()
+
+parse_primary():                 // Highest precedence: atoms
+    IF current token is '(':
+        consume '('
+        expr = parse_expression()    // Recursive!
+        expect ')'
+        return expr
+    
+    IF current token is INTEGER:
+        return create IntegerLiteral(token.value)
+    
+    IF current token is IDENTIFIER:
+        return create VariableRef(token.name)
+    
+    ERROR "Expected expression"</code></pre>
+
+                <h4 style="margin-top: var(--space-8);">Why This Works</h4>
+                <pre><code>Parsing: 2 + 3 * 4
+
+parse_additive()
+├─ parse_multiplicative() → returns 2
+├─ sees '+', consumes it
+└─ parse_multiplicative()
+   ├─ parse_primary() → returns 3
+   ├─ sees '*', consumes it
+   ├─ parse_primary() → returns 4
+   └─ returns BinaryOp(*, 3, 4)
+└─ returns BinaryOp(+, 2, BinaryOp(*, 3, 4))
+
+Result: Correct tree with * as subtree of +!</code></pre>
+            </div>
+        </div>
+
+        <!-- Section 4: Code Generation -->
+        <div class="section" id="section-codegen">
+            <div class="section-header" onclick="toggleSection('section-codegen')">
+                <h3 class="section-title">⚙️ Code Generation (Pseudocode)</h3>
+                <span class="section-toggle">▶</span>
+            </div>
+            <div class="section-content">
+                <p>Generate stack machine instructions by walking the AST in <strong>post-order</strong>.</p>
+
+                <pre><code>ALGORITHM: Generate Stack Machine Code
+
+generate(node):
+    SWITCH node.kind:
+        
+        CASE INTEGER:
+            emit "PUSH {node.value}"
+        
+        CASE BINARY_OP:
+            generate(node.left)     // Left operand first
+            generate(node.right)    // Right operand second
+            
+            SWITCH node.operator:
+                CASE '+': emit "ADD"
+                CASE '-': emit "SUB"
+                CASE '*': emit "MUL"
+                CASE '/': emit "DIV"
+                CASE '%': emit "MOD"
+        
+        CASE UNARY_OP:
+            generate(node.operand)
+            IF node.operator == '-':
+                emit "NEGATE"
+        
+        CASE RETURN:
+            generate(node.expression)
+            emit "RETURN"</code></pre>
+
+                <h4 style="margin-top: var(--space-8);">Example: Generate code for <code>2 + 3 * 4</code></h4>
+                <pre><code>AST:     +
+        / \
+       2   *
+          / \
+         3   4
+
+Walk in post-order:
+1. Visit 2 → emit "PUSH 2"
+2. Visit 3 → emit "PUSH 3"
+3. Visit 4 → emit "PUSH 4"
+4. Visit * → emit "MUL"
+5. Visit + → emit "ADD"
+
+Output:
+PUSH 2
+PUSH 3
+PUSH 4
+MUL
+ADD</code></pre>
+            </div>
+        </div>
+
+        <!-- Section 5: Assembly Output -->
+        <div class="section" id="section-assembly">
+            <div class="section-header" onclick="toggleSection('section-assembly')">
+                <h3 class="section-title">🔧 Stack Machine → Assembly</h3>
+                <span class="section-toggle">▶</span>
+            </div>
+            <div class="section-content">
+                <p>Each stack machine instruction becomes a small assembly snippet:</p>
+
+                <table style="width: 100%; border-collapse: collapse; margin: var(--space-4) 0;">
+                    <tr style="background: var(--bg-card);">
+                        <th style="padding: var(--space-3); text-align: left; border: 1px solid var(--border-default);">
+                            Stack Instr</th>
+                        <th style="padding: var(--space-3); text-align: left; border: 1px solid var(--border-default);">
+                            x86-64 Assembly</th>
+                    </tr>
+                    <tr>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);">
+                            <code>PUSH n</code>
+                        </td>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);">
+                            <code>push n</code>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);"><code>ADD</code>
+                        </td>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);">
+                            <code>pop rcx; pop rax; add rax, rcx; push rax</code>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);"><code>SUB</code>
+                        </td>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);">
+                            <code>pop rcx; pop rax; sub rax, rcx; push rax</code>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);"><code>MUL</code>
+                        </td>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);">
+                            <code>pop rcx; pop rax; imul rax, rcx; push rax</code>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);"><code>DIV</code>
+                        </td>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);">
+                            <code>pop rcx; pop rax; cqo; idiv rcx; push rax</code>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);">
+                            <code>RETURN</code>
+                        </td>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);">
+                            <code>pop rax; ret</code>
+                        </td>
+                    </tr>
+                </table>
+
+                <div
+                    style="background: rgba(239, 68, 68, 0.1); border: 1px solid var(--accent-red); border-radius: var(--radius-lg); padding: var(--space-5); margin: var(--space-6) 0;">
+                    <strong style="color: var(--accent-red);">⚠️ Division Trap:</strong>
+                    <p style="margin-top: var(--space-2);">Always use <code>cqo</code> before <code>idiv</code>! It
+                        sign-extends rax into rdx:rax. Without it, rdx contains garbage and division produces wrong
+                        results.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quiz Section -->
+        <div class="section" id="section-quiz">
+            <div class="section-header" onclick="toggleSection('section-quiz')">
+                <h3 class="section-title">🧠 Check Your Understanding</h3>
+                <span class="section-toggle">▶</span>
+            </div>
+            <div class="section-content">
+                <div class="quiz" data-correct="1" data-quiz-id="q1" data-module-id="week-07"
+                    data-explanation="5 - 2 * 3 = 5 - 6 = -1. Multiplication has higher precedence and evaluates first.">
+                    <div class="quiz-question">What is 5 - 2 * 3?</div>
+                    <div class="quiz-options">
+                        <div class="quiz-option" data-value="0">
+                            <div class="quiz-radio"></div><span>9</span>
+                        </div>
+                        <div class="quiz-option" data-value="1">
+                            <div class="quiz-radio"></div><span>-1</span>
+                        </div>
+                        <div class="quiz-option" data-value="2">
+                            <div class="quiz-radio"></div><span>11</span>
+                        </div>
+                        <div class="quiz-option" data-value="3">
+                            <div class="quiz-radio"></div><span>6</span>
+                        </div>
+                    </div>
+                    <div class="quiz-feedback"></div>
+                </div>
+
+                <div class="quiz" data-correct="2" data-quiz-id="q2" data-module-id="week-07"
+                    data-explanation="Post-order traversal visits left subtree, then right subtree, then root. This naturally produces stack machine code.">
+                    <div class="quiz-question">What tree traversal order produces stack machine code?</div>
+                    <div class="quiz-options">
+                        <div class="quiz-option" data-value="0">
+                            <div class="quiz-radio"></div><span>Pre-order (root, left, right)</span>
+                        </div>
+                        <div class="quiz-option" data-value="1">
+                            <div class="quiz-radio"></div><span>In-order (left, root, right)</span>
+                        </div>
+                        <div class="quiz-option" data-value="2">
+                            <div class="quiz-radio"></div><span>Post-order (left, right, root)</span>
+                        </div>
+                        <div class="quiz-option" data-value="3">
+                            <div class="quiz-radio"></div><span>Level-order (BFS)</span>
+                        </div>
+                    </div>
+                    <div class="quiz-feedback"></div>
+                </div>
+
+                <div class="quiz" data-correct="0" data-quiz-id="q3" data-module-id="week-07"
+                    data-explanation="10 - 5 - 2 with left-associativity: (10 - 5) - 2 = 5 - 2 = 3. Subtraction groups left-to-right.">
+                    <div class="quiz-question">What is 10 - 5 - 2 with left-associativity?</div>
+                    <div class="quiz-options">
+                        <div class="quiz-option" data-value="0">
+                            <div class="quiz-radio"></div><span>3</span>
+                        </div>
+                        <div class="quiz-option" data-value="1">
+                            <div class="quiz-radio"></div><span>7</span>
+                        </div>
+                        <div class="quiz-option" data-value="2">
+                            <div class="quiz-radio"></div><span>-7</span>
+                        </div>
+                        <div class="quiz-option" data-value="3">
+                            <div class="quiz-radio"></div><span>13</span>
+                        </div>
+                    </div>
+                    <div class="quiz-feedback"></div>
+                </div>
+
+                <div class="quiz" data-correct="1" data-quiz-id="q4" data-module-id="week-07"
+                    data-explanation="In precedence climbing, lower precedence functions call higher ones. parse_additive calls parse_multiplicative because + has lower precedence than *.">
+                    <div class="quiz-question">In precedence climbing, parse_additive calls which function first?</div>
+                    <div class="quiz-options">
+                        <div class="quiz-option" data-value="0">
+                            <div class="quiz-radio"></div><span>parse_expression</span>
+                        </div>
+                        <div class="quiz-option" data-value="1">
+                            <div class="quiz-radio"></div><span>parse_multiplicative</span>
+                        </div>
+                        <div class="quiz-option" data-value="2">
+                            <div class="quiz-radio"></div><span>parse_primary</span>
+                        </div>
+                        <div class="quiz-option" data-value="3">
+                            <div class="quiz-radio"></div><span>parse_additive</span>
+                        </div>
+                    </div>
+                    <div class="quiz-feedback"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TA-Only: Actual C Implementation -->
+        <div class="ta-only-content" id="ta-content-week-07" data-content-id="week-07-code">
+            <div class="ta-only-header"><span>💻</span>C Implementation</div>
+            <pre><code>// Expression parsing with precedence climbing
+
+AST_Node* parse_additive(Parser *p) {
+    AST_Node *left = parse_multiplicative(p);
+    
+    while (peek(p)->kind == TOKEN_PLUS || 
+           peek(p)->kind == TOKEN_MINUS) {
+        Token_Kind op = advance(p)->kind;
+        AST_Node *right = parse_multiplicative(p);
+        left = make_binary_node(op, left, right);
+    }
+    return left;
+}
+
+AST_Node* parse_multiplicative(Parser *p) {
+    AST_Node *left = parse_unary(p);
+    
+    while (peek(p)->kind == TOKEN_STAR || 
+           peek(p)->kind == TOKEN_SLASH ||
+           peek(p)->kind == TOKEN_PERCENT) {
+        Token_Kind op = advance(p)->kind;
+        AST_Node *right = parse_unary(p);
+        left = make_binary_node(op, left, right);
+    }
+    return left;
+}
+
+AST_Node* parse_unary(Parser *p) {
+    if (peek(p)->kind == TOKEN_MINUS) {
+        advance(p);
+        AST_Node *operand = parse_unary(p);
+        return make_unary_node(UNARY_NEGATE, operand);
+    }
+    return parse_primary(p);
+}
+
+AST_Node* parse_primary(Parser *p) {
+    Token *tok = peek(p);
+    
+    if (tok->kind == TOKEN_INTEGER) {
+        advance(p);
+        return make_integer_node(tok->long_value);
+    }
+    
+    if (tok->kind == TOKEN_IDENTIFIER) {
+        advance(p);
+        return make_var_ref_node(tok->source);
+    }
+    
+    if (tok->kind == TOKEN_LPAREN) {
+        advance(p);
+        AST_Node *expr = parse_expression(p);
+        expect(p, TOKEN_RPAREN);
+        return expr;
+    }
+    
+    error_at(tok->loc, "Expected expression");
+    return NULL;
+}
+
+// Code generation for binary operators
+void gen_binary_op(AST_Node *node, FILE *out) {
+    gen_expr(node->binop.left, out);   // Left operand
+    gen_expr(node->binop.right, out);  // Right operand
+    
+    fprintf(out, "    pop rcx\n");     // Right in rcx
+    fprintf(out, "    pop rax\n");     // Left in rax
+    
+    switch (node->binop.op) {
+        case BINOP_ADD:
+            fprintf(out, "    add rax, rcx\n");
+            break;
+        case BINOP_SUB:
+            fprintf(out, "    sub rax, rcx\n");
+            break;
+        case BINOP_MUL:
+            fprintf(out, "    imul rax, rcx\n");
+            break;
+        case BINOP_DIV:
+            fprintf(out, "    cqo\n");      // Sign-extend!
+            fprintf(out, "    idiv rcx\n");  // Quotient in rax
+            break;
+        case BINOP_MOD:
+            fprintf(out, "    cqo\n");
+            fprintf(out, "    idiv rcx\n");
+            fprintf(out, "    mov rax, rdx\n"); // Remainder in rdx
+            break;
+    }
+    
+    fprintf(out, "    push rax\n");
+}</code></pre>
+        </div>
+
+        <!-- Common Mistakes Section -->
+        <div class="accordion-item" id="section-mistakes">
+            <button class="accordion-toggle" onclick="toggleSection('section-mistakes')">
+                <span>⚠️ Common Mistakes to Avoid</span>
+                <span class="toggle-icon">▼</span>
+            </button>
+            <div class="accordion-content">
+                <div style="display: flex; flex-direction: column; gap: var(--space-4);">
+
+                    <div
+                        style="padding: var(--space-4); background: rgba(239, 68, 68, 0.1); border-left: 4px solid var(--accent-red); border-radius: var(--radius-md);">
+                        <h4 style="color: var(--accent-red); margin-bottom: var(--space-2);">Mistake 1: Wrong Precedence
+                            Order</h4>
+                        <p style="color: var(--text-secondary); margin-bottom: var(--space-3);">
+                            Each level must call the NEXT level, not itself - or you get infinite recursion.
+                        </p>
+                        <pre><code>// ❌ WRONG - Calls itself
+AST_Node *parse_additive(Parser *parser) {
+    AST_Node *left = parse_additive(parser);  // Infinite recursion!
+}
+
+// ✅ CORRECT - Calls next level
+AST_Node *parse_additive(Parser *parser) {
+    AST_Node *left = parse_multiplicative(parser);  // Higher precedence
+}</code></pre>
+                    </div>
+
+                    <div
+                        style="padding: var(--space-4); background: rgba(239, 68, 68, 0.1); border-left: 4px solid var(--accent-red); border-radius: var(--radius-md);">
+                        <h4 style="color: var(--accent-red); margin-bottom: var(--space-2);">Mistake 2: Forgetting
+                            Left-Associativity</h4>
+                        <p style="color: var(--text-secondary); margin-bottom: var(--space-3);">
+                            Use a WHILE loop, not IF. Otherwise 1-2-3 becomes 1-(2-3) instead of (1-2)-3.
+                        </p>
+                        <pre><code>// ❌ WRONG - Makes right-heavy tree
+if (tok->kind == TOKEN_STAR) {
+    AST_Node *right = parse_multiplicative(parser);  // Right-associative!
+}
+
+// ✅ CORRECT - Loop for left-associativity
+while (tok->kind == TOKEN_STAR) {
+    // ...
+    left = result;  // Update left each iteration
+}</code></pre>
+                    </div>
+
+                    <div
+                        style="padding: var(--space-4); background: rgba(239, 68, 68, 0.1); border-left: 4px solid var(--accent-red); border-radius: var(--radius-md);">
+                        <h4 style="color: var(--accent-red); margin-bottom: var(--space-2);">Mistake 3: Wrong Post-Order
+                            Traversal</h4>
+                        <p style="color: var(--text-secondary); margin-bottom: var(--space-3);">
+                            For stack machines: operands FIRST, then operation. Not the other way around.
+                        </p>
+                        <pre><code>// ❌ WRONG - Operation before operands
+emit_operation(expr->binary_op.op);      // Operation first - WRONG!
+generate_for_expr(expr->binary_op.left);
+generate_for_expr(expr->binary_op.right);
+
+// ✅ CORRECT - Post-order (operands, then op)
+generate_for_expr(expr->binary_op.left);   // Left first
+generate_for_expr(expr->binary_op.right);  // Right second
+emit_operation(expr->binary_op.op);        // Operation last</code></pre>
+                    </div>
+
+                    <div
+                        style="padding: var(--space-4); background: rgba(239, 68, 68, 0.1); border-left: 4px solid var(--accent-red); border-radius: var(--radius-md);">
+                        <h4 style="color: var(--accent-red); margin-bottom: var(--space-2);">Mistake 4: MOD vs DIV
+                            Registers</h4>
+                        <p style="color: var(--text-secondary); margin-bottom: var(--space-3);">
+                            After <code>idiv</code>: quotient is in <code>rax</code>, remainder is in <code>rdx</code>.
+                        </p>
+                        <pre><code>// ❌ WRONG - MOD uses quotient register
+case SM_MOD:
+    // ... idiv rcx ...
+    fprintf(out, "    push rax\n");  // Wrong register!
+
+// ✅ CORRECT - MOD uses remainder register
+case SM_MOD:
+    // ... idiv rcx ...
+    fprintf(out, "    mov rax, rdx\n");  // Remainder in rdx
+    fprintf(out, "    push rax\n");</code></pre>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <!-- Practice Problems Section -->
+        <div class="accordion-item" id="section-practice">
+            <button class="accordion-toggle" onclick="toggleSection('section-practice')">
+                <span>📝 Practice Problems</span>
+                <span class="toggle-icon">▼</span>
+            </button>
+            <div class="accordion-content">
+                <div style="display: flex; flex-direction: column; gap: var(--space-6);">
+
+                    <!-- Problem 1 -->
+                    <div
+                        style="background: var(--bg-card); border: 1px solid var(--border-default); border-radius: var(--radius-lg); padding: var(--space-5);">
+                        <h4 style="color: var(--accent-cyan); margin-bottom: var(--space-3);">Problem 1: AST for
+                            Expression</h4>
+                        <p style="margin-bottom: var(--space-3);">Draw the AST for <code>1 + 2 * 3 + 4</code></p>
+                        <details style="margin-top: var(--space-4);">
+                            <summary style="cursor: pointer; color: var(--accent-purple); font-weight: 600;">Click to
+                                reveal solution</summary>
+                            <div
+                                style="margin-top: var(--space-3); padding: var(--space-4); background: rgba(16, 185, 129, 0.1); border-radius: var(--radius-md);">
+                                <pre><code>        +
+       / \
+      +   4
+     / \
+    1   *
+       / \
+      2   3</code></pre>
+                                <p style="margin-top: var(--space-3);"><strong>Explanation:</strong></p>
+                                <ul style="padding-left: var(--space-5);">
+                                    <li><code>2 * 3</code> is deepest (highest precedence)</li>
+                                    <li><code>1 + (2 * 3)</code> evaluated first (left-associative)</li>
+                                    <li><code>(1 + (2 * 3)) + 4</code> final tree</li>
+                                </ul>
+                                <p><strong>Evaluation:</strong> 2*3=6, 1+6=7, 7+4=11 ✓</p>
+                            </div>
+                        </details>
+                    </div>
+
+                    <!-- Problem 2 -->
+                    <div
+                        style="background: var(--bg-card); border: 1px solid var(--border-default); border-radius: var(--radius-lg); padding: var(--space-5);">
+                        <h4 style="color: var(--accent-cyan); margin-bottom: var(--space-3);">Problem 2: Stack Machine
+                            Trace</h4>
+                        <p style="margin-bottom: var(--space-3);">Write stack machine instructions for
+                            <code>(5 - 2) * 3</code></p>
+                        <details style="margin-top: var(--space-4);">
+                            <summary style="cursor: pointer; color: var(--accent-purple); font-weight: 600;">Click to
+                                reveal solution</summary>
+                            <div
+                                style="margin-top: var(--space-3); padding: var(--space-4); background: rgba(16, 185, 129, 0.1); border-radius: var(--radius-md);">
+                                <pre><code>PUSH 5    → [5]
+PUSH 2    → [5, 2]
+SUB       → [3]        (5 - 2 = 3)
+PUSH 3    → [3, 3]
+MUL       → [9]        (3 * 3 = 9)</code></pre>
+                                <p style="margin-top: var(--space-3);"><strong>Key:</strong> Parentheses parsed by
+                                    <code>parse_primary()</code>, tree has subtraction as left child of multiplication.
+                                </p>
+                            </div>
+                        </details>
+                    </div>
+
+                    <!-- Problem 3 -->
+                    <div
+                        style="background: var(--bg-card); border: 1px solid var(--border-default); border-radius: var(--radius-lg); padding: var(--space-5);">
+                        <h4 style="color: var(--accent-cyan); margin-bottom: var(--space-3);">Problem 3: Precedence vs
+                            Parentheses</h4>
+                        <p style="margin-bottom: var(--space-3);">What's the difference between <code>2 + 3 * 4</code>
+                            and <code>(2 + 3) * 4</code>?</p>
+                        <details style="margin-top: var(--space-4);">
+                            <summary style="cursor: pointer; color: var(--accent-purple); font-weight: 600;">Click to
+                                reveal solution</summary>
+                            <div
+                                style="margin-top: var(--space-3); padding: var(--space-4); background: rgba(16, 185, 129, 0.1); border-radius: var(--radius-md);">
+                                <p><strong>Expression 1:</strong> <code>2 + 3 * 4</code></p>
+                                <ul style="padding-left: var(--space-5);">
+                                    <li>AST: <code>+</code> root, <code>2</code> left, <code>*</code> right</li>
+                                    <li>Evaluation: 3*4=12, 2+12=<strong>14</strong></li>
+                                </ul>
+                                <p style="margin-top: var(--space-3);"><strong>Expression 2:</strong>
+                                    <code>(2 + 3) * 4</code></p>
+                                <ul style="padding-left: var(--space-5);">
+                                    <li>AST: <code>*</code> root, <code>+</code> left, <code>4</code> right</li>
+                                    <li>Evaluation: 2+3=5, 5*4=<strong>20</strong></li>
+                                </ul>
+                                <p style="margin-top: var(--space-3);"><strong>Key:</strong> Parentheses force
+                                    <code>+</code> to be evaluated before <code>*</code>, overriding precedence rules.
+                                </p>
+                            </div>
+                        </details>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <!-- Navigation -->
+        <div
+            style="display: flex; justify-content: space-between; align-items: center; padding: var(--space-6); background: var(--bg-card); border-radius: var(--radius-xl); border: 1px solid var(--border-default); margin-top: var(--space-10);">
+            <a href="#" onclick="event.preventDefault(); UnlockSystem.navigateToModule('week-06', 'week-06-parser.html');"
+                style="display: flex; align-items: center; gap: var(--space-2); color: var(--text-secondary);">← Week
+                6</a>
+            <a href="#" onclick="event.preventDefault(); UnlockSystem.navigateToModule('week-08', 'week-08-variables.html');"
+                style="display: flex; align-items: center; gap: var(--space-2); padding: var(--space-3) var(--space-5); background: var(--gradient-primary); color: white; border-radius: var(--radius-md); font-weight: 600;">
+                Next: Compiler 4 - Variables →
+            </a>
+        </div>
+    </main>
+
+    <script src="../js/modules-data.js"></script>
+    <script src="../js/unlock.js"></script>
+    <script src="../js/progress.js"></script>
+    <script src="../js/quiz.js"></script>
+    <script>
+        function toggleSection(sectionId) {
+            const section = document.getElementById(sectionId);
+            if (section) {
+                section.classList.toggle('open');
+                if (section.classList.contains('open') && window.ProgressTracker) {
+                    ProgressTracker.expandSection('week-07', sectionId);
+                    updateProgress();
+                }
+            }
+        }
+
+        function updateProgress() {
+            if (window.ProgressTracker) {
+                const progress = ProgressTracker.getModuleProgress('week-07');
+                const bar = document.getElementById('moduleProgress');
+                if (bar) bar.style.width = `${progress.percentComplete}%`;
+            }
+        }
+
+        function checkTAContent() {
+            if (window.UnlockSystem) {
+                document.querySelectorAll('.ta-only-content').forEach(el => {
+                    if (UnlockSystem.isTAContentUnlocked(el.dataset.contentId)) {
+                        el.classList.add('unlocked');
+                    }
+                });
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const toggle = document.getElementById('themeToggle');
+            const savedTheme = localStorage.getItem('cs5008_theme') || 'dark';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            toggle.textContent = savedTheme === 'dark' ? '🌙' : '☀️';
+
+            toggle.addEventListener('click', () => {
+                const current = document.documentElement.getAttribute('data-theme');
+                const next = current === 'dark' ? 'light' : 'dark';
+                document.documentElement.setAttribute('data-theme', next);
+                localStorage.setItem('cs5008_theme', next);
+                toggle.textContent = next === 'dark' ? '🌙' : '☀️';
+            });
+
+            if (window.UnlockSystem) { UnlockSystem.init(); checkTAContent(); }
+            if (window.ProgressTracker) { ProgressTracker.visitModule('week-07'); updateProgress(); }
+        });
+    </script>
+</body>
+
+</html>

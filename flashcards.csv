@@ -1,0 +1,73 @@
+"In C programming, what is the key difference from Python/Java regarding memory management?","C requires manual memory allocation and deallocation, whereas Python/Java use automatic garbage collection."
+What is the primary purpose of the Lexer stage in a compiler pipeline?,To simplify parsing by grouping individual characters into meaningful units called tokens.
+The Parser stage in a compiler transforms a stream of tokens into what hierarchical data structure?,An Abstract Syntax Tree (AST).
+Why is a Stack Machine used as an intermediate representation in a compiler?,It simplifies the translation from a high-level AST to low-level assembly code.
+"In C, variables are not labels for values but are actual _____.",memory locations
+"In C, what is the consequence of not initializing a variable before use?","The variable will contain garbage data, leading to undefined behavior."
+What is a 'tagged union' in C?,A pattern where a struct contains a union and a 'tag' field that indicates which member of the union is currently valid.
+"In C, accessing a struct's field is done with the `.` operator, while accessing a field from a pointer to a struct is done with the _____ operator.",`->` (arrow)
+What is the fundamental difference between C strings and Python/Java strings?,"C strings are null-terminated character arrays, not objects with built-in methods and length tracking."
+What C standard library function is used to compare the content of two strings?,`strcmp()`
+What is the term for a pointer that points to a memory location that has been freed or is out of scope?,A dangling pointer.
+"In C's memory model, what is the difference between the Stack and the Heap?","The Stack is used for local variables with automatic cleanup, while the Heap is used for dynamically allocated memory that requires manual cleanup."
+What does the C function `malloc(size_t size)` do?,It allocates a specified number of bytes on the heap and returns a pointer to the beginning of the block.
+What is a memory leak in C programming?,A situation where memory allocated on the heap is no longer needed but is never released using `free()`.
+"In pointer arithmetic, if `p` is an `int*`, what does the expression `p + 1` actually add to the address?","It adds `sizeof(int)` bytes to the address, moving the pointer to the next integer element."
+"In x86-64 assembly, what is the primary role of the `rax` register?",It holds the return value of a function.
+"According to the x86-64 System V calling convention, which register holds the first argument passed to a function?",The `rdi` register.
+What is the key rule regarding memory operands in a single x86-64 instruction?,An instruction can have at most one memory operand.
+What is the difference between the `mov` and `lea` instructions in x86-64 assembly?,"`mov` loads the value from a memory address, while `lea` (Load Effective Address) calculates the address itself and stores it in the destination register."
+"Before executing the `idiv` (signed division) instruction in x86-64, what instruction must be used to sign-extend `rax` into `rdx:rax`?",The `cqo` (Convert Quadword to Octoword) instruction.
+What is the purpose of a function's prologue in x86-64 assembly?,To set up the stack frame by saving the old base pointer (`rbp`) and allocating space for local variables.
+"The function epilogue in x86-64 assembly typically consists of `mov rsp, rbp`, `pop rbp`, and `_____`.",`ret`
+"In x86-64, local variables are typically accessed using negative offsets from which register?",The base pointer register (`rbp`).
+What is the term for registers that a called function (callee) must preserve and restore before returning?,"Callee-saved registers (e.g., `rbx`, `rbp`, `r12`-`r15`)."
+"How does a program request a service from the operating system, such as exiting or writing to a file, in x86-64 Linux?",By using a system call (`syscall`) instruction with the appropriate syscall number in `rax`.
+"In a dynamic array implementation, why is it more efficient to double the capacity when full rather than adding a fixed amount?","Doubling capacity results in an amortized O(1) time complexity per append operation, while adding a fixed amount results in O(n)."
+"In a hash table that uses external chaining, how are collisions resolved?",Entries that hash to the same slot are stored in a linked list at that slot.
+What is the 'load factor' of a hash table?,The ratio of the number of entries to the number of slots in the table.
+What is the defining property of a Binary Search Tree (BST) for any given node?,"All values in the left subtree are less than the node's value, and all values in the right subtree are greater."
+"Which tree traversal algorithm, when applied to a Binary Search Tree, visits the nodes in sorted order?","In-order traversal (Left, Root, Right)."
+The process of generating stack machine code from an AST is equivalent to performing a _____ traversal of the tree.,post-order
+What is the main space complexity trade-off between an adjacency matrix and an adjacency list for graph representation?,"An adjacency matrix uses O(n²) space, while an adjacency list uses O(n + e) space, making lists more efficient for sparse graphs."
+Which graph traversal algorithm uses a queue and is guaranteed to find the shortest path in an unweighted graph?,Breadth-First Search (BFS).
+"In EBNF notation, what do curly braces `{ ... }` signify?","Repetition, indicating that the enclosed element can appear zero or more times."
+"In EBNF notation, what do square brackets `[ ... ]` signify?","Optionality, indicating that the enclosed element can appear zero or one time."
+How is operator precedence encoded in a recursive descent parser's grammar?,"By having functions for lower-precedence operators call functions for higher-precedence operators (e.g., `parse_additive` calls `parse_multiplicative`)."
+What is 'greedy matching' in a lexer?,"The principle of matching the longest possible token, such as recognizing `==` as a single token instead of two separate `=` tokens."
+A symbol table in a compiler is typically implemented with what data structure for its O(1) average lookup time?,A hash table.
+What information does a symbol table map a variable name to?,"Information about the variable, such as its type and storage location (e.g., stack slot number)."
+"In Jive, the `let` keyword is used for variable _____, while the `set` keyword is for variable _____.","declaration, assignment"
+What is the formula to calculate the memory address of a local variable at `slot` N in an x86-64 stack frame?,`[rbp - (N + 1) * 8]`
+"According to the x86-64 System V calling convention, what are the first two registers used for passing integer arguments?",`rdi` for the first argument and `rsi` for the second.
+"What is the purpose of the `setcc` family of instructions (e.g., `sete`, `setl`) in x86-64?",To set a destination byte register to 1 or 0 based on the result of a previous `cmp` or `test` instruction.
+How is a `while` loop typically implemented in assembly?,"With a label at the start, a conditional jump that exits the loop, the loop body, and an unconditional jump back to the start label."
+"In the Jive language, how are boolean values represented for control flow?","The integer `0` represents false, and any non-zero integer represents true."
+"To implement `if (condition)` in assembly, one typically evaluates the condition and uses a conditional jump that executes when the condition is _____.",false
+What system call is used in the course compiler to perform dynamic memory allocation for arrays?,The `mmap` syscall.
+"How is array element access, such as `arr[i]`, translated into assembly for an array of 64-bit integers?",It is translated to an address calculation like `[base_address + index * 8]`.
+"In the x86-64 assembly generated by the compiler, where are string literals stored?",In the read-only `.data` section of the executable.
+"What is Levenshtein distance, and how can it be used in a compiler?","It's the minimum number of edits to change one string into another; used to suggest corrections for misspelled identifiers (e.g., 'Did you mean printf?')."
+What is 'constant folding' as a compiler optimization?,The process of evaluating expressions with constant values at compile time instead of at runtime.
+What does a 'forward declaration' achieve in C?,It allows a function or type to be used before its full definition appears in the source code.
+What is the difference between passing a struct by value versus by reference (pointer) to a C function?,"Passing by value copies the entire struct, while passing by reference only copies the pointer (address), which is much more efficient for large structs."
+"What C keyword is used to create a type alias, such as making `Point` an alias for `struct Point`?",`typedef`
+What is the purpose of the `NULL` pointer in C?,It's a special value indicating that a pointer does not point to any valid memory location.
+"In C, the expression `arr[i]` is syntactic sugar for what pointer arithmetic expression?",`*(arr + i)`
+What is the main advantage of the custom `String` struct (with a length field) over standard C null-terminated strings?,"It provides O(1) length lookup, whereas C strings require an O(n) scan to find the length."
+"In x86-64 assembly, what is the effect of writing to a 32-bit register like `eax` on its 64-bit counterpart `rax`?",It zeros the upper 32 bits of the 64-bit register `rax`.
+"A program's entry point for the linker is the `_start` label, which typically calls `main` and then uses syscall number _____ to exit.",60
+"Which graph data structure, adjacency matrix or list, is better for representing a sparse graph (where e << n²)?","Adjacency list, due to its O(n + e) space complexity."
+Stack Machine Instruction: What does `LOAD 1` do?,It finds the variable stored in slot 1 and pushes its value onto the evaluation stack.
+Stack Machine Instruction: What does `STORE 0` do?,It pops the top value from the evaluation stack and stores it in the variable located at slot 0.
+"In the System V calling convention, if a function needs to use registers `rbx` or `r12`, what is its responsibility?",It must save their original values before using them and restore them before returning (they are callee-saved).
+What is the difference in parsing `a` versus `a()`?,"`a` is parsed as an identifier (variable access), while `a()` is parsed as a function call due to the lookahead for an opening parenthesis."
+Stack Machine Instruction: What is the purpose of `JUMP_IF_ZERO L1`?,"It pops a value from the stack, and if that value is zero, it jumps to the program label `L1`."
+"In Jive, array types are denoted with what syntax?","By enclosing the element type in square brackets, such as `[int]` for an array of integers."
+What is 'dead code elimination'?,"A compiler optimization that removes code that can never be executed, such as statements inside `if (false)`."
+"The `printf` format specifier for a C string (`char*`) is `%s`, and for a pointer address is _____.",`%p`
+What does the `realloc` function in C do?,"It changes the size of a previously allocated memory block, potentially moving it to a new location."
+Term: Recursive Descent Parsing,"A top-down parsing technique where a set of mutually recursive procedures is used to process the input, with one procedure for each nonterminal in the grammar."
+"In an AST for the expression `a - b - c`, which subtraction operator would be the root of the tree to enforce left-associativity?","The second subtraction operator, with the AST for `a - b` as its left child."
+"What is the output of the `test rax, rax` instruction used for?","To set the CPU's zero flag (ZF) if `rax` is zero, without modifying `rax` itself."
+What are the two fundamental operations associated with C pointers?,"The address-of operator `&` to get a variable's address, and the dereference operator `*` to access the value at an address."

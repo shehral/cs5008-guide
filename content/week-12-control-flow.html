@@ -1,0 +1,832 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Week 12: Compiler 6 - Control Flow | CS5008 Guide</title>
+    <link rel="stylesheet" href="../css/styles.css">
+    <link rel="icon"
+        href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>">
+</head>
+
+<body>
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+
+    <header class="header">
+        <div class="header-content">
+            <a href="../index.html" class="logo">
+                <span class="logo-icon">⚡</span>
+                <span>CS5008</span>
+            </a>
+            <div class="header-actions">
+                <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme">🌙</button>
+            </div>
+        </div>
+    </header>
+
+    <main class="main-container module-page">
+        <nav class="breadcrumb">
+            <a href="../index.html">← Back to modules</a>
+        </nav>
+
+        <div class="module-header">
+            <div class="module-badge green">🔀 Compiler 6 • +100 XP</div>
+            <h1>Control <span class="text-gradient">Flow</span></h1>
+            <p>Add if/else and while loops using conditional jumps, labels, and boolean comparisons.</p>
+        </div>
+
+        <div class="progress-bar mb-6">
+            <div class="progress-bar-fill" id="moduleProgress" style="width: 0%"></div>
+        </div>
+
+        <!-- Section 1: If/Else -->
+        <div class="section open" id="section-if">
+            <div class="section-header" onclick="toggleSection('section-if')">
+                <h3 class="section-title">🔀 If/Else Statements</h3>
+                <span class="section-toggle">▶</span>
+            </div>
+            <div class="section-content">
+                <pre><code>fn abs(x: int) -> int {
+    if x < 0 {
+        return -x
+    } else {
+        return x
+    }
+}</code></pre>
+
+                <h4 style="margin-top: var(--space-6);">Control Flow Structure</h4>
+                <pre><code>IF Statement Control Flow:
+
+   ┌─── Evaluate condition ────┐
+   │           │               │
+   │    ┌──────▼──────┐        │
+   │    │  Is result  │        │
+   │    │   truthy?   │        │
+   │    └──────┬──────┘        │
+   │           │               │
+   │    ┌──────┴──────┐        │
+   │  yes│            │no      │
+   │    ▼             ▼        │
+┌──┴────────┐   ┌──────────┐   │
+│ Then body │   │ Else body│   │
+└──────┬────┘   └────┬─────┘   │
+       │             │         │
+       └──────┬──────┘         │
+              ▼                │
+         (continue)            │
+</code></pre>
+
+                <h4 style="margin-top: var(--space-6);">If/Else Template (Pseudocode)</h4>
+                <pre><code>ALGORITHM: Generate If/Else Statement
+
+generate_if(condition, then_body, else_body):
+    label_id = unique_label_counter++
+    
+    // Step 1: Evaluate condition
+    generate_expression(condition)
+    emit "pop rax"
+    emit "test rax, rax"           // Sets ZF if rax == 0
+    emit "jz .else_{label_id}"     // Jump if zero (false)
+    
+    // Step 2: Then block
+    generate_statements(then_body)
+    emit "jmp .endif_{label_id}"   // Skip else block
+    
+    // Step 3: Else block
+    emit ".else_{label_id}:"       // Else label
+    IF else_body exists:
+        generate_statements(else_body)
+    
+    // Step 4: End label
+    emit ".endif_{label_id}:"</code></pre>
+            </div>
+        </div>
+
+        <!-- Section 2: While Loops -->
+        <div class="section" id="section-while">
+            <div class="section-header" onclick="toggleSection('section-while')">
+                <h3 class="section-title">🔁 While Loops</h3>
+                <span class="section-toggle">▶</span>
+            </div>
+            <div class="section-content">
+                <pre><code>fn countdown(n: int) -> int {
+    let sum: int = 0
+    while n > 0 {
+        set sum = sum + n
+        set n = n - 1
+    }
+    return sum
+}</code></pre>
+
+                <h4 style="margin-top: var(--space-6);">While Loop Structure</h4>
+                <pre><code>WHILE Loop Control Flow:
+
+          ┌─────────────────────┐
+          │                     │
+   ┌──────▼──────┐              │
+   │ loop_start: │              │
+   │ Condition   │              │
+   └──────┬──────┘              │
+          │                     │
+   ┌──────┴──────┐              │
+   │  Is result  │              │
+   │   truthy?   │              │
+   └──────┬──────┘              │
+          │                     │
+   ┌──────┴──────┐              │
+ no│            │yes            │
+   ▼             ▼              │
+┌──────┐   ┌──────────┐         │
+│ exit │   │ Loop body│─────────┘
+└──────┘   └──────────┘
+   │
+   ▼
+(continue)</code></pre>
+
+                <h4 style="margin-top: var(--space-6);">While Template (Pseudocode)</h4>
+                <pre><code>ALGORITHM: Generate While Loop
+
+generate_while(condition, body):
+    label_id = unique_label_counter++
+    
+    // Step 1: Loop start label
+    emit ".while_{label_id}:"
+    
+    // Step 2: Evaluate condition
+    generate_expression(condition)
+    emit "pop rax"
+    emit "test rax, rax"
+    emit "jz .endwhile_{label_id}"    // Exit if false
+    
+    // Step 3: Loop body
+    generate_statements(body)
+    
+    // Step 4: Jump back to start
+    emit "jmp .while_{label_id}"
+    
+    // Step 5: End label
+    emit ".endwhile_{label_id}:"</code></pre>
+            </div>
+        </div>
+
+        <!-- Section 3: Comparison Operators -->
+        <div class="section" id="section-comparison">
+            <div class="section-header" onclick="toggleSection('section-comparison')">
+                <h3 class="section-title">⚖️ Comparison Operators & Boolean Values</h3>
+                <span class="section-toggle">▶</span>
+            </div>
+            <div class="section-content">
+                <p>Comparisons produce boolean values: <strong>0 = false</strong>, <strong>non-zero = true</strong></p>
+
+                <h4>Comparison Instructions</h4>
+                <table style="width: 100%; border-collapse: collapse; margin: var(--space-4) 0;">
+                    <tr style="background: var(--bg-card);">
+                        <th style="padding: var(--space-3); text-align: left; border: 1px solid var(--border-default);">
+                            Operator</th>
+                        <th style="padding: var(--space-3); text-align: left; border: 1px solid var(--border-default);">
+                            Condition Jump</th>
+                        <th style="padding: var(--space-3); text-align: left; border: 1px solid var(--border-default);">
+                            SetCC</th>
+                    </tr>
+                    <tr>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);"><code>==</code>
+                        </td>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);"><code>je</code> /
+                            <code>jne</code>
+                        </td>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);"><code>sete</code>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);"><code>!=</code>
+                        </td>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);"><code>jne</code> /
+                            <code>je</code>
+                        </td>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);"><code>setne</code>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);"><code>&lt;</code>
+                        </td>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);"><code>jl</code> /
+                            <code>jge</code>
+                        </td>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);"><code>setl</code>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);"><code>&gt;</code>
+                        </td>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);"><code>jg</code> /
+                            <code>jle</code>
+                        </td>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);"><code>setg</code>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);"><code>&lt;=</code>
+                        </td>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);"><code>jle</code> /
+                            <code>jg</code>
+                        </td>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);"><code>setle</code>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);"><code>&gt;=</code>
+                        </td>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);"><code>jge</code> /
+                            <code>jl</code>
+                        </td>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);"><code>setge</code>
+                        </td>
+                    </tr>
+                </table>
+
+                <h4 style="margin-top: var(--space-6);">Generating Comparison Result</h4>
+                <pre><code>ALGORITHM: Generate Comparison (e.g., a > b)
+
+generate_comparison(left, op, right):
+    generate_expression(left)
+    generate_expression(right)
+    
+    emit "pop rcx"            // Right operand
+    emit "pop rax"            // Left operand
+    emit "cmp rax, rcx"       // Compare a with b
+    
+    // Convert flags to 0/1 boolean
+    SWITCH op:
+        CASE '>':  emit "setg al"
+        CASE '<':  emit "setl al"
+        CASE '>=': emit "setge al"
+        CASE '<=': emit "setle al"
+        CASE '==': emit "sete al"
+        CASE '!=': emit "setne al"
+    
+    emit "movzx rax, al"      // Zero-extend byte to 64-bit
+    emit "push rax"           // Push boolean result</code></pre>
+
+                <div
+                    style="background: rgba(239, 68, 68, 0.1); border: 1px solid var(--accent-red); border-radius: var(--radius-lg); padding: var(--space-5); margin: var(--space-6) 0;">
+                    <strong style="color: var(--accent-red);">⚠️ JUMP_IF_FALSE Inverts Condition!</strong>
+                    <p style="margin-top: var(--space-2);">For <code>if x > 5</code>, we jump when condition is
+                        <em>false</em>, so we use <code>jle</code> (not <code>jg</code>). The jump represents the "skip"
+                        case, not the "execute" case.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section 4: Labels -->
+        <div class="section" id="section-labels">
+            <div class="section-header" onclick="toggleSection('section-labels')">
+                <h3 class="section-title">🏷️ Unique Label Generation</h3>
+                <span class="section-toggle">▶</span>
+            </div>
+            <div class="section-content">
+                <p>Each if/while needs <strong>unique labels</strong> to avoid collisions, especially with nesting.</p>
+
+                <pre><code>ALGORITHM: Generate Unique Labels
+
+global label_counter = 0
+
+generate_label(prefix):
+    id = label_counter
+    label_counter = label_counter + 1
+    RETURN ".{prefix}_{id}"
+
+// Usage in nested if:
+if x > 0 {              // Uses .else_0, .endif_0
+    if y > 0 {          // Uses .else_1, .endif_1
+        ...
+    }
+}</code></pre>
+
+                <h4 style="margin-top: var(--space-6);">Example: Nested If Assembly</h4>
+                <pre><code>; if x > 0 { if y > 0 { return 1 } return 2 } return 0
+
+    ; Outer if (x > 0)
+    push qword [rbp-8]
+    push 0
+    pop rcx
+    pop rax
+    cmp rax, rcx
+    jle .else_0           ; Skip if x <= 0
+    
+    ; Inner if (y > 0)
+    push qword [rbp-16]
+    push 0
+    pop rcx
+    pop rax
+    cmp rax, rcx
+    jle .else_1           ; Skip if y <= 0
+    
+    ; return 1
+    mov rax, 1
+    jmp .endif_1
+    
+.else_1:
+    ; (nothing)
+.endif_1:
+    
+    ; return 2
+    mov rax, 2
+    jmp .endif_0
+    
+.else_0:
+    ; return 0
+    mov rax, 0
+.endif_0:</code></pre>
+            </div>
+        </div>
+
+        <!-- Section 5: Common Mistakes -->
+        <div class="section" id="section-mistakes">
+            <div class="section-header" onclick="toggleSection('section-mistakes')">
+                <h3 class="section-title">🚨 Common Mistakes</h3>
+                <span class="section-toggle">▶</span>
+            </div>
+            <div class="section-content">
+                <h4>Mistake 1: Forgetting to Invert Jump</h4>
+                <pre><code>// WRONG: For "if x > 5", jumping TO the then block
+jg .then_block     // ❌ Should jump when condition is FALSE
+
+// CORRECT: Jump to else/end when condition is FALSE
+jle .else_block    // ✓ Jump if NOT (x > 5), i.e., x <= 5</code></pre>
+
+                <h4 style="margin-top: var(--space-6);">Mistake 2: Infinite Loop (Missing Jump Back)</h4>
+                <pre><code>// WRONG: While loop without jump back
+.while_0:
+    ; condition check
+    jz .endwhile_0
+    ; loop body
+    ; MISSING: jmp .while_0 ❌
+.endwhile_0:
+
+// CORRECT: Always jump back to start
+.while_0:
+    ; condition check
+    jz .endwhile_0
+    ; loop body
+    jmp .while_0           // ✓ Jump back to start
+.endwhile_0:</code></pre>
+
+                <h4 style="margin-top: var(--space-6);">Mistake 3: Label Name Collisions</h4>
+                <pre><code>// WRONG: Same label for nested ifs
+if x { if y { } }  // Both use "else", "endif"? 💥
+
+// CORRECT: Unique counter per label
+.else_0     // First if
+.else_1     // Second if (nested)
+.else_2     // Third if</code></pre>
+
+                <h4 style="margin-top: var(--space-6);">Mistake 4: Not Zero-Extending setX</h4>
+                <pre><code>// WRONG: Upper bits of rax are garbage!
+setg al
+push rax           // ❌ Upper 56 bits could be anything
+
+// CORRECT: Zero-extend to 64 bits
+setg al
+movzx rax, al      // ✓ Zero-extend 8-bit to 64-bit
+push rax</code></pre>
+            </div>
+        </div>
+
+        <!-- Quiz Section -->
+        <div class="section" id="section-quiz">
+            <div class="section-header" onclick="toggleSection('section-quiz')">
+                <h3 class="section-title">🧠 Check Your Understanding</h3>
+                <span class="section-toggle">▶</span>
+            </div>
+            <div class="section-content">
+                <div class="quiz" data-correct="2" data-quiz-id="q1" data-module-id="week-12"
+                    data-explanation="For 'if x > 5', we use JUMP_IF_FALSE which means we jump when the condition is FALSE. NOT(x > 5) equals x <= 5, so we use jle.">
+                    <div class="quiz-question">For <code>if x > 5</code>, which jump instruction after
+                        <code>cmp x, 5</code>?
+                    </div>
+                    <div class="quiz-options">
+                        <div class="quiz-option" data-value="0">
+                            <div class="quiz-radio"></div><span>jg (jump if greater)</span>
+                        </div>
+                        <div class="quiz-option" data-value="1">
+                            <div class="quiz-radio"></div><span>jl (jump if less)</span>
+                        </div>
+                        <div class="quiz-option" data-value="2">
+                            <div class="quiz-radio"></div><span>jle (jump if less or equal)</span>
+                        </div>
+                        <div class="quiz-option" data-value="3">
+                            <div class="quiz-radio"></div><span>jge (jump if greater or equal)</span>
+                        </div>
+                    </div>
+                    <div class="quiz-feedback"></div>
+                </div>
+
+                <div class="quiz" data-correct="0" data-quiz-id="q2" data-module-id="week-12"
+                    data-explanation="In C and most low-level representations, 0 = false and any non-zero value = true.">
+                    <div class="quiz-question">What value represents "false" in our compiler?</div>
+                    <div class="quiz-options">
+                        <div class="quiz-option" data-value="0">
+                            <div class="quiz-radio"></div><span>0</span>
+                        </div>
+                        <div class="quiz-option" data-value="1">
+                            <div class="quiz-radio"></div><span>1</span>
+                        </div>
+                        <div class="quiz-option" data-value="2">
+                            <div class="quiz-radio"></div><span>-1</span>
+                        </div>
+                        <div class="quiz-option" data-value="3">
+                            <div class="quiz-radio"></div><span>NULL</span>
+                        </div>
+                    </div>
+                    <div class="quiz-feedback"></div>
+                </div>
+
+                <div class="quiz" data-correct="1" data-quiz-id="q3" data-module-id="week-12"
+                    data-explanation="setg only sets the low byte (al). We use movzx to zero-extend it to a full 64-bit value in rax.">
+                    <div class="quiz-question">Why do we use <code>movzx rax, al</code> after <code>setg al</code>?
+                    </div>
+                    <div class="quiz-options">
+                        <div class="quiz-option" data-value="0">
+                            <div class="quiz-radio"></div><span>To make the code run faster</span>
+                        </div>
+                        <div class="quiz-option" data-value="1">
+                            <div class="quiz-radio"></div><span>setg only sets 8 bits; we need 64 bits</span>
+                        </div>
+                        <div class="quiz-option" data-value="2">
+                            <div class="quiz-radio"></div><span>The ABI requires it</span>
+                        </div>
+                        <div class="quiz-option" data-value="3">
+                            <div class="quiz-radio"></div><span>To convert unsigned to signed</span>
+                        </div>
+                    </div>
+                    <div class="quiz-feedback"></div>
+                </div>
+
+                <div class="quiz" data-correct="3" data-quiz-id="q4" data-module-id="week-12"
+                    data-explanation="A while loop needs: (1) start label, (2) condition check with exit jump, (3) body, (4) jump back to start, (5) end label.">
+                    <div class="quiz-question">What's missing in a while loop if it runs forever?</div>
+                    <div class="quiz-options">
+                        <div class="quiz-option" data-value="0">
+                            <div class="quiz-radio"></div><span>The start label</span>
+                        </div>
+                        <div class="quiz-option" data-value="1">
+                            <div class="quiz-radio"></div><span>The condition check</span>
+                        </div>
+                        <div class="quiz-option" data-value="2">
+                            <div class="quiz-radio"></div><span>The exit jump</span>
+                        </div>
+                        <div class="quiz-option" data-value="3">
+                            <div class="quiz-radio"></div><span>The jump back to start</span>
+                        </div>
+                    </div>
+                    <div class="quiz-feedback"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TA-Only: Implementation -->
+        <div class="ta-only-content" id="ta-content-week-12" data-content-id="week-12-code">
+            <div class="ta-only-header"><span>💻</span>C Implementation</div>
+            <pre><code>static int next_label_id = 0;
+
+// Generate if/else statement
+void gen_if(AST_Node *node, Symbol_Table *table, FILE *out) {
+    int label_id = next_label_id++;
+    
+    // Evaluate condition (pushes 0 or non-zero)
+    gen_expr(node->if_stmt.condition, table, out);
+    fprintf(out, "    pop rax\n");
+    fprintf(out, "    test rax, rax\n");
+    fprintf(out, "    jz .else_%d\n", label_id);
+    
+    // Then block
+    gen_statements(node->if_stmt.then_body, table, out);
+    fprintf(out, "    jmp .endif_%d\n", label_id);
+    
+    // Else block
+    fprintf(out, ".else_%d:\n", label_id);
+    if (node->if_stmt.else_body.head) {
+        gen_statements(node->if_stmt.else_body, table, out);
+    }
+    
+    fprintf(out, ".endif_%d:\n", label_id);
+}
+
+// Generate while loop
+void gen_while(AST_Node *node, Symbol_Table *table, FILE *out) {
+    int label_id = next_label_id++;
+    
+    // Loop start
+    fprintf(out, ".while_%d:\n", label_id);
+    
+    // Condition
+    gen_expr(node->while_stmt.condition, table, out);
+    fprintf(out, "    pop rax\n");
+    fprintf(out, "    test rax, rax\n");
+    fprintf(out, "    jz .endwhile_%d\n", label_id);
+    
+    // Body
+    gen_statements(node->while_stmt.body, table, out);
+    
+    // Jump back
+    fprintf(out, "    jmp .while_%d\n", label_id);
+    
+    // End
+    fprintf(out, ".endwhile_%d:\n", label_id);
+}
+
+// Generate comparison (e.g., a > b)
+void gen_comparison(AST_Node *node, Symbol_Table *table, FILE *out) {
+    gen_expr(node->binop.left, table, out);
+    gen_expr(node->binop.right, table, out);
+    
+    fprintf(out, "    pop rcx\n");
+    fprintf(out, "    pop rax\n");
+    fprintf(out, "    cmp rax, rcx\n");
+    
+    switch (node->binop.op) {
+        case BINOP_EQ:  fprintf(out, "    sete al\n"); break;
+        case BINOP_NE:  fprintf(out, "    setne al\n"); break;
+        case BINOP_LT:  fprintf(out, "    setl al\n"); break;
+        case BINOP_GT:  fprintf(out, "    setg al\n"); break;
+        case BINOP_LE:  fprintf(out, "    setle al\n"); break;
+        case BINOP_GE:  fprintf(out, "    setge al\n"); break;
+    }
+    
+    fprintf(out, "    movzx rax, al\n");
+    fprintf(out, "    push rax\n");
+}</code></pre>
+        </div>
+
+        <!-- Quick Reference Section -->
+        <div class="accordion-item" id="section-reference">
+            <button class="accordion-toggle" onclick="toggleSection('section-reference')">
+                <span>📋 Quick Reference</span>
+                <span class="toggle-icon">▼</span>
+            </button>
+            <div class="accordion-content">
+                <div style="display: flex; flex-direction: column; gap: var(--space-6);">
+
+                    <!-- Comparison Operators -->
+                    <div>
+                        <h4 style="color: var(--accent-cyan); margin-bottom: var(--space-3);">Comparison Operators</h4>
+                        <div style="overflow-x: auto;">
+                            <table style="width: 100%; border-collapse: collapse; font-size: 0.9rem;">
+                                <thead>
+                                    <tr style="background: var(--bg-elevated);">
+                                        <th
+                                            style="padding: var(--space-2); text-align: left; border-bottom: 1px solid var(--border-default);">
+                                            Jive</th>
+                                        <th
+                                            style="padding: var(--space-2); text-align: left; border-bottom: 1px solid var(--border-default);">
+                                            x86-64</th>
+                                        <th
+                                            style="padding: var(--space-2); text-align: left; border-bottom: 1px solid var(--border-default);">
+                                            Stack Effect</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td
+                                            style="padding: var(--space-2); border-bottom: 1px solid var(--border-default);">
+                                            <code>==</code>
+                                        </td>
+                                        <td
+                                            style="padding: var(--space-2); border-bottom: 1px solid var(--border-default);">
+                                            <code>cmp; sete al</code>
+                                        </td>
+                                        <td
+                                            style="padding: var(--space-2); border-bottom: 1px solid var(--border-default);">
+                                            [a b] → [1 or 0]</td>
+                                    </tr>
+                                    <tr>
+                                        <td
+                                            style="padding: var(--space-2); border-bottom: 1px solid var(--border-default);">
+                                            <code>!=</code>
+                                        </td>
+                                        <td
+                                            style="padding: var(--space-2); border-bottom: 1px solid var(--border-default);">
+                                            <code>cmp; setne al</code>
+                                        </td>
+                                        <td
+                                            style="padding: var(--space-2); border-bottom: 1px solid var(--border-default);">
+                                            [a b] → [1 or 0]</td>
+                                    </tr>
+                                    <tr>
+                                        <td
+                                            style="padding: var(--space-2); border-bottom: 1px solid var(--border-default);">
+                                            <code>&lt;</code>
+                                        </td>
+                                        <td
+                                            style="padding: var(--space-2); border-bottom: 1px solid var(--border-default);">
+                                            <code>cmp; setl al</code>
+                                        </td>
+                                        <td
+                                            style="padding: var(--space-2); border-bottom: 1px solid var(--border-default);">
+                                            [a b] → [1 or 0]</td>
+                                    </tr>
+                                    <tr>
+                                        <td
+                                            style="padding: var(--space-2); border-bottom: 1px solid var(--border-default);">
+                                            <code>&lt;=</code>
+                                        </td>
+                                        <td
+                                            style="padding: var(--space-2); border-bottom: 1px solid var(--border-default);">
+                                            <code>cmp; setle al</code>
+                                        </td>
+                                        <td
+                                            style="padding: var(--space-2); border-bottom: 1px solid var(--border-default);">
+                                            [a b] → [1 or 0]</td>
+                                    </tr>
+                                    <tr>
+                                        <td
+                                            style="padding: var(--space-2); border-bottom: 1px solid var(--border-default);">
+                                            <code>&gt;</code>
+                                        </td>
+                                        <td
+                                            style="padding: var(--space-2); border-bottom: 1px solid var(--border-default);">
+                                            <code>cmp; setg al</code>
+                                        </td>
+                                        <td
+                                            style="padding: var(--space-2); border-bottom: 1px solid var(--border-default);">
+                                            [a b] → [1 or 0]</td>
+                                    </tr>
+                                    <tr>
+                                        <td style="padding: var(--space-2);"><code>&gt;=</code></td>
+                                        <td style="padding: var(--space-2);"><code>cmp; setge al</code></td>
+                                        <td style="padding: var(--space-2);">[a b] → [1 or 0]</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Logical Operators -->
+                    <div>
+                        <h4 style="color: var(--accent-cyan); margin-bottom: var(--space-3);">Logical Operators</h4>
+                        <div style="overflow-x: auto;">
+                            <table style="width: 100%; border-collapse: collapse; font-size: 0.9rem;">
+                                <thead>
+                                    <tr style="background: var(--bg-elevated);">
+                                        <th
+                                            style="padding: var(--space-2); text-align: left; border-bottom: 1px solid var(--border-default);">
+                                            Jive</th>
+                                        <th
+                                            style="padding: var(--space-2); text-align: left; border-bottom: 1px solid var(--border-default);">
+                                            x86-64</th>
+                                        <th
+                                            style="padding: var(--space-2); text-align: left; border-bottom: 1px solid var(--border-default);">
+                                            Semantics</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td
+                                            style="padding: var(--space-2); border-bottom: 1px solid var(--border-default);">
+                                            <code>&&</code>
+                                        </td>
+                                        <td
+                                            style="padding: var(--space-2); border-bottom: 1px solid var(--border-default);">
+                                            <code>test; setne; and</code>
+                                        </td>
+                                        <td
+                                            style="padding: var(--space-2); border-bottom: 1px solid var(--border-default);">
+                                            Both non-zero</td>
+                                    </tr>
+                                    <tr>
+                                        <td style="padding: var(--space-2);"><code>||</code></td>
+                                        <td style="padding: var(--space-2);"><code>test; setne; or</code></td>
+                                        <td style="padding: var(--space-2);">At least one non-zero</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Jump Instructions -->
+                    <div>
+                        <h4 style="color: var(--accent-cyan); margin-bottom: var(--space-3);">Jump Instructions</h4>
+                        <div style="overflow-x: auto;">
+                            <table style="width: 100%; border-collapse: collapse; font-size: 0.9rem;">
+                                <thead>
+                                    <tr style="background: var(--bg-elevated);">
+                                        <th
+                                            style="padding: var(--space-2); text-align: left; border-bottom: 1px solid var(--border-default);">
+                                            Instruction</th>
+                                        <th
+                                            style="padding: var(--space-2); text-align: left; border-bottom: 1px solid var(--border-default);">
+                                            x86-64</th>
+                                        <th
+                                            style="padding: var(--space-2); text-align: left; border-bottom: 1px solid var(--border-default);">
+                                            Usage</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td
+                                            style="padding: var(--space-2); border-bottom: 1px solid var(--border-default);">
+                                            JUMP</td>
+                                        <td
+                                            style="padding: var(--space-2); border-bottom: 1px solid var(--border-default);">
+                                            <code>jmp label</code>
+                                        </td>
+                                        <td
+                                            style="padding: var(--space-2); border-bottom: 1px solid var(--border-default);">
+                                            Unconditional (loops)</td>
+                                    </tr>
+                                    <tr>
+                                        <td style="padding: var(--space-2);">JUMP_IF_ZERO</td>
+                                        <td style="padding: var(--space-2);"><code>test; jz label</code></td>
+                                        <td style="padding: var(--space-2);">If condition false</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Operator Precedence -->
+                    <div>
+                        <h4 style="color: var(--accent-cyan); margin-bottom: var(--space-3);">Operator Precedence (Low
+                            to High)</h4>
+                        <div
+                            style="background: var(--bg-card); border: 1px solid var(--border-default); border-radius: var(--radius-md); padding: var(--space-4);">
+                            <pre
+                                style="margin: 0; line-height: 1.6;"><code>||  →  &&  →  == !=  →  < <= > >=  →  + -  →  * / %  →  Primary</code></pre>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <!-- Navigation -->
+        <div
+            style="display: flex; justify-content: space-between; align-items: center; padding: var(--space-6); background: var(--bg-card); border-radius: var(--radius-xl); border: 1px solid var(--border-default); margin-top: var(--space-10);">
+            <a href="#" onclick="event.preventDefault(); UnlockSystem.navigateToModule('week-11', 'week-11-review.html');"
+                style="display: flex; align-items: center; gap: var(--space-2); color: var(--text-secondary);">← Week
+                11</a>
+            <a href="#" onclick="event.preventDefault(); UnlockSystem.navigateToModule('week-13', 'week-13-types.html');"
+                style="display: flex; align-items: center; gap: var(--space-2); padding: var(--space-3) var(--space-5); background: var(--gradient-primary); color: white; border-radius: var(--radius-md); font-weight: 600;">
+                Next: Type Checking →
+            </a>
+        </div>
+    </main>
+
+    <script src="../js/modules-data.js"></script>
+    <script src="../js/unlock.js"></script>
+    <script src="../js/progress.js"></script>
+    <script src="../js/quiz.js"></script>
+    <script>
+        function toggleSection(sectionId) {
+            const section = document.getElementById(sectionId);
+            if (section) {
+                section.classList.toggle('open');
+                if (section.classList.contains('open') && window.ProgressTracker) {
+                    ProgressTracker.expandSection('week-12', sectionId);
+                    updateProgress();
+                }
+            }
+        }
+
+        function updateProgress() {
+            if (window.ProgressTracker) {
+                const progress = ProgressTracker.getModuleProgress('week-12');
+                const bar = document.getElementById('moduleProgress');
+                if (bar) bar.style.width = `${progress.percentComplete}%`;
+            }
+        }
+
+        function checkTAContent() {
+            if (window.UnlockSystem) {
+                document.querySelectorAll('.ta-only-content').forEach(el => {
+                    if (UnlockSystem.isTAContentUnlocked(el.dataset.contentId)) {
+                        el.classList.add('unlocked');
+                    }
+                });
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const toggle = document.getElementById('themeToggle');
+            const savedTheme = localStorage.getItem('cs5008_theme') || 'dark';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            toggle.textContent = savedTheme === 'dark' ? '🌙' : '☀️';
+
+            toggle.addEventListener('click', () => {
+                const current = document.documentElement.getAttribute('data-theme');
+                const next = current === 'dark' ? 'light' : 'dark';
+                document.documentElement.setAttribute('data-theme', next);
+                localStorage.setItem('cs5008_theme', next);
+                toggle.textContent = next === 'dark' ? '🌙' : '☀️';
+            });
+
+            if (window.UnlockSystem) { UnlockSystem.init(); checkTAContent(); }
+            if (window.ProgressTracker) { ProgressTracker.visitModule('week-12'); updateProgress(); }
+        });
+    </script>
+</body>
+
+</html>

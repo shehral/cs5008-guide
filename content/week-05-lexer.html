@@ -1,0 +1,1008 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Week 5: Compiler 1 - Lexer | CS5008 Guide</title>
+    <link rel="stylesheet" href="../css/styles.css">
+    <link rel="icon"
+        href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>">
+</head>
+
+<body>
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+
+    <header class="header">
+        <div class="header-content">
+            <a href="../index.html" class="logo">
+                <span class="logo-icon">⚡</span>
+                <span>CS5008</span>
+            </a>
+            <div class="header-actions">
+                <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme">🌙</button>
+            </div>
+        </div>
+    </header>
+
+    <main class="main-container module-page">
+        <nav class="breadcrumb">
+            <a href="../index.html">← Back to modules</a>
+        </nav>
+
+        <div class="module-header">
+            <div class="module-badge green">🔤 Compiler 1 • +100 XP</div>
+            <h1>The <span class="text-gradient">Lexer</span></h1>
+            <p>Your first compiler stage! Transform raw source code into a stream of tokens—the atoms of programming
+                languages.</p>
+        </div>
+
+        <div class="progress-bar mb-6">
+            <div class="progress-bar-fill" id="moduleProgress" style="width: 0%"></div>
+        </div>
+
+        <!-- Section 1: Compiler Pipeline -->
+        <div class="section open" id="section-pipeline">
+            <div class="section-header" onclick="toggleSection('section-pipeline')">
+                <h3 class="section-title">🔧 Where the Lexer Fits</h3>
+                <span class="section-toggle">▶</span>
+            </div>
+            <div class="section-content">
+                <p>Your Jive compiler has 4 main stages:</p>
+                <pre><code>Source Code → [LEXER] → Tokens → [PARSER] → AST → [CODEGEN] → Assembly
+
+┌─────────────────────────────────────────────────────────────────────┐
+│  "fn main() -> int { return 2 + 3 * 4 }"                            │
+│        │                                                            │
+│        ▼                                                            │
+│  ┌─────────┐                                                        │
+│  │  LEXER  │  ◄── YOU ARE HERE                                      │
+│  └────┬────┘                                                        │
+│        │                                                            │
+│        ▼                                                            │
+│  [fn] [main] [(] [)] [{] [return] [2] [+] [3] [*] [4] [}]           │
+│        │                                                            │
+│        ▼                                                            │
+│  ┌─────────┐                                                        │
+│  │ PARSER  │  → Tree structure with precedence                      │
+│  └────┬────┘                                                        │
+│        ▼                                                            │
+│  ┌─────────┐                                                        │
+│  │ CODEGEN │  → Assembly code                                       │
+│  └─────────┘                                                        │
+└─────────────────────────────────────────────────────────────────────┘</code></pre>
+
+                <h4 style="margin-top: var(--space-8);">Complete Pipeline Example</h4>
+                <p>Let's trace <code>fn main() -> int { return 2 + 3 * 4 }</code> through all stages:</p>
+
+                <div style="display: grid; gap: var(--space-4); margin: var(--space-6) 0;">
+                    <div
+                        style="background: var(--bg-card); border: 1px solid var(--accent-green); border-radius: var(--radius-lg); padding: var(--space-5);">
+                        <div style="font-weight: 600; color: var(--accent-green);">Stage 1: Lexer → Tokens</div>
+                        <pre style="margin-top: var(--space-3);"><code>input.jive:1:1    KEYWORD      fn
+input.jive:1:4    IDENTIFIER   main
+input.jive:1:8    (
+input.jive:1:9    )
+input.jive:1:11   ->
+input.jive:1:14   TYPE         int
+input.jive:2:1    {
+input.jive:3:5    KEYWORD      return
+input.jive:3:12   INTEGER      2
+input.jive:3:14   +
+input.jive:3:16   INTEGER      3
+input.jive:3:18   *
+input.jive:3:20   INTEGER      4
+input.jive:4:1    }
+input.jive:4:2    EOF</code></pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section 2: What Is a Lexer -->
+        <div class="section" id="section-what">
+            <div class="section-header" onclick="toggleSection('section-what')">
+                <h3 class="section-title">🔤 What Is a Lexer?</h3>
+                <span class="section-toggle">▶</span>
+            </div>
+            <div class="section-content">
+                <p>A lexer (also called a <strong>tokenizer</strong> or <strong>scanner</strong>) breaks text into
+                    meaningful chunks called <strong>tokens</strong>.</p>
+
+                <h4>🐍 YOU KNOW (Python): string.split()</h4>
+                <pre><code># Python splits on whitespace
+"hello world".split()  # ['hello', 'world']
+
+# But code isn't that simple!
+"x=5+3".split()        # Just ['x=5+3'] - useless!</code></pre>
+
+                <h4 style="margin-top: var(--space-6);">⚙️ A Lexer is smarter:</h4>
+                <pre><code>Input:  "x = 5 + 3"
+
+Output: [IDENTIFIER 'x'] [EQUALS] [INTEGER 5] [PLUS] [INTEGER 3]
+
+# It understands what each piece IS, not just where spaces are!</code></pre>
+
+                <div
+                    style="background: var(--bg-terminal); border-radius: var(--radius-lg); padding: var(--space-5); margin: var(--space-6) 0;">
+                    <strong style="color: var(--accent-cyan);">💡 Think of it like reading:</strong>
+                    <ul style="margin-top: var(--space-3); padding-left: var(--space-5);">
+                        <li>You don't read letter-by-letter: "H-e-l-l-o"</li>
+                        <li>You see <strong>words</strong>: "Hello"</li>
+                        <li>A lexer sees <strong>tokens</strong> (keywords, numbers, operators)</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section 3: Token Types -->
+        <div class="section" id="section-tokens">
+            <div class="section-header" onclick="toggleSection('section-tokens')">
+                <h3 class="section-title">🏷️ Token Types in Jive</h3>
+                <span class="section-toggle">▶</span>
+            </div>
+            <div class="section-content">
+                <p>Your lexer must recognize these categories:</p>
+
+                <table style="width: 100%; border-collapse: collapse; margin: var(--space-6) 0;">
+                    <tr style="background: var(--bg-card);">
+                        <th style="padding: var(--space-3); text-align: left; border: 1px solid var(--border-default);">
+                            Category</th>
+                        <th style="padding: var(--space-3); text-align: left; border: 1px solid var(--border-default);">
+                            Examples</th>
+                        <th style="padding: var(--space-3); text-align: left; border: 1px solid var(--border-default);">
+                            Token Kind</th>
+                    </tr>
+                    <tr>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);">
+                            <strong>Keywords</strong>
+                        </td>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);">fn, return, let,
+                            if, else, while</td>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);">
+                            <code>TOKEN_KEYWORD</code>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);">
+                            <strong>Types</strong>
+                        </td>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);">int, bool, str
+                        </td>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);">
+                            <code>TOKEN_TYPE</code>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);">
+                            <strong>Identifiers</strong>
+                        </td>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);">main, myVar,
+                            foo123</td>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);">
+                            <code>TOKEN_IDENTIFIER</code>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);">
+                            <strong>Integers</strong>
+                        </td>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);">0, 42, 1234567
+                        </td>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);">
+                            <code>TOKEN_INTEGER</code>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);">
+                            <strong>Single-char</strong>
+                        </td>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);">( ) { } : ; + - *
+                            /</td>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);">
+                            <code>TOKEN_LPAREN</code>, etc.
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);">
+                            <strong>Two-char</strong>
+                        </td>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);">->, ==, !=, <=,>=
+                        </td>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);">
+                            <code>TOKEN_ARROW</code>, etc.
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);"><strong>End of
+                                File</strong></td>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);">(none)</td>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);">
+                            <code>TOKEN_EOF</code>
+                        </td>
+                    </tr>
+                </table>
+
+                <h4 style="margin-top: var(--space-8);">Identifier vs Keyword</h4>
+                <p>Both start with a letter! How to distinguish?</p>
+                <pre><code>1. Read the entire word: "return"
+2. Check if it's in the keyword list
+3. If yes → TOKEN_KEYWORD  
+   If no  → TOKEN_IDENTIFIER
+
+Check list: fn, let, set, if, else, while, return, true, false, call</code></pre>
+            </div>
+        </div>
+
+        <!-- Section: EBNF Grammar Notation -->
+        <div class="section" id="section-ebnf">
+            <div class="section-header" onclick="toggleSection('section-ebnf')">
+                <h3 class="section-title">📐 EBNF Grammar Notation</h3>
+                <span class="section-toggle">▶</span>
+            </div>
+            <div class="section-content">
+                <p><strong>EBNF</strong> = <strong>Extended Backus-Naur Form</strong> — A formal way to describe the
+                    grammar (syntax rules) of a programming language.</p>
+
+                <div
+                    style="background: rgba(139, 92, 246, 0.1); border: 1px solid var(--accent-purple); border-radius: var(--radius-lg); padding: var(--space-4); margin-bottom: var(--space-6);">
+                    <strong style="color: var(--accent-purple);">📝 Why You Need This</strong>
+                    <ul style="margin-top: var(--space-2); padding-left: var(--space-5);">
+                        <li>Exam questions use EBNF to describe language features</li>
+                        <li>Parser implementation directly follows EBNF grammar</li>
+                    </ul>
+                </div>
+
+                <h4>EBNF Symbols</h4>
+                <table style="width: 100%; border-collapse: collapse; margin: var(--space-4) 0;">
+                    <tr style="background: var(--bg-card);">
+                        <th style="padding: var(--space-2); text-align: left; border: 1px solid var(--border-default);">
+                            Symbol</th>
+                        <th style="padding: var(--space-2); text-align: left; border: 1px solid var(--border-default);">
+                            Meaning</th>
+                        <th style="padding: var(--space-2); text-align: left; border: 1px solid var(--border-default);">
+                            Example</th>
+                    </tr>
+                    <tr>
+                        <td style="padding: var(--space-2); border: 1px solid var(--border-default);"><code>=</code>
+                        </td>
+                        <td style="padding: var(--space-2); border: 1px solid var(--border-default);">"is defined as"
+                        </td>
+                        <td style="padding: var(--space-2); border: 1px solid var(--border-default);">
+                            <code>digit = "0" | "1" | ... | "9"</code></td>
+                    </tr>
+                    <tr>
+                        <td style="padding: var(--space-2); border: 1px solid var(--border-default);"><code>,</code>
+                        </td>
+                        <td style="padding: var(--space-2); border: 1px solid var(--border-default);">Sequence (one
+                            after another)</td>
+                        <td style="padding: var(--space-2); border: 1px solid var(--border-default);">
+                            <code>if_stmt = "if", expr, block</code></td>
+                    </tr>
+                    <tr>
+                        <td style="padding: var(--space-2); border: 1px solid var(--border-default);"><code>|</code>
+                        </td>
+                        <td style="padding: var(--space-2); border: 1px solid var(--border-default);">Choice (one or the
+                            other)</td>
+                        <td style="padding: var(--space-2); border: 1px solid var(--border-default);">
+                            <code>type = "int" | "str" | "bool"</code></td>
+                    </tr>
+                    <tr>
+                        <td style="padding: var(--space-2); border: 1px solid var(--border-default);">
+                            <code>[ ... ]</code></td>
+                        <td style="padding: var(--space-2); border: 1px solid var(--border-default);">Optional (0 or 1
+                            times)</td>
+                        <td style="padding: var(--space-2); border: 1px solid var(--border-default);">
+                            <code>fn_def = "fn", name, [ "->", type ]</code></td>
+                    </tr>
+                    <tr>
+                        <td style="padding: var(--space-2); border: 1px solid var(--border-default);">
+                            <code>{ ... }</code></td>
+                        <td style="padding: var(--space-2); border: 1px solid var(--border-default);">Repetition (0 or
+                            more)</td>
+                        <td style="padding: var(--space-2); border: 1px solid var(--border-default);">
+                            <code>program = { fn_definition }</code></td>
+                    </tr>
+                    <tr>
+                        <td style="padding: var(--space-2); border: 1px solid var(--border-default);">
+                            <code>" ... "</code></td>
+                        <td style="padding: var(--space-2); border: 1px solid var(--border-default);">Literal text</td>
+                        <td style="padding: var(--space-2); border: 1px solid var(--border-default);"><code>"fn"</code>,
+                            <code>"return"</code>, <code>"+"</code></td>
+                    </tr>
+                </table>
+
+                <div
+                    style="background: rgba(245, 158, 11, 0.1); border: 1px solid var(--accent-yellow); border-radius: var(--radius-lg); padding: var(--space-4); margin-top: var(--space-4);">
+                    <strong style="color: var(--accent-yellow);">⚠️ CRITICAL</strong>
+                    <p style="margin-top: var(--space-2);">Don't confuse EBNF <code>{}</code> (repetition) with C
+                        <code>{}</code> (block delimiters)!</p>
+                </div>
+
+                <h4 style="margin-top: var(--space-8);">Example: Arithmetic Expression</h4>
+                <pre><code>EBNF:
+number = digit, { digit } ;
+expr = number, { ("+" | "-"), number } ;
+
+Valid:   5, 1+2, 1+2-3+4
+Invalid: +5, 1+, 1++2</code></pre>
+
+                <h4 style="margin-top: var(--space-6);">Jive Language Grammar (Simplified)</h4>
+                <pre><code>identifier = ( "_" | letter ), { "_" | letter | digit } ;
+number = digit, { digit } ;
+type = "int" | "str" | "bool" ;
+
+primary = number | identifier | "(", expr, ")" ;
+expr = primary, { ("+" | "-" | "*" | "/"), primary } ;
+
+let_stmt = "let", identifier, ":", type, [ "=", expr ] ;
+return_stmt = "return", expr ;
+
+statement = let_stmt | return_stmt | ... ;
+block = "{", { statement }, "}" ;
+fn_definition = "fn", identifier, "(", params, ")", [ "->", type ], block ;
+program = { fn_definition } ;</code></pre>
+            </div>
+        </div>
+
+        <!-- Section 4: The Token Struct -->
+        <div class="section" id="section-struct">
+            <div class="section-header" onclick="toggleSection('section-struct')">
+                <h3 class="section-title">📦 The Token Struct</h3>
+                <span class="section-toggle">▶</span>
+            </div>
+            <div class="section-content">
+                <p>Each token contains:</p>
+                <pre><code>typedef struct Token {
+    Token_Kind kind;    // What type (KEYWORD, INTEGER, etc.)
+    String source;      // The actual text ("42", "main", "+")
+    Loc loc;            // Where in the file (line, column)
+    
+    union {             // Extra data depending on kind:
+        long long_value;   // For INTEGER tokens
+        Keyword keyword;   // For KEYWORD tokens (KW_FN, KW_RETURN...)
+    };
+} Token;</code></pre>
+
+                <h4 style="margin-top: var(--space-8);">Example: Lexing "42"</h4>
+                <pre><code>Token {
+    kind: TOKEN_INTEGER,
+    source: "42",
+    loc: {line: 3, col: 12},
+    long_value: 42        // Parsed numeric value!
+}</code></pre>
+
+                <h4 style="margin-top: var(--space-6);">Example: Lexing "return"</h4>
+                <pre><code>Token {
+    kind: TOKEN_KEYWORD,
+    source: "return",
+    loc: {line: 3, col: 5},
+    keyword: KW_RETURN
+}</code></pre>
+
+                <div
+                    style="background: rgba(16, 185, 129, 0.1); border: 1px solid var(--accent-green); border-radius: var(--radius-lg); padding: var(--space-5); margin: var(--space-6) 0;">
+                    <strong style="color: var(--accent-green);">🎯 Why store location?</strong>
+                    <p style="margin-top: var(--space-2);">Error messages!
+                        <code>"Error at line 3, column 12: expected ';'"</code>
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section 5: Algorithm -->
+        <div class="section" id="section-algorithm">
+            <div class="section-header" onclick="toggleSection('section-algorithm')">
+                <h3 class="section-title">⚙️ The Lexing Algorithm</h3>
+                <span class="section-toggle">▶</span>
+            </div>
+            <div class="section-content">
+                <p>The lexer works character-by-character with a simple pattern:</p>
+
+                <pre><code>while not at end of input:
+    skip whitespace (spaces, tabs, newlines)
+    
+    c = current character
+    
+    if c is letter or underscore:
+        read whole word (while letter/digit/underscore)
+        if word in keywords → emit KEYWORD token
+        else if word in types → emit TYPE token
+        else → emit IDENTIFIER token
+    
+    else if c is digit:
+        read whole number (while digit)
+        parse to integer
+        emit INTEGER token with parsed value
+    
+    else if c is '(':  emit LPAREN
+    else if c is ')':  emit RPAREN
+    else if c is '{':  emit LBRACE
+    else if c is '}':  emit RBRACE
+    
+    else if c is '-':
+        if next is '>' → advance, emit ARROW  // ->
+        else → emit MINUS
+    
+    else if c is '=':
+        if next is '=' → advance, emit EQEQ   // ==
+        else → emit EQ
+    
+    ... etc for all symbols</code></pre>
+
+                <h4 style="margin-top: var(--space-8);">Key Insight: Deterministic by First Character</h4>
+                <pre><code>First Character   What Token(s) to Check
+──────────────────────────────────────────
+a-z, A-Z, _       identifier OR keyword OR type
+0-9               integer
+(                 LPAREN (definitely)
+)                 RPAREN (definitely)
+-                 MINUS or ARROW (peek next!)
+=                 EQ or EQEQ (peek next!)
+!                 Only valid if next is '=' (!=)</code></pre>
+            </div>
+        </div>
+
+        <!-- Section 6: Key Functions -->
+        <div class="section" id="section-functions">
+            <div class="section-header" onclick="toggleSection('section-functions')">
+                <h3 class="section-title">🔧 Key Functions</h3>
+                <span class="section-toggle">▶</span>
+            </div>
+            <div class="section-content">
+                <h4>next_token()</h4>
+                <p>The heart of the lexer. Reads characters and returns the next token.</p>
+                <pre><code>Token next_token(Lexer *lexer) {
+    skip_whitespace(lexer);
+    
+    if (is_at_end(lexer)) {
+        return make_token(TOKEN_EOF);
+    }
+    
+    char c = advance(lexer);
+    
+    // Single-char tokens
+    if (c == '(') return make_token(TOKEN_LPAREN);
+    if (c == ')') return make_token(TOKEN_RPAREN);
+    // ... etc
+    
+    // Multi-char tokens
+    if (is_alpha(c)) return identifier_or_keyword(lexer);
+    if (is_digit(c)) return number(lexer);
+    
+    return error_token("Unexpected character");
+}</code></pre>
+
+                <h4 style="margin-top: var(--space-8);">Helper Functions</h4>
+                <pre><code>// Look at current char without consuming
+char peek(Lexer *lexer) {
+    return lexer->source[lexer->current];
+}
+
+// Consume current char and advance
+char advance(Lexer *lexer) {
+    return lexer->source[lexer->current++];
+}
+
+// Consume if next char matches expected
+bool match(Lexer *lexer, char expected) {
+    if (peek(lexer) == expected) {
+        advance(lexer);
+        return true;
+    }
+    return false;
+}
+
+// Character classification
+bool is_alpha(char c) {
+    return (c >= 'a' && c <= 'z') ||
+           (c >= 'A' && c <= 'Z') ||
+           c == '_';
+}
+
+bool is_digit(char c) {
+    return c >= '0' && c <= '9';
+}</code></pre>
+            </div>
+        </div>
+
+        <!-- Section 7: Common Mistakes -->
+        <div class="section" id="section-mistakes">
+            <div class="section-header" onclick="toggleSection('section-mistakes')">
+                <h3 class="section-title">⚠️ Common Lexer Mistakes</h3>
+                <span class="section-toggle">▶</span>
+            </div>
+            <div class="section-content">
+                <h4>Mistake 1: Forgetting to skip whitespace</h4>
+                <pre><code>// ❌ Wrong: Returns whitespace as unknown token
+Token next_token(Lexer *lexer) {
+    char c = advance(lexer);
+    // Problem: c could be ' ' or '\n'!
+}
+
+// ✅ Correct: Skip whitespace first
+Token next_token(Lexer *lexer) {
+    skip_whitespace(lexer);  // Handle spaces, tabs, newlines
+    char c = advance(lexer);
+}</code></pre>
+
+                <h4 style="margin-top: var(--space-8);">Mistake 2: Not checking two-char tokens</h4>
+                <pre><code>// ❌ Wrong: Treats -> as MINUS then ERROR
+case '-': return make_token(TOKEN_MINUS);
+
+// ✅ Correct: Check for arrow first
+case '-':
+    if (match(lexer, '>')) return make_token(TOKEN_ARROW);
+    return make_token(TOKEN_MINUS);</code></pre>
+
+                <h4 style="margin-top: var(--space-8);">Mistake 3: Not parsing integer value</h4>
+                <pre><code>// ❌ Wrong: Only stores the string "42"
+Token tok;
+tok.kind = TOKEN_INTEGER;
+tok.source = "42";
+
+// ✅ Correct: Also parse the numeric value
+Token tok;
+tok.kind = TOKEN_INTEGER;
+tok.source = "42";
+tok.long_value = 42;  // Parser needs this!</code></pre>
+            </div>
+        </div>
+
+        <!-- Quiz Section -->
+        <div class="section" id="section-quiz">
+            <div class="section-header" onclick="toggleSection('section-quiz')">
+                <h3 class="section-title">🧠 Check Your Understanding</h3>
+                <span class="section-toggle">▶</span>
+            </div>
+            <div class="section-content">
+                <div class="quiz" data-correct="1" data-quiz-id="q1" data-module-id="week-05"
+                    data-explanation="The lexer's job is to produce a stream of tokens from raw source code characters.">
+                    <div class="quiz-question">What does the lexer produce as output?</div>
+                    <div class="quiz-options">
+                        <div class="quiz-option" data-value="0">
+                            <div class="quiz-radio"></div>
+                            <span>Abstract Syntax Tree</span>
+                        </div>
+                        <div class="quiz-option" data-value="1">
+                            <div class="quiz-radio"></div>
+                            <span>Stream of tokens</span>
+                        </div>
+                        <div class="quiz-option" data-value="2">
+                            <div class="quiz-radio"></div>
+                            <span>Assembly code</span>
+                        </div>
+                        <div class="quiz-option" data-value="3">
+                            <div class="quiz-radio"></div>
+                            <span>Binary executable</span>
+                        </div>
+                    </div>
+                    <div class="quiz-feedback"></div>
+                </div>
+
+                <div class="quiz" data-correct="2" data-quiz-id="q2" data-module-id="week-05"
+                    data-explanation="'return' is a keyword in Jive. The lexer first reads it as a word, then checks if it's in the keyword list.">
+                    <div class="quiz-question">The text "return" becomes what token type?</div>
+                    <div class="quiz-options">
+                        <div class="quiz-option" data-value="0">
+                            <div class="quiz-radio"></div>
+                            <span>TOKEN_IDENTIFIER</span>
+                        </div>
+                        <div class="quiz-option" data-value="1">
+                            <div class="quiz-radio"></div>
+                            <span>TOKEN_TYPE</span>
+                        </div>
+                        <div class="quiz-option" data-value="2">
+                            <div class="quiz-radio"></div>
+                            <span>TOKEN_KEYWORD</span>
+                        </div>
+                        <div class="quiz-option" data-value="3">
+                            <div class="quiz-radio"></div>
+                            <span>TOKEN_OPERATOR</span>
+                        </div>
+                    </div>
+                    <div class="quiz-feedback"></div>
+                </div>
+
+                <div class="quiz" data-correct="1" data-quiz-id="q3" data-module-id="week-05"
+                    data-explanation="The lexer sees '-' and peeks ahead to find '>'. Together they form the ARROW token.">
+                    <div class="quiz-question">How does the lexer handle "->"?</div>
+                    <div class="quiz-options">
+                        <div class="quiz-option" data-value="0">
+                            <div class="quiz-radio"></div>
+                            <span>Returns TOKEN_MINUS then TOKEN_GT</span>
+                        </div>
+                        <div class="quiz-option" data-value="1">
+                            <div class="quiz-radio"></div>
+                            <span>Peeks ahead, returns single TOKEN_ARROW</span>
+                        </div>
+                        <div class="quiz-option" data-value="2">
+                            <div class="quiz-radio"></div>
+                            <span>Reports an error</span>
+                        </div>
+                        <div class="quiz-option" data-value="3">
+                            <div class="quiz-radio"></div>
+                            <span>Skips both characters</span>
+                        </div>
+                    </div>
+                    <div class="quiz-feedback"></div>
+                </div>
+
+                <div class="quiz" data-correct="0" data-quiz-id="q4" data-module-id="week-05"
+                    data-explanation="The Token struct stores: kind (type), source (text), loc (position), and a union for extra data like parsed integer value.">
+                    <div class="quiz-question">What does a Token store?</div>
+                    <div class="quiz-options">
+                        <div class="quiz-option" data-value="0">
+                            <div class="quiz-radio"></div>
+                            <span>kind, source text, location, and type-specific data</span>
+                        </div>
+                        <div class="quiz-option" data-value="1">
+                            <div class="quiz-radio"></div>
+                            <span>Only the source text</span>
+                        </div>
+                        <div class="quiz-option" data-value="2">
+                            <div class="quiz-radio"></div>
+                            <span>AST node pointer</span>
+                        </div>
+                        <div class="quiz-option" data-value="3">
+                            <div class="quiz-radio"></div>
+                            <span>Assembly instruction</span>
+                        </div>
+                    </div>
+                    <div class="quiz-feedback"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TA-Only: Implementation -->
+        <div class="ta-only-content" id="ta-content-week-05" data-content-id="week-05-code">
+            <div class="ta-only-header">
+                <span>💡</span>
+                Implementation Pseudocode
+            </div>
+            <pre><code>// Complete lexer function pseudocode
+Token next_token(Lexer *lexer) {
+    skip_whitespace(lexer);
+    
+    if (is_at_end(lexer)) {
+        return make_token(TOKEN_EOF);
+    }
+    
+    char c = advance(lexer);
+    
+    // Single character tokens
+    switch (c) {
+        case '(': return make_token(TOKEN_LPAREN);
+        case ')': return make_token(TOKEN_RPAREN);
+        case '{': return make_token(TOKEN_LBRACE);
+        case '}': return make_token(TOKEN_RBRACE);
+        case ':': return make_token(TOKEN_COLON);
+        case ';': return make_token(TOKEN_SEMICOLON);
+        case ',': return make_token(TOKEN_COMMA);
+        case '+': return make_token(TOKEN_PLUS);
+        case '*': return make_token(TOKEN_STAR);
+        case '/': return make_token(TOKEN_SLASH);
+        case '%': return make_token(TOKEN_PERCENT);
+    }
+    
+    // Two-character tokens
+    if (c == '-') {
+        if (match(lexer, '>')) return make_token(TOKEN_ARROW);
+        return make_token(TOKEN_MINUS);
+    }
+    if (c == '=') {
+        if (match(lexer, '=')) return make_token(TOKEN_EQEQ);
+        return make_token(TOKEN_EQ);
+    }
+    if (c == '!') {
+        if (match(lexer, '=')) return make_token(TOKEN_NE);
+        return error_token("Expected '=' after '!'");
+    }
+    if (c == '<') {
+        if (match(lexer, '=')) return make_token(TOKEN_LE);
+        return make_token(TOKEN_LT);
+    }
+    if (c == '>') {
+        if (match(lexer, '=')) return make_token(TOKEN_GE);
+        return make_token(TOKEN_GT);
+    }
+    
+    // Identifiers and keywords
+    if (is_alpha(c)) {
+        while (is_alpha(peek(lexer)) || is_digit(peek(lexer))) {
+            advance(lexer);
+        }
+        String word = get_current_lexeme(lexer);
+        Token_Kind kind = check_keyword_or_type(word);
+        return make_token(kind);
+    }
+    
+    // Numbers
+    if (is_digit(c)) {
+        while (is_digit(peek(lexer))) {
+            advance(lexer);
+        }
+        long value = parse_int(get_current_lexeme(lexer));
+        return make_integer_token(value);
+    }
+    
+    return error_token("Unexpected character");
+}</code></pre>
+        </div>
+
+        <!-- Common Mistakes Section -->
+        <div class="accordion-item" id="section-mistakes">
+            <button class="accordion-toggle" onclick="toggleSection('section-mistakes')">
+                <span>⚠️ Common Mistakes to Avoid</span>
+                <span class="toggle-icon">▼</span>
+            </button>
+            <div class="accordion-content">
+                <div style="display: flex; flex-direction: column; gap: var(--space-4);">
+
+                    <div
+                        style="padding: var(--space-4); background: rgba(239, 68, 68, 0.1); border-left: 4px solid var(--accent-red); border-radius: var(--radius-md);">
+                        <h4 style="color: var(--accent-red); margin-bottom: var(--space-2);">Mistake 1: Forgetting to
+                            Advance</h4>
+                        <p style="color: var(--text-secondary); margin-bottom: var(--space-3);">
+                            After matching a character, you must consume it. Otherwise you'll create infinite loops.
+                        </p>
+                        <pre><code>// ❌ WRONG - Didn't advance!
+if (c == '(') {
+    return make_token(TOKEN_OPEN_PAREN, ...);
+}
+
+// ✅ CORRECT - Consume the character first
+if (c == '(') {
+    advance(sc);  // Must consume character!
+    return make_token(TOKEN_OPEN_PAREN, ...);
+}</code></pre>
+                    </div>
+
+                    <div
+                        style="padding: var(--space-4); background: rgba(239, 68, 68, 0.1); border-left: 4px solid var(--accent-red); border-radius: var(--radius-md);">
+                        <h4 style="color: var(--accent-red); margin-bottom: var(--space-2);">Mistake 2: Wrong Multi-char
+                            Order</h4>
+                        <p style="color: var(--text-secondary); margin-bottom: var(--space-3);">
+                            Always check multi-character tokens BEFORE single-character ones.
+                        </p>
+                        <pre><code>// ❌ WRONG - Single-char first
+if (c == '&') {
+    advance();
+    return make_token(TOKEN_AMPERSAND);  // Never recognizes &&
+}
+
+// ✅ CORRECT - Check multi-char first
+if (c == '&') {
+    advance();
+    if (match(sc, '&')) {  // Check for second &
+        return make_token(TOKEN_AND_AND);
+    }
+    return make_token(TOKEN_AMPERSAND);
+}</code></pre>
+                    </div>
+
+                    <div
+                        style="padding: var(--space-4); background: rgba(239, 68, 68, 0.1); border-left: 4px solid var(--accent-red); border-radius: var(--radius-md);">
+                        <h4 style="color: var(--accent-red); margin-bottom: var(--space-2);">Mistake 3: Off-by-one in
+                            Location</h4>
+                        <p style="color: var(--text-secondary); margin-bottom: var(--space-3);">
+                            Save the location BEFORE advancing, not after.
+                        </p>
+                        <pre><code>// ❌ WRONG - Save after advancing
+char c = advance(sc);
+Loc loc = {sc->filename, sc->line, sc->col};  // Off by one!
+
+// ✅ CORRECT - Save before advancing
+Loc loc = {sc->filename, sc->line, sc->col};
+char c = advance(sc);</code></pre>
+                    </div>
+
+                    <div
+                        style="padding: var(--space-4); background: rgba(239, 68, 68, 0.1); border-left: 4px solid var(--accent-red); border-radius: var(--radius-md);">
+                        <h4 style="color: var(--accent-red); margin-bottom: var(--space-2);">Mistake 4: String Length
+                            Calculation</h4>
+                        <p style="color: var(--text-secondary); margin-bottom: var(--space-3);">
+                            Use pointer subtraction for length, not index math.
+                        </p>
+                        <pre><code>// ❌ WRONG - Mixing pointers and indices
+long length = sc->idx - start;  // start is a pointer, not index!
+
+// ✅ CORRECT - Pointer subtraction
+const char *start = &sc->src[sc->idx];
+// ... advance through token ...
+long length = &sc->src[sc->idx] - start;  // Pointer math</code></pre>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <!-- Practice Problems Section -->
+        <div class="accordion-item" id="section-practice">
+            <button class="accordion-toggle" onclick="toggleSection('section-practice')">
+                <span>📝 Practice Problems</span>
+                <span class="toggle-icon">▼</span>
+            </button>
+            <div class="accordion-content">
+                <div style="display: flex; flex-direction: column; gap: var(--space-6);">
+
+                    <!-- Problem 1 -->
+                    <div
+                        style="background: var(--bg-card); border: 1px solid var(--border-default); border-radius: var(--radius-lg); padding: var(--space-5);">
+                        <h4 style="color: var(--accent-cyan); margin-bottom: var(--space-3);">Problem 1: Token Count
+                        </h4>
+                        <p style="margin-bottom: var(--space-3);">How many tokens does this produce?</p>
+                        <pre><code>fn add(a: int, b: int) -> int { return a + b }</code></pre>
+                        <details style="margin-top: var(--space-4);">
+                            <summary style="cursor: pointer; color: var(--accent-purple); font-weight: 600;">Click to
+                                reveal solution</summary>
+                            <div
+                                style="margin-top: var(--space-3); padding: var(--space-4); background: rgba(16, 185, 129, 0.1); border-radius: var(--radius-md);">
+                                <p><strong>Answer: 20 tokens</strong></p>
+                                <ol style="margin-top: var(--space-2); padding-left: var(--space-5);">
+                                    <li><code>fn</code> (KEYWORD)</li>
+                                    <li><code>add</code> (IDENTIFIER)</li>
+                                    <li><code>(</code> (OPEN_PAREN)</li>
+                                    <li><code>a</code> (IDENTIFIER)</li>
+                                    <li><code>:</code> (COLON)</li>
+                                    <li><code>int</code> (TYPE)</li>
+                                    <li><code>,</code> (COMMA)</li>
+                                    <li><code>b</code> (IDENTIFIER)</li>
+                                    <li><code>:</code> (COLON)</li>
+                                    <li><code>int</code> (TYPE)</li>
+                                    <li><code>)</code> (CLOSE_PAREN)</li>
+                                    <li><code>-></code> (ARROW)</li>
+                                    <li><code>int</code> (TYPE)</li>
+                                    <li><code>{</code> (OPEN_BRACE)</li>
+                                    <li><code>return</code> (KEYWORD)</li>
+                                    <li><code>a</code> (IDENTIFIER)</li>
+                                    <li><code>+</code> (PLUS)</li>
+                                    <li><code>b</code> (IDENTIFIER)</li>
+                                    <li><code>}</code> (CLOSE_BRACE)</li>
+                                    <li>EOF</li>
+                                </ol>
+                            </div>
+                        </details>
+                    </div>
+
+                    <!-- Problem 2 -->
+                    <div
+                        style="background: var(--bg-card); border: 1px solid var(--border-default); border-radius: var(--radius-lg); padding: var(--space-5);">
+                        <h4 style="color: var(--accent-cyan); margin-bottom: var(--space-3);">Problem 2: Greedy Matching
+                        </h4>
+                        <p style="margin-bottom: var(--space-3);">What tokens are produced from <code>x&&y</code>?</p>
+                        <details style="margin-top: var(--space-4);">
+                            <summary style="cursor: pointer; color: var(--accent-purple); font-weight: 600;">Click to
+                                reveal solution</summary>
+                            <div
+                                style="margin-top: var(--space-3); padding: var(--space-4); background: rgba(16, 185, 129, 0.1); border-radius: var(--radius-md);">
+                                <p><strong>Answer: 3 tokens</strong></p>
+                                <ol style="margin-top: var(--space-2); padding-left: var(--space-5);">
+                                    <li><code>x</code> (IDENTIFIER)</li>
+                                    <li><code>&&</code> (AND_AND)</li>
+                                    <li><code>y</code> (IDENTIFIER)</li>
+                                </ol>
+                                <p style="margin-top: var(--space-3);"><strong>Key:</strong> <code>&&</code> is
+                                    recognized as a single token due to greedy matching.</p>
+                                <p><strong>NOT:</strong> <code>x</code>, <code>&</code>, <code>&</code>, <code>y</code>
+                                    (that would be wrong!)</p>
+                            </div>
+                        </details>
+                    </div>
+
+                    <!-- Problem 3 -->
+                    <div
+                        style="background: var(--bg-card); border: 1px solid var(--border-default); border-radius: var(--radius-lg); padding: var(--space-5);">
+                        <h4 style="color: var(--accent-cyan); margin-bottom: var(--space-3);">Problem 3: Keyword vs
+                            Identifier</h4>
+                        <p style="margin-bottom: var(--space-3);">Are these keywords or identifiers?</p>
+                        <ul style="padding-left: var(--space-5);">
+                            <li><code>fn</code></li>
+                            <li><code>fn_name</code></li>
+                            <li><code>function</code></li>
+                            <li><code>if</code></li>
+                            <li><code>iffy</code></li>
+                        </ul>
+                        <details style="margin-top: var(--space-4);">
+                            <summary style="cursor: pointer; color: var(--accent-purple); font-weight: 600;">Click to
+                                reveal solution</summary>
+                            <div
+                                style="margin-top: var(--space-3); padding: var(--space-4); background: rgba(16, 185, 129, 0.1); border-radius: var(--radius-md);">
+                                <ul style="padding-left: var(--space-5);">
+                                    <li><code>fn</code> — <strong>KEYWORD</strong> (exact match)</li>
+                                    <li><code>fn_name</code> — <strong>IDENTIFIER</strong> (longer than keyword)</li>
+                                    <li><code>function</code> — <strong>IDENTIFIER</strong> (not a Jive keyword)</li>
+                                    <li><code>if</code> — <strong>KEYWORD</strong> (exact match)</li>
+                                    <li><code>iffy</code> — <strong>IDENTIFIER</strong> (longer than keyword)</li>
+                                </ul>
+                                <p style="margin-top: var(--space-3);"><strong>Rule:</strong> Keywords must be exact
+                                    match. Any extra characters make it an identifier.</p>
+                            </div>
+                        </details>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <!-- Navigation -->
+        <div
+            style="display: flex; justify-content: space-between; align-items: center; padding: var(--space-6); background: var(--bg-card); border-radius: var(--radius-xl); border: 1px solid var(--border-default); margin-top: var(--space-10);">
+            <a href="#"
+                onclick="event.preventDefault(); UnlockSystem.navigateToModule('week-04', 'week-04-assembly.html');"
+                style="display: flex; align-items: center; gap: var(--space-2); color: var(--text-secondary);">
+                ← Week 4
+            </a>
+            <a href="#"
+                onclick="event.preventDefault(); UnlockSystem.navigateToModule('week-06', 'week-06-parser.html');"
+                style="display: flex; align-items: center; gap: var(--space-2); padding: var(--space-3) var(--space-5); background: var(--gradient-primary); color: white; border-radius: var(--radius-md); font-weight: 600;">
+                Next: Compiler 2 - Parser →
+            </a>
+        </div>
+    </main>
+
+    <script src="../js/modules-data.js"></script>
+    <script src="../js/unlock.js"></script>
+    <script src="../js/progress.js"></script>
+    <script src="../js/quiz.js"></script>
+    <script>
+        function toggleSection(sectionId) {
+            const section = document.getElementById(sectionId);
+            if (section) {
+                section.classList.toggle('open');
+                if (section.classList.contains('open') && window.ProgressTracker) {
+                    ProgressTracker.expandSection('week-05', sectionId);
+                    updateProgress();
+                }
+            }
+        }
+
+        function updateProgress() {
+            if (window.ProgressTracker) {
+                const progress = ProgressTracker.getModuleProgress('week-05');
+                const bar = document.getElementById('moduleProgress');
+                if (bar) bar.style.width = `${progress.percentComplete}%`;
+            }
+        }
+
+        function checkTAContent() {
+            if (window.UnlockSystem) {
+                const taContent = document.querySelectorAll('.ta-only-content');
+                taContent.forEach(el => {
+                    const contentId = el.dataset.contentId;
+                    if (UnlockSystem.isTAContentUnlocked(contentId)) {
+                        el.classList.add('unlocked');
+                    }
+                });
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const toggle = document.getElementById('themeToggle');
+            const savedTheme = localStorage.getItem('cs5008_theme') || 'dark';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            toggle.textContent = savedTheme === 'dark' ? '🌙' : '☀️';
+
+            toggle.addEventListener('click', () => {
+                const current = document.documentElement.getAttribute('data-theme');
+                const next = current === 'dark' ? 'light' : 'dark';
+                document.documentElement.setAttribute('data-theme', next);
+                localStorage.setItem('cs5008_theme', next);
+                toggle.textContent = next === 'dark' ? '🌙' : '☀️';
+            });
+
+            if (window.UnlockSystem) {
+                UnlockSystem.init();
+                checkTAContent();
+            }
+
+            if (window.ProgressTracker) {
+                ProgressTracker.visitModule('week-05');
+                updateProgress();
+            }
+        });
+    </script>
+</body>
+
+</html>

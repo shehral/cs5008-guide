@@ -1,0 +1,1232 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Week 4: x86-64 Assembly | CS5008 Guide</title>
+    <link rel="stylesheet" href="../css/styles.css">
+    <link rel="icon"
+        href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>">
+</head>
+
+<body>
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+
+    <header class="header">
+        <div class="header-content">
+            <a href="../index.html" class="logo">
+                <span class="logo-icon">⚡</span>
+                <span>CS5008</span>
+            </a>
+            <div class="header-actions">
+                <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme">🌙</button>
+            </div>
+        </div>
+    </header>
+
+    <main class="main-container module-page">
+        <nav class="breadcrumb">
+            <a href="../index.html">← Back to modules</a>
+        </nav>
+
+        <div class="module-header">
+            <div class="module-badge">⚙️ Week 4 • +100 XP</div>
+            <h1>x86-64 <span class="text-gradient">Assembly</span></h1>
+            <p>Master x86-64 assembly language. Your compiler will generate this! Understanding assembly is essential
+                for writing a correct code generator.</p>
+        </div>
+
+        <div class="progress-bar mb-6">
+            <div class="progress-bar-fill" id="moduleProgress" style="width: 0%"></div>
+        </div>
+
+        <!-- Section 1: Assembly Syntax -->
+        <div class="section open" id="section-syntax">
+            <div class="section-header" onclick="toggleSection('section-syntax')">
+                <h3 class="section-title">📝 Assembly Syntax (NASM)</h3>
+                <span class="section-toggle">▶</span>
+            </div>
+            <div class="section-content">
+                <p>Assembly has a simple structure: <strong>instruction</strong> followed by <strong>operands</strong>.
+                </p>
+
+                <pre><code>instruction   destination, source    ; comment
+─────────────────────────────────────────────
+               NASM uses Intel syntax
+
+Examples:
+    mov rax, 42       ; rax = 42
+    add rax, rbx      ; rax = rax + rbx
+    sub rax, 10       ; rax = rax - 10
+    imul rax, rcx     ; rax = rax * rcx</code></pre>
+
+                <h4 style="margin-top: var(--space-8);">Three Types of Operands</h4>
+                <table style="width: 100%; border-collapse: collapse; margin-top: var(--space-4);">
+                    <tr style="background: var(--bg-card);">
+                        <th style="padding: var(--space-3); text-align: left; border: 1px solid var(--border-default);">
+                            Type</th>
+                        <th style="padding: var(--space-3); text-align: left; border: 1px solid var(--border-default);">
+                            Syntax</th>
+                        <th style="padding: var(--space-3); text-align: left; border: 1px solid var(--border-default);">
+                            Example</th>
+                    </tr>
+                    <tr>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);">
+                            <strong>Register</strong>
+                        </td>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);">Register name</td>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);">
+                            <code>mov rax, rbx</code>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);">
+                            <strong>Immediate</strong>
+                        </td>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);">Literal number
+                        </td>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);">
+                            <code>mov rax, 42</code>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);">
+                            <strong>Memory</strong>
+                        </td>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);">[...] brackets
+                        </td>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);">
+                            <code>mov rax, [rbp-8]</code>
+                        </td>
+                    </tr>
+                </table>
+
+                <h4 style="margin-top: var(--space-8);">Memory Addressing Modes</h4>
+                <pre><code>; Full form: [base + index*scale + displacement]
+
+mov rax, [rbp]              ; Simple: address in rbp
+mov rax, [rbp - 8]          ; Base + displacement
+mov rax, [rbx + rcx]        ; Base + index
+mov rax, [rbx + rcx*4]      ; Base + index*scale (array of ints)
+mov rax, [rbx + rcx*8 + 16] ; Full form (array of longs)</code></pre>
+
+                <div
+                    style="background: rgba(239, 68, 68, 0.1); border: 1px solid var(--accent-red); border-radius: var(--radius-lg); padding: var(--space-5); margin: var(--space-6) 0;">
+                    <strong style="color: var(--accent-red);">⚠️ CRITICAL RULE:</strong>
+                    <p style="margin-top: var(--space-2);">At most ONE memory operand per instruction!</p>
+                    <pre style="margin-top: var(--space-3);"><code>mov rax, [rbx]     ; ✅ OK: register ← memory
+mov [rax], rbx     ; ✅ OK: memory ← register
+mov [rax], [rbx]   ; ❌ ERROR: memory ← memory
+
+; FIX: Use intermediate register
+mov rcx, [rbx]     ; Load to temp
+mov [rax], rcx     ; Store from temp</code></pre>
+                </div>
+
+                <h4 style="margin-top: var(--space-8);">Size Specifiers</h4>
+                <p>When moving to memory, you must specify the size:</p>
+                <pre><code>mov qword [rax], 42   ; 8 bytes (quad word) - for long/pointer
+mov dword [rax], 42   ; 4 bytes (double word) - for int
+mov word [rax], 42    ; 2 bytes (word) - for short
+mov byte [rax], 42    ; 1 byte - for char</code></pre>
+            </div>
+        </div>
+
+        <!-- Section 2: Data Movement -->
+        <div class="section" id="section-movement">
+            <div class="section-header" onclick="toggleSection('section-movement')">
+                <h3 class="section-title">📦 Data Movement Instructions</h3>
+                <span class="section-toggle">▶</span>
+            </div>
+            <div class="section-content">
+                <h4>mov - Move (Copy) Data</h4>
+                <pre><code>mov dest, src       ; Copy src to dest (src unchanged)
+
+mov rax, 42              ; rax = 42 (immediate → register)
+mov rbx, rax             ; rbx = rax (register → register)
+mov rax, [rbx]           ; rax = mem[rbx] (memory → register)
+mov [rax], rbx           ; mem[rax] = rbx (register → memory)
+mov qword [rax], 42      ; mem[rax] = 42 (immediate → memory)</code></pre>
+
+                <h4 style="margin-top: var(--space-8);">push - Push onto Stack</h4>
+                <pre><code>push rax            ; Decrement rsp by 8, store rax at [rsp]
+
+; Equivalent to:
+sub rsp, 8          ; RSP moves down (stack grows down)
+mov [rsp], rax      ; Store value at new stack top</code></pre>
+
+                <h4 style="margin-top: var(--space-6);">pop - Pop from Stack</h4>
+                <pre><code>pop rax             ; Load rax from [rsp], increment rsp by 8
+
+; Equivalent to:
+mov rax, [rsp]      ; Load value from stack top
+add rsp, 8          ; RSP moves up (deallocate)</code></pre>
+
+                <h4 style="margin-top: var(--space-8);">lea - Load Effective Address</h4>
+                <p><strong>NOT a memory load!</strong> Just calculates an address (or does arithmetic).</p>
+                <pre><code>lea rax, [rbx + rcx*4 + 8]  ; rax = rbx + rcx*4 + 8 (no memory access!)
+
+; Clever arithmetic tricks:
+lea rax, [rbx + rbx*2]      ; rax = rbx * 3
+lea rax, [rbx + rbx*4]      ; rax = rbx * 5
+lea rax, [rbx + rcx + 10]   ; rax = rbx + rcx + 10 (in one instruction!)</code></pre>
+            </div>
+        </div>
+
+        <!-- Section 3: Arithmetic -->
+        <div class="section" id="section-arithmetic">
+            <div class="section-header" onclick="toggleSection('section-arithmetic')">
+                <h3 class="section-title">➕ Arithmetic Instructions</h3>
+                <span class="section-toggle">▶</span>
+            </div>
+            <div class="section-content">
+                <h4>Basic Arithmetic</h4>
+                <pre><code>add dest, src       ; dest = dest + src
+sub dest, src       ; dest = dest - src
+inc dest            ; dest = dest + 1
+dec dest            ; dest = dest - 1
+neg dest            ; dest = -dest (two's complement)</code></pre>
+
+                <h4 style="margin-top: var(--space-8);">Multiplication (imul)</h4>
+                <pre><code>imul rax, rbx       ; rax = rax * rbx (signed multiply)
+imul rax, rbx, 5    ; rax = rbx * 5 (3-operand form)
+
+; Full multiplication (128-bit result):
+imul rbx            ; rdx:rax = rax * rbx
+                    ; High 64 bits in rdx, low 64 bits in rax</code></pre>
+
+                <h4 style="margin-top: var(--space-8);">Division (idiv)</h4>
+                <div
+                    style="background: rgba(239, 68, 68, 0.1); border: 1px solid var(--accent-red); border-radius: var(--radius-lg); padding: var(--space-5); margin: var(--space-4) 0;">
+                    <strong style="color: var(--accent-red);">⚠️ CRITICAL:</strong> Must use <code>cqo</code> before
+                    <code>idiv</code>!
+                </div>
+                <pre><code>; Setup: Sign-extend rax into rdx:rax
+mov rax, 20         ; Dividend (what we're dividing)
+cqo                 ; Sign-extend rax into rdx (REQUIRED!)
+mov rcx, 7          ; Divisor
+idiv rcx            ; rax = 20 / 7 = 2 (quotient)
+                    ; rdx = 20 % 7 = 6 (remainder)
+
+; ❌ WRONG - undefined result!
+mov rax, 20
+idiv rcx            ; rdx has garbage!
+
+; ✅ CORRECT
+mov rax, 20
+cqo                 ; Sign-extend first
+idiv rcx            ; Now it works</code></pre>
+            </div>
+        </div>
+
+        <!-- Section 4: Comparisons and Jumps -->
+        <div class="section" id="section-jumps">
+            <div class="section-header" onclick="toggleSection('section-jumps')">
+                <h3 class="section-title">🔀 Comparisons & Conditional Jumps</h3>
+                <span class="section-toggle">▶</span>
+            </div>
+            <div class="section-content">
+                <h4>cmp - Compare Values</h4>
+                <pre><code>cmp op1, op2        ; Computes op1 - op2, sets flags (doesn't store result)
+
+mov rax, 10
+cmp rax, 5          ; 10 - 5 = 5 → ZF=0 (not equal), SF=0 (positive)
+cmp rax, 10         ; 10 - 10 = 0 → ZF=1 (equal!)
+cmp rax, 20         ; 10 - 20 = -10 → ZF=0, SF=1 (negative)</code></pre>
+
+                <h4 style="margin-top: var(--space-8);">test - Bitwise AND for Flags</h4>
+                <pre><code>test rax, rax       ; AND rax with itself (sets ZF if rax == 0)
+                    ; Common pattern to check if value is zero
+
+test rax, 1         ; Check if bit 0 is set (odd number)</code></pre>
+
+                <h4 style="margin-top: var(--space-8);">Conditional Jump Reference (Signed)</h4>
+                <table style="width: 100%; border-collapse: collapse; margin-top: var(--space-4);">
+                    <tr style="background: var(--bg-card);">
+                        <th style="padding: var(--space-3); text-align: left; border: 1px solid var(--border-default);">
+                            Instruction</th>
+                        <th style="padding: var(--space-3); text-align: left; border: 1px solid var(--border-default);">
+                            Meaning</th>
+                        <th style="padding: var(--space-3); text-align: left; border: 1px solid var(--border-default);">
+                            After cmp a, b</th>
+                    </tr>
+                    <tr>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);"><code>je</code> /
+                            <code>jz</code>
+                        </td>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);">Jump if equal /
+                            zero</td>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);">a == b</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);"><code>jne</code> /
+                            <code>jnz</code>
+                        </td>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);">Jump if not equal
+                            / not zero</td>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);">a != b</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);"><code>jl</code>
+                        </td>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);">Jump if less
+                            (signed)</td>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);">a < b</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);"><code>jle</code>
+                        </td>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);">Jump if less or
+                            equal</td>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);">a <= b</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);"><code>jg</code>
+                        </td>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);">Jump if greater
+                            (signed)</td>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);">a > b</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);"><code>jge</code>
+                        </td>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);">Jump if greater or
+                            equal</td>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);">a >= b</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);"><code>jmp</code>
+                        </td>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);">Unconditional jump
+                        </td>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);">Always jump</td>
+                    </tr>
+                </table>
+
+                <h4 style="margin-top: var(--space-8);">Conditional Set (setcc)</h4>
+                <p>Set a byte to 0 or 1 based on condition (used for boolean expressions):</p>
+                <pre><code>; Implement: result = (x < 3)
+mov rax, [rbp - 8]      ; Load x
+cmp rax, 3              ; Compare x with 3
+setl al                 ; al = (x < 3) ? 1 : 0
+movzx rax, al           ; Zero-extend al to full 64-bit rax
+
+; setl, setle, setg, setge, sete, setne (same pattern as jumps)</code></pre>
+            </div>
+        </div>
+
+        <!-- Section 5: Calling Convention -->
+        <div class="section" id="section-calling">
+            <div class="section-header" onclick="toggleSection('section-calling')">
+                <h3 class="section-title">📞 System V Calling Convention</h3>
+                <span class="section-toggle">▶</span>
+            </div>
+            <div class="section-content">
+                <p>The <strong>x86-64 System V ABI</strong> (Linux/macOS) defines how functions communicate:</p>
+
+                <h4>Argument Passing</h4>
+                <table style="width: 100%; border-collapse: collapse; margin-top: var(--space-4);">
+                    <tr style="background: var(--bg-card);">
+                        <th style="padding: var(--space-3); text-align: left; border: 1px solid var(--border-default);">
+                            Argument</th>
+                        <th style="padding: var(--space-3); text-align: left; border: 1px solid var(--border-default);">
+                            Register</th>
+                    </tr>
+                    <tr>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);">1st argument</td>
+                        <td
+                            style="padding: var(--space-3); border: 1px solid var(--border-default); font-family: var(--font-mono);">
+                            <strong>RDI</strong>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);">2nd argument</td>
+                        <td
+                            style="padding: var(--space-3); border: 1px solid var(--border-default); font-family: var(--font-mono);">
+                            <strong>RSI</strong>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);">3rd argument</td>
+                        <td
+                            style="padding: var(--space-3); border: 1px solid var(--border-default); font-family: var(--font-mono);">
+                            <strong>RDX</strong>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);">4th argument</td>
+                        <td
+                            style="padding: var(--space-3); border: 1px solid var(--border-default); font-family: var(--font-mono);">
+                            <strong>RCX</strong>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);">5th argument</td>
+                        <td
+                            style="padding: var(--space-3); border: 1px solid var(--border-default); font-family: var(--font-mono);">
+                            <strong>R8</strong>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);">6th argument</td>
+                        <td
+                            style="padding: var(--space-3); border: 1px solid var(--border-default); font-family: var(--font-mono);">
+                            <strong>R9</strong>
+                        </td>
+                    </tr>
+                    <tr style="background: rgba(16, 185, 129, 0.1);">
+                        <td style="padding: var(--space-3); border: 1px solid var(--accent-green);"><strong>Return
+                                value</strong></td>
+                        <td
+                            style="padding: var(--space-3); border: 1px solid var(--accent-green); font-family: var(--font-mono);">
+                            <strong>RAX</strong>
+                        </td>
+                    </tr>
+                </table>
+
+                <h4 style="margin-top: var(--space-8);">Function Prologue & Epilogue</h4>
+                <pre><code>my_function:
+    ; ═══════ PROLOGUE ═══════
+    push rbp            ; Save caller's base pointer
+    mov rbp, rsp        ; Set up our frame
+    sub rsp, 32         ; Reserve space for 4 local variables (4 × 8)
+    
+    ; ═══════ BODY ═══════
+    ; Save parameters to stack (if needed)
+    mov [rbp - 8], rdi  ; Save 1st arg to slot 0
+    mov [rbp - 16], rsi ; Save 2nd arg to slot 1
+    
+    ; ... function body ...
+    
+    ; ═══════ EPILOGUE ═══════
+    mov rsp, rbp        ; Deallocate locals
+    pop rbp             ; Restore caller's base pointer
+    ret                 ; Return to caller</code></pre>
+
+                <h4 style="margin-top: var(--space-8);">Stack Frame Layout</h4>
+                <pre><code>Higher addresses
+┌──────────────────────┐
+│  ... caller's data   │
+├──────────────────────┤
+│  return address      │  ← pushed by 'call' instruction
+├──────────────────────┤
+│  saved RBP           │  ← RBP points here
+├──────────────────────┤
+│  local variable 0    │  ← [rbp - 8]
+├──────────────────────┤
+│  local variable 1    │  ← [rbp - 16]
+├──────────────────────┤
+│  local variable 2    │  ← [rbp - 24]
+├──────────────────────┤
+│  ...                 │  ← RSP points here
+└──────────────────────┘
+Lower addresses</code></pre>
+            </div>
+        </div>
+
+        <!-- Section 6: Complete Examples -->
+        <div class="section" id="section-examples">
+            <div class="section-header" onclick="toggleSection('section-examples')">
+                <h3 class="section-title">🔧 Complete Compiler Examples</h3>
+                <span class="section-toggle">▶</span>
+            </div>
+            <div class="section-content">
+                <h4>Example 1: Simple Return</h4>
+                <pre><code>; Jive: fn main() -> int { return 42 }
+
+global _start
+section .text
+
+main:
+    push rbp
+    mov rbp, rsp
+    
+    push 42             ; PUSH 42
+    pop rax             ; RETURN (value in rax)
+    
+    mov rsp, rbp
+    pop rbp
+    ret
+
+_start:
+    call main
+    mov rdi, rax        ; Exit code = return value
+    mov rax, 60         ; syscall: exit
+    syscall</code></pre>
+
+                <h4 style="margin-top: var(--space-8);">Example 2: Arithmetic</h4>
+                <pre><code>; Jive: fn main() -> int { return 2 + 3 * 4 }
+; Result should be 14 (multiplication first!)
+
+main:
+    push rbp
+    mov rbp, rsp
+    
+    ; 3 * 4
+    push 3
+    push 4
+    pop rcx             ; rcx = 4
+    pop rax             ; rax = 3
+    imul rax, rcx       ; rax = 12
+    push rax
+    
+    ; 2 + (result)
+    push 2
+    pop rcx             ; rcx = 2
+    pop rax             ; rax = 12
+    add rax, rcx        ; Wait, order is wrong! Should be: 2 + 12
+    ; Better:
+    pop rax             ; rax = 12
+    pop rcx             ; rcx = 2
+    add rax, rcx        ; rax = 14 - but stack order means we need to swap
+    ; Actually for addition it doesn't matter, but let's be precise:
+    push 2
+    pop rax             ; rax = 2
+    pop rcx             ; rcx = 12
+    add rax, rcx        ; rax = 14
+    push rax
+    
+    pop rax             ; Return value
+    mov rsp, rbp
+    pop rbp
+    ret</code></pre>
+
+                <h4 style="margin-top: var(--space-8);">Example 3: Local Variables</h4>
+                <pre><code>; Jive: fn main() -> int { let x: int = 5; let y: int = 10; return x + y }
+
+main:
+    push rbp
+    mov rbp, rsp
+    sub rsp, 16             ; Room for 2 local vars
+    
+    ; let x: int = 5
+    mov qword [rbp - 8], 5  ; x = 5 (slot 0)
+    
+    ; let y: int = 10
+    mov qword [rbp - 16], 10 ; y = 10 (slot 1)
+    
+    ; return x + y
+    mov rax, [rbp - 8]      ; Load x
+    push rax
+    mov rax, [rbp - 16]     ; Load y
+    push rax
+    pop rcx                 ; rcx = y
+    pop rax                 ; rax = x
+    add rax, rcx            ; rax = x + y
+    
+    mov rsp, rbp
+    pop rbp
+    ret</code></pre>
+
+                <h4 style="margin-top: var(--space-8);">Example 4: Function Call</h4>
+                <pre><code>; Jive: fn add(a: int, b: int) -> int { return a + b }
+;       fn main() -> int { return add(5, 3) }
+
+add:
+    push rbp
+    mov rbp, rsp
+    sub rsp, 16
+    
+    mov [rbp - 8], rdi      ; Save a (1st arg)
+    mov [rbp - 16], rsi     ; Save b (2nd arg)
+    
+    mov rax, [rbp - 8]      ; Load a
+    add rax, [rbp - 16]     ; Add b
+    
+    mov rsp, rbp
+    pop rbp
+    ret
+
+main:
+    push rbp
+    mov rbp, rsp
+    
+    mov rdi, 5              ; 1st argument
+    mov rsi, 3              ; 2nd argument
+    call add                ; Result in rax
+    
+    mov rsp, rbp
+    pop rbp
+    ret</code></pre>
+            </div>
+        </div>
+
+        <!-- Quiz Section -->
+        <div class="section" id="section-quiz">
+            <div class="section-header" onclick="toggleSection('section-quiz')">
+                <h3 class="section-title">🧠 Check Your Understanding</h3>
+                <span class="section-toggle">▶</span>
+            </div>
+            <div class="section-content">
+                <div class="quiz" data-correct="1" data-quiz-id="q1" data-module-id="week-04"
+                    data-explanation="In the x86-64 System V ABI, the first argument is passed in RDI.">
+                    <div class="quiz-question">Which register holds the first function argument?</div>
+                    <div class="quiz-options">
+                        <div class="quiz-option" data-value="0">
+                            <div class="quiz-radio"></div>
+                            <span>RAX</span>
+                        </div>
+                        <div class="quiz-option" data-value="1">
+                            <div class="quiz-radio"></div>
+                            <span>RDI</span>
+                        </div>
+                        <div class="quiz-option" data-value="2">
+                            <div class="quiz-radio"></div>
+                            <span>RSI</span>
+                        </div>
+                        <div class="quiz-option" data-value="3">
+                            <div class="quiz-radio"></div>
+                            <span>RDX</span>
+                        </div>
+                    </div>
+                    <div class="quiz-feedback"></div>
+                </div>
+
+                <div class="quiz" data-correct="2" data-quiz-id="q2" data-module-id="week-04"
+                    data-explanation="The first local variable is at [rbp - 8]. RBP points to saved base pointer, and locals grow downward.">
+                    <div class="quiz-question">How do you access the first local variable?</div>
+                    <div class="quiz-options">
+                        <div class="quiz-option" data-value="0">
+                            <div class="quiz-radio"></div>
+                            <span>[rbp]</span>
+                        </div>
+                        <div class="quiz-option" data-value="1">
+                            <div class="quiz-radio"></div>
+                            <span>[rbp + 8]</span>
+                        </div>
+                        <div class="quiz-option" data-value="2">
+                            <div class="quiz-radio"></div>
+                            <span>[rbp - 8]</span>
+                        </div>
+                        <div class="quiz-option" data-value="3">
+                            <div class="quiz-radio"></div>
+                            <span>[rsp]</span>
+                        </div>
+                    </div>
+                    <div class="quiz-feedback"></div>
+                </div>
+
+                <div class="quiz" data-correct="3" data-quiz-id="q3" data-module-id="week-04"
+                    data-explanation="You must use cqo to sign-extend rax into rdx before idiv, otherwise rdx contains garbage and division produces wrong results.">
+                    <div class="quiz-question">What must you do before using idiv?</div>
+                    <div class="quiz-options">
+                        <div class="quiz-option" data-value="0">
+                            <div class="quiz-radio"></div>
+                            <span>Clear rdx with mov rdx, 0</span>
+                        </div>
+                        <div class="quiz-option" data-value="1">
+                            <div class="quiz-radio"></div>
+                            <span>Push the divisor</span>
+                        </div>
+                        <div class="quiz-option" data-value="2">
+                            <div class="quiz-radio"></div>
+                            <span>Save rax to memory</span>
+                        </div>
+                        <div class="quiz-option" data-value="3">
+                            <div class="quiz-radio"></div>
+                            <span>Use cqo to sign-extend rax into rdx</span>
+                        </div>
+                    </div>
+                    <div class="quiz-feedback"></div>
+                </div>
+
+                <div class="quiz" data-correct="0" data-quiz-id="q4" data-module-id="week-04"
+                    data-explanation="x86-64 doesn't allow memory-to-memory operations. You must use an intermediate register.">
+                    <div class="quiz-question">Why is <code>mov [rax], [rbx]</code> invalid?</div>
+                    <div class="quiz-options">
+                        <div class="quiz-option" data-value="0">
+                            <div class="quiz-radio"></div>
+                            <span>x86-64 allows at most one memory operand per instruction</span>
+                        </div>
+                        <div class="quiz-option" data-value="1">
+                            <div class="quiz-radio"></div>
+                            <span>mov doesn't work with memory</span>
+                        </div>
+                        <div class="quiz-option" data-value="2">
+                            <div class="quiz-radio"></div>
+                            <span>You need to specify qword</span>
+                        </div>
+                        <div class="quiz-option" data-value="3">
+                            <div class="quiz-radio"></div>
+                            <span>Square brackets are wrong syntax</span>
+                        </div>
+                    </div>
+                    <div class="quiz-feedback"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Reference Section -->
+        <div class="accordion-item" id="section-reference">
+            <button class="accordion-toggle" onclick="toggleSection('section-reference')">
+                <span>📋 Quick Reference</span>
+                <span class="toggle-icon">▼</span>
+            </button>
+            <div class="accordion-content">
+                <div style="display: flex; flex-direction: column; gap: var(--space-6);">
+
+                    <!-- Registers -->
+                    <div>
+                        <h4 style="color: var(--accent-cyan); margin-bottom: var(--space-3);">x86-64 Registers</h4>
+                        <div style="overflow-x: auto;">
+                            <table style="width: 100%; border-collapse: collapse; font-size: 0.9rem;">
+                                <thead>
+                                    <tr style="background: var(--bg-elevated);">
+                                        <th
+                                            style="padding: var(--space-2); text-align: left; border-bottom: 1px solid var(--border-default);">
+                                            Register</th>
+                                        <th
+                                            style="padding: var(--space-2); text-align: left; border-bottom: 1px solid var(--border-default);">
+                                            Purpose</th>
+                                        <th
+                                            style="padding: var(--space-2); text-align: left; border-bottom: 1px solid var(--border-default);">
+                                            Preserved?</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td
+                                            style="padding: var(--space-2); border-bottom: 1px solid var(--border-default);">
+                                            <code>rax</code>
+                                        </td>
+                                        <td
+                                            style="padding: var(--space-2); border-bottom: 1px solid var(--border-default);">
+                                            Return value, arithmetic</td>
+                                        <td
+                                            style="padding: var(--space-2); border-bottom: 1px solid var(--border-default);">
+                                            Caller-saved</td>
+                                    </tr>
+                                    <tr>
+                                        <td
+                                            style="padding: var(--space-2); border-bottom: 1px solid var(--border-default);">
+                                            <code>rdi</code>
+                                        </td>
+                                        <td
+                                            style="padding: var(--space-2); border-bottom: 1px solid var(--border-default);">
+                                            1st argument</td>
+                                        <td
+                                            style="padding: var(--space-2); border-bottom: 1px solid var(--border-default);">
+                                            Caller-saved</td>
+                                    </tr>
+                                    <tr>
+                                        <td
+                                            style="padding: var(--space-2); border-bottom: 1px solid var(--border-default);">
+                                            <code>rsi</code>
+                                        </td>
+                                        <td
+                                            style="padding: var(--space-2); border-bottom: 1px solid var(--border-default);">
+                                            2nd argument</td>
+                                        <td
+                                            style="padding: var(--space-2); border-bottom: 1px solid var(--border-default);">
+                                            Caller-saved</td>
+                                    </tr>
+                                    <tr>
+                                        <td
+                                            style="padding: var(--space-2); border-bottom: 1px solid var(--border-default);">
+                                            <code>rdx</code>
+                                        </td>
+                                        <td
+                                            style="padding: var(--space-2); border-bottom: 1px solid var(--border-default);">
+                                            3rd argument, remainder</td>
+                                        <td
+                                            style="padding: var(--space-2); border-bottom: 1px solid var(--border-default);">
+                                            Caller-saved</td>
+                                    </tr>
+                                    <tr>
+                                        <td
+                                            style="padding: var(--space-2); border-bottom: 1px solid var(--border-default);">
+                                            <code>rcx</code>
+                                        </td>
+                                        <td
+                                            style="padding: var(--space-2); border-bottom: 1px solid var(--border-default);">
+                                            4th argument, loop counter</td>
+                                        <td
+                                            style="padding: var(--space-2); border-bottom: 1px solid var(--border-default);">
+                                            Caller-saved</td>
+                                    </tr>
+                                    <tr>
+                                        <td
+                                            style="padding: var(--space-2); border-bottom: 1px solid var(--border-default);">
+                                            <code>rbp</code>
+                                        </td>
+                                        <td
+                                            style="padding: var(--space-2); border-bottom: 1px solid var(--border-default);">
+                                            Base pointer (frame)</td>
+                                        <td
+                                            style="padding: var(--space-2); border-bottom: 1px solid var(--border-default);">
+                                            Callee-saved</td>
+                                    </tr>
+                                    <tr>
+                                        <td style="padding: var(--space-2);"><code>rsp</code></td>
+                                        <td style="padding: var(--space-2);">Stack pointer</td>
+                                        <td style="padding: var(--space-2);">Special</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Common Instructions -->
+                    <div>
+                        <h4 style="color: var(--accent-cyan); margin-bottom: var(--space-3);">Common Instructions</h4>
+                        <div style="overflow-x: auto;">
+                            <table style="width: 100%; border-collapse: collapse; font-size: 0.9rem;">
+                                <thead>
+                                    <tr style="background: var(--bg-elevated);">
+                                        <th
+                                            style="padding: var(--space-2); text-align: left; border-bottom: 1px solid var(--border-default);">
+                                            Instruction</th>
+                                        <th
+                                            style="padding: var(--space-2); text-align: left; border-bottom: 1px solid var(--border-default);">
+                                            Description</th>
+                                        <th
+                                            style="padding: var(--space-2); text-align: left; border-bottom: 1px solid var(--border-default);">
+                                            Example</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td
+                                            style="padding: var(--space-2); border-bottom: 1px solid var(--border-default);">
+                                            <code>mov</code>
+                                        </td>
+                                        <td
+                                            style="padding: var(--space-2); border-bottom: 1px solid var(--border-default);">
+                                            Move/copy value</td>
+                                        <td
+                                            style="padding: var(--space-2); border-bottom: 1px solid var(--border-default);">
+                                            <code>mov rax, 42</code>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td
+                                            style="padding: var(--space-2); border-bottom: 1px solid var(--border-default);">
+                                            <code>add</code>
+                                        </td>
+                                        <td
+                                            style="padding: var(--space-2); border-bottom: 1px solid var(--border-default);">
+                                            Addition</td>
+                                        <td
+                                            style="padding: var(--space-2); border-bottom: 1px solid var(--border-default);">
+                                            <code>add rax, rcx</code>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td
+                                            style="padding: var(--space-2); border-bottom: 1px solid var(--border-default);">
+                                            <code>sub</code>
+                                        </td>
+                                        <td
+                                            style="padding: var(--space-2); border-bottom: 1px solid var(--border-default);">
+                                            Subtraction</td>
+                                        <td
+                                            style="padding: var(--space-2); border-bottom: 1px solid var(--border-default);">
+                                            <code>sub rax, 5</code>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td
+                                            style="padding: var(--space-2); border-bottom: 1px solid var(--border-default);">
+                                            <code>imul</code>
+                                        </td>
+                                        <td
+                                            style="padding: var(--space-2); border-bottom: 1px solid var(--border-default);">
+                                            Signed multiply</td>
+                                        <td
+                                            style="padding: var(--space-2); border-bottom: 1px solid var(--border-default);">
+                                            <code>imul rax, rcx</code>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td
+                                            style="padding: var(--space-2); border-bottom: 1px solid var(--border-default);">
+                                            <code>idiv</code>
+                                        </td>
+                                        <td
+                                            style="padding: var(--space-2); border-bottom: 1px solid var(--border-default);">
+                                            Signed divide (rax=quo, rdx=rem)</td>
+                                        <td
+                                            style="padding: var(--space-2); border-bottom: 1px solid var(--border-default);">
+                                            <code>idiv rcx</code>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td
+                                            style="padding: var(--space-2); border-bottom: 1px solid var(--border-default);">
+                                            <code>push</code>
+                                        </td>
+                                        <td
+                                            style="padding: var(--space-2); border-bottom: 1px solid var(--border-default);">
+                                            Push to stack (rsp -= 8)</td>
+                                        <td
+                                            style="padding: var(--space-2); border-bottom: 1px solid var(--border-default);">
+                                            <code>push rax</code>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td
+                                            style="padding: var(--space-2); border-bottom: 1px solid var(--border-default);">
+                                            <code>pop</code>
+                                        </td>
+                                        <td
+                                            style="padding: var(--space-2); border-bottom: 1px solid var(--border-default);">
+                                            Pop from stack (rsp += 8)</td>
+                                        <td
+                                            style="padding: var(--space-2); border-bottom: 1px solid var(--border-default);">
+                                            <code>pop rcx</code>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td
+                                            style="padding: var(--space-2); border-bottom: 1px solid var(--border-default);">
+                                            <code>call</code>
+                                        </td>
+                                        <td
+                                            style="padding: var(--space-2); border-bottom: 1px solid var(--border-default);">
+                                            Call function</td>
+                                        <td
+                                            style="padding: var(--space-2); border-bottom: 1px solid var(--border-default);">
+                                            <code>call foo</code>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td style="padding: var(--space-2);"><code>ret</code></td>
+                                        <td style="padding: var(--space-2);">Return from function</td>
+                                        <td style="padding: var(--space-2);"><code>ret</code></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Calling Convention -->
+                    <div>
+                        <h4 style="color: var(--accent-cyan); margin-bottom: var(--space-3);">System V Calling
+                            Convention</h4>
+                        <div
+                            style="background: var(--bg-card); border: 1px solid var(--border-default); border-radius: var(--radius-md); padding: var(--space-4);">
+                            <ul style="padding-left: var(--space-5); line-height: 1.8;">
+                                <li><strong>Arguments:</strong> rdi, rsi, rdx, rcx, r8, r9 (first 6)</li>
+                                <li><strong>Return Value:</strong> rax</li>
+                                <li><strong>Caller-saved:</strong> rax, rcx, rdx, rsi, rdi, r8-r11</li>
+                                <li><strong>Callee-saved:</strong> rbx, rbp, r12-r15</li>
+                                <li><strong>Stack Alignment:</strong> 16-byte before <code>call</code></li>
+                                <li><strong>Variable Offset:</strong> slot N at <code>[rbp - (N+1)*8]</code></li>
+                            </ul>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <!-- Section: Syscalls -->
+        <div class="section" id="section-syscalls">
+            <div class="section-header" onclick="toggleSection('section-syscalls')">
+                <h3 class="section-title">📞 Syscalls - Talking to the OS</h3>
+                <span class="section-toggle">▶</span>
+            </div>
+            <div class="section-content">
+                <p><strong>Syscall = System Call</strong>: Request service from the operating system (read/write files,
+                    exit program, allocate memory).</p>
+
+                <h4>Syscall Mechanism (x86-64 Linux)</h4>
+                <pre><code>1. Put syscall number in rax
+2. Put arguments in: rdi, rsi, rdx, r10, r8, r9
+3. Execute "syscall" instruction
+4. Return value in rax</code></pre>
+
+                <h4 style="margin-top: var(--space-6);">Common Syscalls Table</h4>
+                <table style="width: 100%; border-collapse: collapse; margin: var(--space-4) 0;">
+                    <tr style="background: var(--bg-card);">
+                        <th style="padding: var(--space-2); text-align: left; border: 1px solid var(--border-default);">
+                            Number</th>
+                        <th style="padding: var(--space-2); text-align: left; border: 1px solid var(--border-default);">
+                            Name</th>
+                        <th style="padding: var(--space-2); text-align: left; border: 1px solid var(--border-default);">
+                            rdi</th>
+                        <th style="padding: var(--space-2); text-align: left; border: 1px solid var(--border-default);">
+                            Description</th>
+                    </tr>
+                    <tr>
+                        <td style="padding: var(--space-2); border: 1px solid var(--border-default);">0</td>
+                        <td style="padding: var(--space-2); border: 1px solid var(--border-default);"><code>read</code>
+                        </td>
+                        <td style="padding: var(--space-2); border: 1px solid var(--border-default);">fd</td>
+                        <td style="padding: var(--space-2); border: 1px solid var(--border-default);">Read from file
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding: var(--space-2); border: 1px solid var(--border-default);">1</td>
+                        <td style="padding: var(--space-2); border: 1px solid var(--border-default);"><code>write</code>
+                        </td>
+                        <td style="padding: var(--space-2); border: 1px solid var(--border-default);">fd</td>
+                        <td style="padding: var(--space-2); border: 1px solid var(--border-default);">Write to
+                            file/stdout</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: var(--space-2); border: 1px solid var(--border-default);">60</td>
+                        <td style="padding: var(--space-2); border: 1px solid var(--border-default);"><code>exit</code>
+                        </td>
+                        <td style="padding: var(--space-2); border: 1px solid var(--border-default);">status</td>
+                        <td style="padding: var(--space-2); border: 1px solid var(--border-default);">Exit program</td>
+                    </tr>
+                </table>
+
+                <h4 style="margin-top: var(--space-6);">Example: Exit Program</h4>
+                <pre><code>; exit(42) - exit with status code 42
+mov rax, 60         ; Syscall number for exit
+mov rdi, 42         ; Exit status code
+syscall             ; Execute (doesn't return!)</code></pre>
+
+                <h4 style="margin-top: var(--space-6);">IN COMPILER: _start Entry Point</h4>
+                <pre><code>global _start
+
+_start:
+    call main           ; Call main function
+    
+    ; Exit with main's return value
+    mov rdi, rax        ; Exit status = main's return value
+    mov rax, 60         ; Syscall number for exit
+    syscall             ; Exit program</code></pre>
+
+                <div
+                    style="background: rgba(245, 158, 11, 0.1); border: 1px solid var(--accent-yellow); border-radius: var(--radius-lg); padding: var(--space-4); margin-top: var(--space-6);">
+                    <strong style="color: var(--accent-yellow);">💡 Why not just return from _start?</strong>
+                    <p style="margin-top: var(--space-2);">There's no caller to return to! _start is the first thing
+                        that runs.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section: Two's Complement -->
+        <div class="section" id="section-twos-complement">
+            <div class="section-header" onclick="toggleSection('section-twos-complement')">
+                <h3 class="section-title">🔢 Two's Complement</h3>
+                <span class="section-toggle">▶</span>
+            </div>
+            <div class="section-content">
+                <div
+                    style="background: rgba(139, 92, 246, 0.1); border: 1px solid var(--accent-purple); border-radius: var(--radius-lg); padding: var(--space-4); margin-bottom: var(--space-6);">
+                    <strong style="color: var(--accent-purple);">🎯 EXAM TIP</strong>
+                    <p style="margin-top: var(--space-2);">Quick mental trick for calculating negative numbers!</p>
+                </div>
+
+                <h4>The Trick: MSB as Negative Power of 2</h4>
+                <pre><code>Formula for 8-bit signed integer:
+Value = -b₇×128 + b₆×64 + b₅×32 + b₄×16 + b₃×8 + b₂×4 + b₁×2 + b₀×1
+         └─MSB (negative!)</code></pre>
+
+                <h4 style="margin-top: var(--space-6);">Example: 0b11111101</h4>
+                <pre><code>Bit:     7  6  5  4  3  2  1  0
+Value:   1  1  1  1  1  1  0  1
+
+= -1×128 + 1×64 + 1×32 + 1×16 + 1×8 + 1×4 + 0×2 + 1×1
+= -128 + 64 + 32 + 16 + 8 + 4 + 0 + 1
+= -128 + 125
+= -3</code></pre>
+
+                <h4 style="margin-top: var(--space-6);">Quick Method</h4>
+                <ol style="padding-left: var(--space-5); line-height: 1.8;">
+                    <li>If MSB = 1, start with <strong>-128</strong> (for 8-bit), -32768 (for 16-bit)</li>
+                    <li>Add positive values for remaining 1 bits</li>
+                    <li>Result is the signed value</li>
+                </ol>
+
+                <h4 style="margin-top: var(--space-6);">Another Example: 0b10000001</h4>
+                <pre><code>MSB = 1 → start with -128
+Bit 0 = 1 → add 1
+Result: -128 + 1 = -127</code></pre>
+
+                <h4 style="margin-top: var(--space-6);">Common Values Reference</h4>
+                <table style="width: 100%; border-collapse: collapse; margin: var(--space-4) 0;">
+                    <tr style="background: var(--bg-card);">
+                        <th style="padding: var(--space-2); text-align: left; border: 1px solid var(--border-default);">
+                            Binary (8-bit)</th>
+                        <th style="padding: var(--space-2); text-align: left; border: 1px solid var(--border-default);">
+                            Signed</th>
+                        <th style="padding: var(--space-2); text-align: left; border: 1px solid var(--border-default);">
+                            Unsigned</th>
+                    </tr>
+                    <tr>
+                        <td style="padding: var(--space-2); border: 1px solid var(--border-default);">
+                            <code>01111111</code>
+                        </td>
+                        <td style="padding: var(--space-2); border: 1px solid var(--border-default);">127</td>
+                        <td style="padding: var(--space-2); border: 1px solid var(--border-default);">127</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: var(--space-2); border: 1px solid var(--border-default);">
+                            <code>10000000</code>
+                        </td>
+                        <td style="padding: var(--space-2); border: 1px solid var(--border-default);">-128</td>
+                        <td style="padding: var(--space-2); border: 1px solid var(--border-default);">128</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: var(--space-2); border: 1px solid var(--border-default);">
+                            <code>11111111</code>
+                        </td>
+                        <td style="padding: var(--space-2); border: 1px solid var(--border-default);">-1</td>
+                        <td style="padding: var(--space-2); border: 1px solid var(--border-default);">255</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+
+        <!-- Practice Problems Section -->
+        <div class="section" id="section-practice">
+            <div class="section-header" onclick="toggleSection('section-practice')">
+                <h3 class="section-title">📝 Practice Problems</h3>
+                <span class="section-toggle">▶</span>
+            </div>
+            <div class="section-content">
+                <div style="display: flex; flex-direction: column; gap: var(--space-6);">
+
+                    <!-- Problem 1 -->
+                    <div
+                        style="background: var(--bg-card); border: 1px solid var(--border-default); border-radius: var(--radius-lg); padding: var(--space-5);">
+                        <h4 style="color: var(--accent-cyan); margin-bottom: var(--space-3);">Problem 1: Register Sizes
+                        </h4>
+                        <pre><code>mov rax, 0xFFFFFFFFFFFFFFFF
+mov eax, 0x12345678
+; What is the value of rax now?</code></pre>
+                        <details style="margin-top: var(--space-4);">
+                            <summary style="cursor: pointer; color: var(--accent-purple); font-weight: 600;">Click for
+                                solution</summary>
+                            <div
+                                style="margin-top: var(--space-3); padding: var(--space-4); background: rgba(16, 185, 129, 0.1); border-radius: var(--radius-md);">
+                                <p><strong>Answer:</strong> <code>0x0000000012345678</code></p>
+                                <p><strong>Why:</strong> Writing to 32-bit register (<code>eax</code>) <strong>zeros the
+                                        upper 32 bits</strong> of the 64-bit register (<code>rax</code>).</p>
+                            </div>
+                        </details>
+                    </div>
+
+                    <!-- Problem 2 -->
+                    <div
+                        style="background: var(--bg-card); border: 1px solid var(--border-default); border-radius: var(--radius-lg); padding: var(--space-5);">
+                        <h4 style="color: var(--accent-cyan); margin-bottom: var(--space-3);">Problem 2: Valid Memory
+                            Operands</h4>
+                        <pre><code>; Which of these are valid?
+mov rax, [rbx]          ; A
+mov [rax], [rbx]        ; B
+mov [rax], 42           ; C
+add rax, [rbx]          ; D
+add [rax], [rbx]        ; E</code></pre>
+                        <details style="margin-top: var(--space-4);">
+                            <summary style="cursor: pointer; color: var(--accent-purple); font-weight: 600;">Click for
+                                solution</summary>
+                            <div
+                                style="margin-top: var(--space-3); padding: var(--space-4); background: rgba(16, 185, 129, 0.1); border-radius: var(--radius-md);">
+                                <p><strong>Valid:</strong> A, C, D</p>
+                                <p><strong>Invalid:</strong></p>
+                                <ul>
+                                    <li><strong>B</strong>: <code>mov [rax], [rbx]</code> - Can't have memory on BOTH
+                                        sides</li>
+                                    <li><strong>E</strong>: <code>add [rax], [rbx]</code> - Same rule</li>
+                                </ul>
+                                <p><strong>Fix for B:</strong></p>
+                                <pre><code>mov rcx, [rbx]    ; Load to temp
+mov [rax], rcx    ; Store from temp</code></pre>
+                            </div>
+                        </details>
+                    </div>
+
+                    <!-- Problem 3 -->
+                    <div
+                        style="background: var(--bg-card); border: 1px solid var(--border-default); border-radius: var(--radius-lg); padding: var(--space-5);">
+                        <h4 style="color: var(--accent-cyan); margin-bottom: var(--space-3);">Problem 3: Implement
+                            Conditional</h4>
+                        <p>Write assembly for: <code>if (x < 5) return 1; else return 0;</code></p>
+                        <p style="color: var(--text-secondary); font-size: 0.9rem;">Assume x is at [rbp - 8]</p>
+                        <details style="margin-top: var(--space-4);">
+                            <summary style="cursor: pointer; color: var(--accent-purple); font-weight: 600;">Click for
+                                solution</summary>
+                            <div
+                                style="margin-top: var(--space-3); padding: var(--space-4); background: rgba(16, 185, 129, 0.1); border-radius: var(--radius-md);">
+                                <pre><code>    mov rax, [rbp - 8]      ; Load x
+    cmp rax, 5              ; Compare with 5
+    jl .then                ; Jump if x < 5
+.else:
+    mov rax, 0              ; Return 0
+    jmp .done
+.then:
+    mov rax, 1              ; Return 1
+.done:
+    ret</code></pre>
+                                <p style="margin-top: var(--space-3);"><strong>Alternative (using setl):</strong></p>
+                                <pre><code>    cmp rax, 5
+    setl al                 ; al = (x < 5) ? 1 : 0
+    movzx rax, al           ; Zero-extend to 64 bits
+    ret</code></pre>
+                            </div>
+                        </details>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Navigation -->
+        <div
+            style="display: flex; justify-content: space-between; align-items: center; padding: var(--space-6); background: var(--bg-card); border-radius: var(--radius-xl); border: 1px solid var(--border-default); margin-top: var(--space-10);">
+            <a href="#" onclick="event.preventDefault(); UnlockSystem.navigateToModule('week-03', 'week-03-cpu.html');"
+                style="display: flex; align-items: center; gap: var(--space-2); color: var(--text-secondary);">
+                ← Week 3
+            </a>
+            <a href="#"
+                onclick="event.preventDefault(); UnlockSystem.navigateToModule('week-05', 'week-05-lexer.html');"
+                style="display: flex; align-items: center; gap: var(--space-2); padding: var(--space-3) var(--space-5); background: var(--gradient-primary); color: white; border-radius: var(--radius-md); font-weight: 600;">
+                Next: Compiler 1 - Lexer →
+            </a>
+        </div>
+    </main>
+
+    <script src="../js/modules-data.js"></script>
+    <script src="../js/unlock.js"></script>
+    <script src="../js/progress.js"></script>
+    <script src="../js/quiz.js"></script>
+    <script>
+        function toggleSection(sectionId) {
+            const section = document.getElementById(sectionId);
+            if (section) {
+                section.classList.toggle('open');
+                if (section.classList.contains('open') && window.ProgressTracker) {
+                    ProgressTracker.expandSection('week-04', sectionId);
+                    updateProgress();
+                }
+            }
+        }
+
+        function updateProgress() {
+            if (window.ProgressTracker) {
+                const progress = ProgressTracker.getModuleProgress('week-04');
+                const bar = document.getElementById('moduleProgress');
+                if (bar) bar.style.width = `${progress.percentComplete}%`;
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const toggle = document.getElementById('themeToggle');
+            const savedTheme = localStorage.getItem('cs5008_theme') || 'dark';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            toggle.textContent = savedTheme === 'dark' ? '🌙' : '☀️';
+
+            toggle.addEventListener('click', () => {
+                const current = document.documentElement.getAttribute('data-theme');
+                const next = current === 'dark' ? 'light' : 'dark';
+                document.documentElement.setAttribute('data-theme', next);
+                localStorage.setItem('cs5008_theme', next);
+                toggle.textContent = next === 'dark' ? '🌙' : '☀️';
+            });
+
+            if (window.ProgressTracker) {
+                ProgressTracker.visitModule('week-04');
+                updateProgress();
+            }
+        });
+    </script>
+</body>
+
+</html>

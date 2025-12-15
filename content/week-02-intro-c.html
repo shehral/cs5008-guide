@@ -1,0 +1,983 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Week 2: Introduction to C | CS5008 Guide</title>
+    <link rel="stylesheet" href="../css/styles.css">
+    <link rel="icon"
+        href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>">
+</head>
+
+<body>
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+
+    <header class="header">
+        <div class="header-content">
+            <a href="../index.html" class="logo">
+                <span class="logo-icon">⚡</span>
+                <span>CS5008</span>
+            </a>
+            <div class="header-actions">
+                <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme">🌙</button>
+            </div>
+        </div>
+    </header>
+
+    <main class="main-container module-page">
+        <nav class="breadcrumb">
+            <a href="../index.html">← Back to modules</a>
+        </nav>
+
+        <div class="module-header">
+            <div class="module-badge">🔧 Week 2 • +100 XP</div>
+            <h1>Introduction to <span class="text-gradient">C</span></h1>
+            <p>C fundamentals through the lens of Python/Java. Learn how C differs and why those differences matter for
+                building compilers.</p>
+        </div>
+
+        <div class="progress-bar mb-6">
+            <div class="progress-bar-fill" id="moduleProgress" style="width: 0%"></div>
+        </div>
+
+        <!-- Section 1: Types & Variables -->
+        <div class="section open" id="section-types">
+            <div class="section-header" onclick="toggleSection('section-types')">
+                <h3 class="section-title">📦 Types & Variables</h3>
+                <span class="section-toggle">▶</span>
+            </div>
+            <div class="section-content">
+                <p><strong>The big difference:</strong> C is statically typed. Once a variable has a type, it can never
+                    change.</p>
+
+                <!-- Python vs C Comparison -->
+                <h4>🐍 YOU KNOW (Python): Dynamic Typing</h4>
+                <pre><code>x = 42          # x is int
+x = "hello"     # Now x is str - perfectly fine!
+x = [1, 2, 3]   # Now x is list - still fine!</code></pre>
+
+                <h4 style="margin-top: var(--space-6);">⚙️ IN C: Static Typing</h4>
+                <pre><code>int x = 42;        // x is ALWAYS an int
+x = "hello";       // ❌ ERROR! Type mismatch
+x = 100;           // ✓ OK - still an int</code></pre>
+
+                <div
+                    style="background: var(--bg-terminal); border-radius: var(--radius-lg); padding: var(--space-5); margin: var(--space-6) 0;">
+                    <strong style="color: var(--accent-cyan);">WHY DIFFERENT?</strong>
+                    <ul style="margin-top: var(--space-3); padding-left: var(--space-5);">
+                        <li>Python discovers types at runtime (slow but flexible)</li>
+                        <li>C knows types at compile time (fast but rigid)</li>
+                        <li>No type checking overhead at runtime in C</li>
+                    </ul>
+                </div>
+
+                <h4 style="margin-top: var(--space-8);">C Type Sizes (Reference Table)</h4>
+                <table style="width: 100%; border-collapse: collapse; margin-top: var(--space-4);">
+                    <tr style="background: var(--bg-card);">
+                        <th style="padding: var(--space-3); text-align: left; border: 1px solid var(--border-default);">
+                            Type</th>
+                        <th style="padding: var(--space-3); text-align: left; border: 1px solid var(--border-default);">
+                            Bytes</th>
+                        <th style="padding: var(--space-3); text-align: left; border: 1px solid var(--border-default);">
+                            Range</th>
+                        <th style="padding: var(--space-3); text-align: left; border: 1px solid var(--border-default);">
+                            Use Case</th>
+                    </tr>
+                    <tr>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);"><code>char</code>
+                        </td>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);">1</td>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);">-128 to 127</td>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);">Single character
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);"><code>int</code>
+                        </td>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);">4</td>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);">-2³¹ to 2³¹-1</td>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);">Most integers</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);"><code>long</code>
+                        </td>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);">8</td>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);">-2⁶³ to 2⁶³-1</td>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);">Large integers,
+                            pointers</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);"><code>float</code>
+                        </td>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);">4</td>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);">~7 decimal digits
+                        </td>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);">Rarely used</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);">
+                            <code>double</code>
+                        </td>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);">8</td>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);">~15 decimal digits
+                        </td>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);">Floating point
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);"><code>bool</code>
+                        </td>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);">1</td>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);">0 or 1</td>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);">Boolean (needs
+                            stdbool.h)</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);"><code>void*</code>
+                        </td>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);">8</td>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);">N/A</td>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);">Generic pointer
+                        </td>
+                    </tr>
+                </table>
+
+                <h4 style="margin-top: var(--space-8);">⚠️ Declaration vs Initialization</h4>
+                <pre><code>int x;           // DECLARATION: x exists but has GARBAGE value!
+printf("%d", x); // Undefined behavior (could print anything)
+
+int x = 0;       // ✅ ALWAYS INITIALIZE - Safe!</code></pre>
+
+                <blockquote
+                    style="border-left: 4px solid var(--accent-red); padding-left: var(--space-5); margin: var(--space-6) 0; background: rgba(239, 68, 68, 0.1); padding: var(--space-4); border-radius: var(--radius-md);">
+                    <strong style="color: var(--accent-red);">🚨 CRITICAL:</strong> Uninitialized variables in C contain
+                    random garbage! This causes bugs that are extremely hard to track down.
+                </blockquote>
+
+                <h4 style="margin-top: var(--space-8);">Constants</h4>
+                <div
+                    style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4); margin: var(--space-4) 0;">
+                    <div
+                        style="background: var(--bg-card); border: 1px solid var(--border-default); border-radius: var(--radius-lg); padding: var(--space-5);">
+                        <div style="font-weight: 600; color: var(--accent-yellow); margin-bottom: var(--space-3);">🐍
+                            Python</div>
+                        <pre style="margin: 0; font-size: 0.85rem;"><code>MAX_SIZE = 100
+# Convention only - 
+# you CAN change it!</code></pre>
+                    </div>
+                    <div
+                        style="background: var(--bg-card); border: 1px solid var(--accent-cyan); border-radius: var(--radius-lg); padding: var(--space-5);">
+                        <div style="font-weight: 600; color: var(--accent-cyan); margin-bottom: var(--space-3);">⚙️ C
+                        </div>
+                        <pre style="margin: 0; font-size: 0.85rem;"><code>const int MAX_SIZE = 100;
+MAX_SIZE = 200; // ❌ ERROR!
+
+#define MAX_SIZE 100  // Macro</code></pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section 2: Functions -->
+        <div class="section" id="section-functions">
+            <div class="section-header" onclick="toggleSection('section-functions')">
+                <h3 class="section-title">🔧 Functions</h3>
+                <span class="section-toggle">▶</span>
+            </div>
+            <div class="section-content">
+                <h4>🐍 YOU KNOW (Python)</h4>
+                <pre><code>def add(a, b):
+    return a + b
+
+result = add(5, 3)  # result = 8</code></pre>
+
+                <h4 style="margin-top: var(--space-6);">⚙️ IN C: Must Declare Types</h4>
+                <pre><code>int add(int a, int b) {
+    return a + b;
+}
+
+int result = add(5, 3);  // result = 8</code></pre>
+
+                <h4 style="margin-top: var(--space-6);">Function Anatomy</h4>
+                <pre><code>int           add    (int a, int b)     {  return a + b;  }
+│             │       │                  │  │
+return type   name    parameters         │  function body
+                                         └─ opening brace</code></pre>
+
+                <h4 style="margin-top: var(--space-8);">Forward Declarations</h4>
+                <p>C requires functions to be declared before they're used:</p>
+
+                <pre><code>// ❌ ERROR: add not declared yet
+int main() {
+    int x = add(5, 3);  // Compiler doesn't know about add!
+    return 0;
+}
+
+int add(int a, int b) {
+    return a + b;
+}</code></pre>
+
+                <p style="margin-top: var(--space-4);"><strong>FIX: Forward declaration</strong></p>
+                <pre><code>// ✅ WORKS - declare signature first
+int add(int a, int b);  // Forward declaration
+
+int main() {
+    int x = add(5, 3);  // OK - compiler knows about add
+    return 0;
+}
+
+int add(int a, int b) {  // Definition can come later
+    return a + b;
+}</code></pre>
+
+                <div
+                    style="background: var(--bg-terminal); border-radius: var(--radius-lg); padding: var(--space-5); margin: var(--space-6) 0;">
+                    <strong style="color: var(--accent-green);">🛠️ IN YOUR COMPILER:</strong>
+                    <pre style="margin-top: var(--space-3);"><code>// In parser.c - forward declarations at top
+static AST_Node *parse_additive(Parser *parser);
+static AST_Node *parse_multiplicative(Parser *parser);
+static AST_Node *parse_primary(Parser *parser);
+
+// Now these functions can call each other in any order!</code></pre>
+                </div>
+
+                <h4 style="margin-top: var(--space-8);">The main() Function</h4>
+                <pre><code>int main(int argc, char *argv[]) {
+    // argc = argument count
+    // argv = argument values (array of strings)
+    
+    printf("Hello\n");
+    return 0;  // 0 = success, non-zero = error
+}
+
+// Simple version:
+int main() {
+    printf("Hello\n");
+    return 0;
+}</code></pre>
+            </div>
+        </div>
+
+        <!-- Section 3: printf - Formatted Output -->
+        <div class="section" id="section-printf">
+            <div class="section-header" onclick="toggleSection('section-printf')">
+                <h3 class="section-title">📝 printf - Formatted Output</h3>
+                <span class="section-toggle">▶</span>
+            </div>
+            <div class="section-content">
+                <h4>🐍 YOU KNOW (Python): f-strings</h4>
+                <pre><code>x = 42
+name = "Alice"
+print(f"{name} has {x} points")  # Python 3.6+</code></pre>
+
+                <h4 style="margin-top: var(--space-6);">⚙️ IN C: printf with format specifiers</h4>
+                <pre><code>int x = 42;
+char *name = "Alice";
+printf("%s has %d points\n", name, x);</code></pre>
+
+                <h4 style="margin-top: var(--space-8);">Format Specifiers Reference</h4>
+                <table style="width: 100%; border-collapse: collapse; margin-top: var(--space-4);">
+                    <tr style="background: var(--bg-card);">
+                        <th style="padding: var(--space-3); text-align: left; border: 1px solid var(--border-default);">
+                            Specifier</th>
+                        <th style="padding: var(--space-3); text-align: left; border: 1px solid var(--border-default);">
+                            Type</th>
+                        <th style="padding: var(--space-3); text-align: left; border: 1px solid var(--border-default);">
+                            Example</th>
+                    </tr>
+                    <tr>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);"><code>%d</code>
+                        </td>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);">int</td>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);">
+                            <code>printf("%d", 42)</code> → <code>42</code>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);"><code>%ld</code>
+                        </td>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);">long</td>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);">
+                            <code>printf("%ld", 123L)</code> → <code>123</code>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);"><code>%x</code>
+                        </td>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);">hex</td>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);">
+                            <code>printf("%x", 255)</code> → <code>ff</code>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);"><code>%p</code>
+                        </td>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);">pointer</td>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);">
+                            <code>printf("%p", ptr)</code> → <code>0x7fff...</code>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);"><code>%s</code>
+                        </td>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);">string (char*)
+                        </td>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);">
+                            <code>printf("%s", "hi")</code> → <code>hi</code>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);"><code>%c</code>
+                        </td>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);">character</td>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);">
+                            <code>printf("%c", 'A')</code> → <code>A</code>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);"><code>%.2f</code>
+                        </td>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);">double (2
+                            decimals)</td>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);">
+                            <code>printf("%.2f", 3.14159)</code> → <code>3.14</code>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);"><code>%%</code>
+                        </td>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);">literal %</td>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);">
+                            <code>printf("%%")</code> → <code>%</code>
+                        </td>
+                    </tr>
+                </table>
+
+                <blockquote
+                    style="border-left: 4px solid var(--accent-red); padding-left: var(--space-5); margin: var(--space-6) 0; background: rgba(239, 68, 68, 0.1); padding: var(--space-4); border-radius: var(--radius-md);">
+                    <strong style="color: var(--accent-red);">⚠️ CRITICAL:</strong> Type MUST match specifier!
+                    <pre style="margin-top: var(--space-3);"><code>int x = 42;
+printf("%s", x);   // ❌ DANGER! Expects string, got int
+printf("%d", "hi"); // ❌ DANGER! Expects int, got string
+// Both cause undefined behavior (crashes, garbage output)</code></pre>
+                </blockquote>
+
+                <div
+                    style="background: var(--bg-terminal); border-radius: var(--radius-lg); padding: var(--space-5); margin: var(--space-6) 0;">
+                    <strong style="color: var(--accent-green);">🛠️ IN YOUR COMPILER:</strong>
+                    <p style="margin-top: var(--space-3);">Your String struct has no null terminator, so use:</p>
+                    <pre style="margin-top: var(--space-3);"><code>// Print exactly N characters with %.*s
+printf("%.*s\n", (int)s.count, s.data);
+
+// Or use the PRINT_STRING macro:
+#define PRINT_STRING(s) (int)((s).count), (s).data
+printf("Token: %.*s\n", PRINT_STRING(tok.source));</code></pre>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section 4: Structs -->
+        <div class="section" id="section-structs">
+            <div class="section-header" onclick="toggleSection('section-structs')">
+                <h3 class="section-title">📐 Structs</h3>
+                <span class="section-toggle">▶</span>
+            </div>
+            <div class="section-content">
+                <p>Structs are like classes with only data, no methods. They're used everywhere in your compiler!</p>
+
+                <h4>☕ YOU KNOW (Java): Classes</h4>
+                <pre><code>class Point {
+    int x;
+    int y;
+    // In Java, you'd add methods here
+}
+
+Point p = new Point();
+p.x = 10;
+p.y = 20;</code></pre>
+
+                <h4 style="margin-top: var(--space-6);">⚙️ IN C: Struct (data only)</h4>
+                <pre><code>struct Point {
+    int x;
+    int y;
+};
+
+struct Point p;  // Note: need "struct" keyword
+p.x = 10;
+p.y = 20;</code></pre>
+
+                <h4 style="margin-top: var(--space-8);">typedef - Creating Type Aliases</h4>
+                <p>Writing <code>struct Point</code> everywhere is tedious. Use <code>typedef</code>:</p>
+                <pre><code>// Define struct AND create type alias in one go:
+typedef struct {
+    int x;
+    int y;
+} Point;
+
+// Now can use just "Point" instead of "struct Point"
+Point p;
+p.x = 10;</code></pre>
+
+                <h4 style="margin-top: var(--space-8);">Struct Initialization Methods</h4>
+                <div
+                    style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4); margin: var(--space-4) 0;">
+                    <div
+                        style="background: var(--bg-card); border: 1px solid var(--border-default); border-radius: var(--radius-lg); padding: var(--space-5);">
+                        <div style="font-weight: 600; margin-bottom: var(--space-3);">Method 1: Field by field</div>
+                        <pre style="margin: 0; font-size: 0.85rem;"><code>Point p;
+p.x = 10;
+p.y = 20;</code></pre>
+                    </div>
+                    <div
+                        style="background: var(--bg-card); border: 1px solid var(--border-default); border-radius: var(--radius-lg); padding: var(--space-5);">
+                        <div style="font-weight: 600; margin-bottom: var(--space-3);">Method 2: Positional</div>
+                        <pre style="margin: 0; font-size: 0.85rem;"><code>Point p = {10, 20};
+// x=10, y=20</code></pre>
+                    </div>
+                    <div
+                        style="background: var(--bg-card); border: 1px solid var(--accent-green); border-radius: var(--radius-lg); padding: var(--space-5);">
+                        <div style="font-weight: 600; color: var(--accent-green); margin-bottom: var(--space-3);">✅
+                            Method 3: Named (best!)</div>
+                        <pre style="margin: 0; font-size: 0.85rem;"><code>Point p = {
+    .x = 10,
+    .y = 20
+};</code></pre>
+                    </div>
+                    <div
+                        style="background: var(--bg-card); border: 1px solid var(--border-default); border-radius: var(--radius-lg); padding: var(--space-5);">
+                        <div style="font-weight: 600; margin-bottom: var(--space-3);">Method 4: Zero init</div>
+                        <pre style="margin: 0; font-size: 0.85rem;"><code>Point p = {0};
+// All fields = 0</code></pre>
+                    </div>
+                </div>
+
+                <h4 style="margin-top: var(--space-8);">Accessing Struct Fields</h4>
+                <div
+                    style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4); margin: var(--space-4) 0;">
+                    <div
+                        style="background: var(--bg-card); border: 1px solid var(--border-default); border-radius: var(--radius-lg); padding: var(--space-5);">
+                        <div style="font-weight: 600; margin-bottom: var(--space-3);">With struct variable: use
+                            <code>.</code>
+                        </div>
+                        <pre style="margin: 0; font-size: 0.85rem;"><code>Point p;
+p.x = 10;     // dot operator</code></pre>
+                    </div>
+                    <div
+                        style="background: var(--bg-card); border: 1px solid var(--accent-cyan); border-radius: var(--radius-lg); padding: var(--space-5);">
+                        <div style="font-weight: 600; margin-bottom: var(--space-3);">With pointer: use <code>-></code>
+                        </div>
+                        <pre style="margin: 0; font-size: 0.85rem;"><code>Point *ptr = &p;
+ptr->x = 10;  // arrow operator</code></pre>
+                    </div>
+                </div>
+
+                <div
+                    style="background: var(--bg-terminal); border-radius: var(--radius-lg); padding: var(--space-5); margin: var(--space-6) 0;">
+                    <strong style="color: var(--accent-green);">🛠️ IN YOUR COMPILER - Nested Structs:</strong>
+                    <pre style="margin-top: var(--space-3);"><code>typedef struct {
+    Token_Kind kind;
+    String source;    // Nested struct!
+    Loc loc;          // Nested struct!
+    long long_value;
+} Token;
+
+// Access nested fields:
+tok.source.data = "42";
+tok.loc.line = 1;</code></pre>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section 5: Enums & Unions -->
+        <div class="section" id="section-enums">
+            <div class="section-header" onclick="toggleSection('section-enums')">
+                <h3 class="section-title">🏷️ Enums & Unions</h3>
+                <span class="section-toggle">▶</span>
+            </div>
+            <div class="section-content">
+                <h4>Enums: Named Constants</h4>
+                <p>Type-safe alternatives to magic numbers:</p>
+
+                <h4>🐍 YOU KNOW (Python)</h4>
+                <pre><code># Option 1: Strings (error-prone)
+token_kind = "KEYWORD"
+if token_kind == "KEYWROD":  # Typo - no error!
+    ...
+
+# Option 2: Class attributes
+class TokenKind:
+    KEYWORD = 0
+    INTEGER = 1</code></pre>
+
+                <h4 style="margin-top: var(--space-6);">⚙️ IN C: Enum (type-safe!)</h4>
+                <pre><code>typedef enum {
+    TOKEN_KEYWORD,      // = 0 (auto-numbered)
+    TOKEN_INTEGER,      // = 1
+    TOKEN_IDENTIFIER,   // = 2
+    TOKEN_PLUS,         // = 3
+    // ...
+} Token_Kind;
+
+Token_Kind kind = TOKEN_KEYWORD;  // Type-safe!</code></pre>
+
+                <div
+                    style="background: var(--bg-terminal); border-radius: var(--radius-lg); padding: var(--space-5); margin: var(--space-6) 0;">
+                    <strong style="color: var(--accent-cyan);">Why enums are better than strings:</strong>
+                    <ul style="margin-top: var(--space-3); padding-left: var(--space-5);">
+                        <li>✅ Compiler catches typos</li>
+                        <li>✅ Autocomplete in editors</li>
+                        <li>✅ No string comparison overhead</li>
+                        <li>✅ Clear documentation of valid values</li>
+                    </ul>
+                </div>
+
+                <h4 style="margin-top: var(--space-8);">Unions: Same Memory, Different Types</h4>
+                <p>A union allows multiple types to share the same memory location:</p>
+
+                <pre><code>union Value {
+    long int_value;
+    double float_value;
+    char *str_value;
+};
+
+union Value v;
+v.int_value = 42;        // Store as int
+v.float_value = 3.14;    // OVERWRITES int_value!</code></pre>
+
+                <h4 style="margin-top: var(--space-6);">Memory Layout</h4>
+                <pre><code>Union (size = 8 bytes - size of LARGEST member):
+┌────────────────────────────┐
+│  int_value   (8 bytes)     │
+│  float_value (8 bytes)     │  } All three share
+│  str_value   (8 bytes)     │  } the SAME memory!
+└────────────────────────────┘</code></pre>
+
+                <h4 style="margin-top: var(--space-8);">Tagged Unions - The Safe Pattern</h4>
+                <p><strong>Problem:</strong> How do you know which union member is valid?</p>
+                <p><strong>Solution:</strong> Add a "tag" field (enum) to track it!</p>
+
+                <pre><code>typedef struct {
+    Token_Kind kind;  // The "TAG" - tells us which member is valid
+    union {
+        long int_value;      // Valid if kind == TOKEN_INTEGER
+        Keyword keyword;     // Valid if kind == TOKEN_KEYWORD  
+        Type type;           // Valid if kind == TOKEN_TYPE
+    };
+} Token;</code></pre>
+
+                <div
+                    style="background: var(--bg-terminal); border-radius: var(--radius-lg); padding: var(--space-5); margin: var(--space-6) 0;">
+                    <strong style="color: var(--accent-green);">🛠️ IN YOUR COMPILER:</strong>
+                    <pre style="margin-top: var(--space-3);"><code>Token tok = next_token(&scanner);
+
+// Always check the tag before accessing union members!
+if (tok.kind == TOKEN_INTEGER) {
+    long value = tok.long_value;  // ✅ Safe - we checked!
+    printf("Got number: %ld\n", value);
+}
+else if (tok.kind == TOKEN_KEYWORD) {
+    Keyword kw = tok.keyword;     // ✅ Safe
+    if (kw == KEYWORD_RETURN) {
+        // Handle return keyword
+    }
+}</code></pre>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section 6: Pointers -->
+        <div class="section" id="section-pointers">
+            <div class="section-header" onclick="toggleSection('section-pointers')">
+                <h3 class="section-title">👉 Pointers: The Core Concept</h3>
+                <span class="section-toggle">▶</span>
+            </div>
+            <div class="section-content">
+                <p>Pointers store memory addresses. They're <strong>the most important concept in C</strong> and have no
+                    equivalent in Python/Java!</p>
+
+                <h4>Memory Model Visualization</h4>
+                <pre><code>Memory Address    Value       Variable
+┌──────────────┬──────────┬───────────┐
+│   0x1000     │    42    │   x       │  ← int x = 42;
+├──────────────┼──────────┼───────────┤
+│   0x1008     │  0x1000  │   p       │  ← int *p = &x;
+└──────────────┴──────────┴───────────┘
+                    │
+                    └───── p contains the ADDRESS of x</code></pre>
+
+                <h4 style="margin-top: var(--space-8);">Two Key Operations</h4>
+                <div
+                    style="background: var(--bg-terminal); border-radius: var(--radius-lg); padding: var(--space-6); margin: var(--space-4) 0; font-family: var(--font-mono);">
+                    <div style="display: grid; grid-template-columns: auto 1fr; gap: var(--space-4);">
+                        <div style="color: var(--accent-cyan); font-size: 1.5rem;">&x</div>
+                        <div>
+                            <div style="font-weight: 600;">Address-of operator</div>
+                            <div style="color: var(--text-secondary);">Gets the memory address of variable x</div>
+                        </div>
+                        <div style="color: var(--accent-green); font-size: 1.5rem;">*p</div>
+                        <div>
+                            <div style="font-weight: 600;">Dereference operator</div>
+                            <div style="color: var(--text-secondary);">Gets the value at address stored in p</div>
+                        </div>
+                    </div>
+                </div>
+
+                <h4 style="margin-top: var(--space-6);">Complete Example</h4>
+                <pre><code>int x = 42;       // x holds value 42
+int *p = &x;      // p holds ADDRESS of x
+
+printf("%d\n", x);   // Prints: 42 (value of x)
+printf("%p\n", p);   // Prints: 0x7fff... (address of x)
+printf("%d\n", *p);  // Prints: 42 (value AT address p)
+
+*p = 100;            // Set value at address p to 100
+printf("%d\n", x);   // Prints: 100 (x changed!)</code></pre>
+
+                <h4 style="margin-top: var(--space-8);">Why Pointers Matter</h4>
+                <div
+                    style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4); margin: var(--space-4) 0;">
+                    <div
+                        style="background: var(--bg-card); border: 1px solid var(--border-default); border-radius: var(--radius-lg); padding: var(--space-5);">
+                        <div style="font-weight: 600; color: var(--accent-green); margin-bottom: var(--space-3);">✅
+                            Modify variables in other functions</div>
+                        <pre style="margin: 0; font-size: 0.85rem;"><code>void increment(int *x) {
+    (*x)++;  // Modifies original!
+}
+
+int n = 5;
+increment(&n);  // n is now 6</code></pre>
+                    </div>
+                    <div
+                        style="background: var(--bg-card); border: 1px solid var(--border-default); border-radius: var(--radius-lg); padding: var(--space-5);">
+                        <div style="font-weight: 600; color: var(--accent-green); margin-bottom: var(--space-3);">✅
+                            Avoid copying large structs</div>
+                        <pre style="margin: 0; font-size: 0.85rem;"><code>// Instead of copying 1000 bytes:
+void process(BigStruct *ptr) {
+    // Work with ptr->field
+    // Only copies 8-byte pointer!
+}</code></pre>
+                    </div>
+                </div>
+
+                <div
+                    style="background: var(--bg-terminal); border-radius: var(--radius-lg); padding: var(--space-5); margin: var(--space-6) 0;">
+                    <strong style="color: var(--accent-green);">🛠️ IN YOUR COMPILER:</strong>
+                    <pre style="margin-top: var(--space-3);"><code>// Parser functions take pointer to avoid copying:
+static AST_Node *parse_expression(Parser *parser) {
+    Token tok = parser->current;  // Access via arrow
+    advance(parser);              // Pass pointer to advance
+    // ...
+}</code></pre>
+                </div>
+
+                <h4 style="margin-top: var(--space-8);">Common Pointer Mistakes</h4>
+                <pre><code>// ❌ Uninitialized pointer
+int *p;
+*p = 42;  // CRASH! p points to random memory
+
+// ❌ Dangling pointer
+int *p = malloc(sizeof(int));
+free(p);
+*p = 42;  // CRASH! Memory already freed
+
+// ❌ NULL dereference
+int *p = NULL;
+*p = 42;  // CRASH! Can't dereference NULL
+
+// ✅ Always check pointers!
+if (p != NULL) {
+    *p = 42;  // Safe
+}</code></pre>
+            </div>
+        </div>
+
+        <!-- Quiz Section -->
+        <div class="section" id="section-quiz">
+            <div class="section-header" onclick="toggleSection('section-quiz')">
+                <h3 class="section-title">🧠 Check Your Understanding</h3>
+                <span class="section-toggle">▶</span>
+            </div>
+            <div class="section-content">
+                <div class="quiz" data-correct="1" data-quiz-id="q1" data-module-id="week-02"
+                    data-explanation="The arrow operator (->) is shorthand for dereferencing a pointer and accessing a field: ptr->field is equivalent to (*ptr).field">
+                    <div class="quiz-question">How do you access a struct field through a pointer?</div>
+                    <div class="quiz-options">
+                        <div class="quiz-option" data-value="0">
+                            <div class="quiz-radio"></div>
+                            <span>ptr.field</span>
+                        </div>
+                        <div class="quiz-option" data-value="1">
+                            <div class="quiz-radio"></div>
+                            <span>ptr->field</span>
+                        </div>
+                        <div class="quiz-option" data-value="2">
+                            <div class="quiz-radio"></div>
+                            <span>*ptr.field</span>
+                        </div>
+                        <div class="quiz-option" data-value="3">
+                            <div class="quiz-radio"></div>
+                            <span>ptr::field</span>
+                        </div>
+                    </div>
+                    <div class="quiz-feedback"></div>
+                </div>
+
+                <div class="quiz" data-correct="2" data-quiz-id="q2" data-module-id="week-02"
+                    data-explanation="The & operator (address-of) gives you the memory address where a variable is stored.">
+                    <div class="quiz-question">What does &x give you?</div>
+                    <div class="quiz-options">
+                        <div class="quiz-option" data-value="0">
+                            <div class="quiz-radio"></div>
+                            <span>The value of x</span>
+                        </div>
+                        <div class="quiz-option" data-value="1">
+                            <div class="quiz-radio"></div>
+                            <span>A copy of x</span>
+                        </div>
+                        <div class="quiz-option" data-value="2">
+                            <div class="quiz-radio"></div>
+                            <span>The memory address of x</span>
+                        </div>
+                        <div class="quiz-option" data-value="3">
+                            <div class="quiz-radio"></div>
+                            <span>A null pointer</span>
+                        </div>
+                    </div>
+                    <div class="quiz-feedback"></div>
+                </div>
+
+                <div class="quiz" data-correct="3" data-quiz-id="q3" data-module-id="week-02"
+                    data-explanation="printf(\" %d\", x) expects x to be an int. Using %s (string) or %f (float) with an
+                    int is undefined behavior.">
+                    <div class="quiz-question">What's wrong with: <code>int x = 42; printf("%s", x);</code></div>
+                    <div class="quiz-options">
+                        <div class="quiz-option" data-value="0">
+                            <div class="quiz-radio"></div>
+                            <span>Nothing, it works fine</span>
+                        </div>
+                        <div class="quiz-option" data-value="1">
+                            <div class="quiz-radio"></div>
+                            <span>Missing newline</span>
+                        </div>
+                        <div class="quiz-option" data-value="2">
+                            <div class="quiz-radio"></div>
+                            <span>x needs to be initialized</span>
+                        </div>
+                        <div class="quiz-option" data-value="3">
+                            <div class="quiz-radio"></div>
+                            <span>%s expects a string, not an int</span>
+                        </div>
+                    </div>
+                    <div class="quiz-feedback"></div>
+                </div>
+
+                <div class="quiz" data-correct="1" data-quiz-id="q4" data-module-id="week-02"
+                    data-explanation="In a tagged union, the 'tag' (usually an enum) tells you which union member is currently valid.">
+                    <div class="quiz-question">In a tagged union, what's the purpose of the "tag"?</div>
+                    <div class="quiz-options">
+                        <div class="quiz-option" data-value="0">
+                            <div class="quiz-radio"></div>
+                            <span>To store extra data</span>
+                        </div>
+                        <div class="quiz-option" data-value="1">
+                            <div class="quiz-radio"></div>
+                            <span>To indicate which union member is valid</span>
+                        </div>
+                        <div class="quiz-option" data-value="2">
+                            <div class="quiz-radio"></div>
+                            <span>To name the union</span>
+                        </div>
+                        <div class="quiz-option" data-value="3">
+                            <div class="quiz-radio"></div>
+                            <span>To set the union size</span>
+                        </div>
+                    </div>
+                    <div class="quiz-feedback"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Practice Problems Section -->
+        <div class="section" id="section-practice">
+            <div class="section-header" onclick="toggleSection('section-practice')">
+                <h3 class="section-title">📝 Practice Problems</h3>
+                <span class="section-toggle">▶</span>
+            </div>
+            <div class="section-content">
+                <div style="display: flex; flex-direction: column; gap: var(--space-6);">
+
+                    <!-- Problem 1 -->
+                    <div
+                        style="background: var(--bg-card); border: 1px solid var(--border-default); border-radius: var(--radius-lg); padding: var(--space-5);">
+                        <h4 style="color: var(--accent-cyan); margin-bottom: var(--space-3);">Problem 1: Fix the Swap
+                        </h4>
+                        <pre><code>void swap(int a, int b) {
+    int temp = a;
+    a = b;
+    b = temp;
+}
+
+int main() {
+    int x = 5, y = 10;
+    swap(x, y);
+    printf("%d %d\n", x, y);  // Prints: 5 10 (not swapped!)
+}</code></pre>
+                        <details style="margin-top: var(--space-4);">
+                            <summary style="cursor: pointer; color: var(--accent-purple); font-weight: 600;">Click for
+                                solution</summary>
+                            <div
+                                style="margin-top: var(--space-3); padding: var(--space-4); background: rgba(16, 185, 129, 0.1); border-radius: var(--radius-md);">
+                                <p><strong>Problem:</strong> swap receives COPIES of x and y, not the originals.</p>
+                                <pre><code>// Fix: Use pointers
+void swap(int *a, int *b) {
+    int temp = *a;
+    *a = *b;
+    *b = temp;
+}
+
+int main() {
+    int x = 5, y = 10;
+    swap(&x, &y);  // Pass addresses
+    printf("%d %d\n", x, y);  // Prints: 10 5 ✓
+}</code></pre>
+                            </div>
+                        </details>
+                    </div>
+
+                    <!-- Problem 2 -->
+                    <div
+                        style="background: var(--bg-card); border: 1px solid var(--border-default); border-radius: var(--radius-lg); padding: var(--space-5);">
+                        <h4 style="color: var(--accent-cyan); margin-bottom: var(--space-3);">Problem 2: Struct by Value
+                        </h4>
+                        <pre><code>typedef struct { int x; int y; } Point;
+
+void move(Point p, int dx, int dy) {
+    p.x += dx;
+    p.y += dy;
+}
+
+int main() {
+    Point p = {10, 20};
+    move(p, 5, 5);
+    printf("(%d, %d)\n", p.x, p.y);  // What prints?
+}</code></pre>
+                        <details style="margin-top: var(--space-4);">
+                            <summary style="cursor: pointer; color: var(--accent-purple); font-weight: 600;">Click for
+                                solution</summary>
+                            <div
+                                style="margin-top: var(--space-3); padding: var(--space-4); background: rgba(16, 185, 129, 0.1); border-radius: var(--radius-md);">
+                                <p><strong>Prints:</strong> (10, 20) - NOT (15, 25)!</p>
+                                <p><strong>Why:</strong> <code>move</code> receives a COPY of the struct.</p>
+                                <pre><code>// Fix: Pass pointer
+void move(Point *p, int dx, int dy) {
+    p->x += dx;
+    p->y += dy;
+}
+move(&p, 5, 5);  // Now prints (15, 25)</code></pre>
+                            </div>
+                        </details>
+                    </div>
+
+                    <!-- Problem 3 -->
+                    <div
+                        style="background: var(--bg-card); border: 1px solid var(--border-default); border-radius: var(--radius-lg); padding: var(--space-5);">
+                        <h4 style="color: var(--accent-cyan); margin-bottom: var(--space-3);">Problem 3: Returning Local
+                            Array</h4>
+                        <pre><code>char *create_greeting() {
+    char msg[] = "Hello";
+    return msg;  // Is this correct?
+}
+
+int main() {
+    char *greeting = create_greeting();
+    printf("%s\n", greeting);
+}</code></pre>
+                        <details style="margin-top: var(--space-4);">
+                            <summary style="cursor: pointer; color: var(--accent-purple); font-weight: 600;">Click for
+                                solution</summary>
+                            <div
+                                style="margin-top: var(--space-3); padding: var(--space-4); background: rgba(239, 68, 68, 0.1); border-radius: var(--radius-md);">
+                                <p><strong>NO!</strong> <code>msg</code> is on the stack, destroyed when function
+                                    returns.</p>
+                                <p><strong>Result:</strong> Undefined behavior (garbage or crash).</p>
+                                <pre><code>// Fix: Return string literal or use malloc
+char *create_greeting() {
+    return "Hello";  // String literal persists
+}
+// OR
+char *create_greeting() {
+    char *msg = malloc(6);
+    strcpy(msg, "Hello");
+    return msg;  // Caller must free!
+}</code></pre>
+                            </div>
+                        </details>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Navigation -->
+        <div
+            style="display: flex; justify-content: space-between; align-items: center; padding: var(--space-6); background: var(--bg-card); border-radius: var(--radius-xl); border: 1px solid var(--border-default); margin-top: var(--space-10);">
+            <a href="#"
+                onclick="event.preventDefault(); UnlockSystem.navigateToModule('week-01', 'week-01-overview.html');"
+                style="display: flex; align-items: center; gap: var(--space-2); color: var(--text-secondary);">
+                ← Week 1
+            </a>
+            <a href="#" onclick="event.preventDefault(); UnlockSystem.navigateToModule('week-03', 'week-03-cpu.html');"
+                style="display: flex; align-items: center; gap: var(--space-2); padding: var(--space-3) var(--space-5); background: var(--gradient-primary); color: white; border-radius: var(--radius-md); font-weight: 600;">
+                Next: CPU Architecture →
+            </a>
+        </div>
+    </main>
+
+    <script src="../js/modules-data.js"></script>
+    <script src="../js/unlock.js"></script>
+    <script src="../js/progress.js"></script>
+    <script src="../js/quiz.js"></script>
+    <script>
+        function toggleSection(sectionId) {
+            const section = document.getElementById(sectionId);
+            if (section) {
+                section.classList.toggle('open');
+                if (section.classList.contains('open') && window.ProgressTracker) {
+                    ProgressTracker.expandSection('week-02', sectionId);
+                    updateProgress();
+                }
+            }
+        }
+
+        function updateProgress() {
+            if (window.ProgressTracker) {
+                const progress = ProgressTracker.getModuleProgress('week-02');
+                const bar = document.getElementById('moduleProgress');
+                if (bar) bar.style.width = `${progress.percentComplete}%`;
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const toggle = document.getElementById('themeToggle');
+            const savedTheme = localStorage.getItem('cs5008_theme') || 'dark';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            toggle.textContent = savedTheme === 'dark' ? '🌙' : '☀️';
+
+            toggle.addEventListener('click', () => {
+                const current = document.documentElement.getAttribute('data-theme');
+                const next = current === 'dark' ? 'light' : 'dark';
+                document.documentElement.setAttribute('data-theme', next);
+                localStorage.setItem('cs5008_theme', next);
+                toggle.textContent = next === 'dark' ? '🌙' : '☀️';
+            });
+
+            if (window.ProgressTracker) {
+                ProgressTracker.visitModule('week-02');
+                updateProgress();
+            }
+        });
+    </script>
+</body>
+
+</html>

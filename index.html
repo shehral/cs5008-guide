@@ -1,0 +1,609 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CS5008 Learning Guide | Build Your Own Compiler</title>
+    <meta name="description"
+        content="From Python to building compilers. Master C, x86-64 assembly, and systems programming with this interactive guide.">
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="icon"
+        href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>">
+    <style>
+        /* Landing Page Styles */
+        .landing-view {
+            transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.6s ease;
+        }
+
+        .landing-view.hidden {
+            display: none;
+        }
+
+        .modules-view {
+            display: none;
+        }
+
+        .modules-view.visible {
+            display: block;
+        }
+
+        /* Video Section */
+        .video-hero {
+            position: relative;
+            width: 100%;
+            max-width: 900px;
+            margin: 0 auto var(--space-10);
+            border-radius: var(--radius-xl);
+            overflow: hidden;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+
+        .video-hero video {
+            width: 100%;
+            display: block;
+            border-radius: var(--radius-xl);
+        }
+
+        .video-hero::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: var(--radius-xl);
+            padding: 2px;
+            background: linear-gradient(135deg, var(--accent-purple), var(--accent-cyan));
+            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
+            pointer-events: none;
+        }
+
+        /* Infographic Section */
+        .infographic-section {
+            text-align: center;
+            margin-bottom: var(--space-10);
+        }
+
+        .infographic-section h2 {
+            margin-bottom: var(--space-6);
+        }
+
+        .infographic-container {
+            max-width: 800px;
+            margin: 0 auto;
+            border-radius: var(--radius-xl);
+            overflow: hidden;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--border-default);
+        }
+
+        .infographic-container img {
+            width: 100%;
+            display: block;
+        }
+
+        /* PDF Section */
+        .pdf-section {
+            margin-bottom: var(--space-10);
+            text-align: center;
+        }
+
+        .pdf-section h2 {
+            margin-bottom: var(--space-6);
+        }
+
+        .pdf-viewer {
+            max-width: 900px;
+            margin: 0 auto;
+            height: 600px;
+            border-radius: var(--radius-xl);
+            overflow: hidden;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+            border: 2px solid var(--border-default);
+            background: var(--bg-card);
+        }
+
+        .pdf-viewer iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+
+        /* Begin Journey Button */
+        .begin-journey-section {
+            text-align: center;
+            padding: var(--space-12) 0;
+        }
+
+        .begin-journey-btn {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            gap: var(--space-4);
+            padding: var(--space-5) var(--space-10);
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: white;
+            background: linear-gradient(135deg, var(--accent-purple) 0%, var(--accent-cyan) 100%);
+            border: none;
+            border-radius: 100px;
+            cursor: pointer;
+            overflow: hidden;
+            transition: transform 0.3s, box-shadow 0.3s;
+            box-shadow: 0 10px 40px rgba(139, 92, 246, 0.4);
+        }
+
+        .begin-journey-btn:hover {
+            transform: translateY(-3px) scale(1.02);
+            box-shadow: 0 20px 50px rgba(139, 92, 246, 0.5);
+        }
+
+        .begin-journey-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            transition: left 0.5s;
+        }
+
+        .begin-journey-btn:hover::before {
+            left: 100%;
+        }
+
+        .begin-journey-btn .arrow {
+            transition: transform 0.3s;
+        }
+
+        .begin-journey-btn:hover .arrow {
+            transform: translateX(5px);
+        }
+
+        /* Section divider */
+        .section-divider {
+            display: flex;
+            align-items: center;
+            gap: var(--space-4);
+            margin: var(--space-8) 0;
+            color: var(--text-muted);
+        }
+
+        .section-divider::before,
+        .section-divider::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--border-default), transparent);
+        }
+
+        /* Scroll indicator */
+        .scroll-indicator {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: var(--space-2);
+            color: var(--text-muted);
+            font-size: 0.75rem;
+            animation: bounce 2s infinite;
+            z-index: 100;
+            opacity: 1;
+            transition: opacity 0.3s;
+        }
+
+        .scroll-indicator.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        @keyframes bounce {
+
+            0%,
+            20%,
+            50%,
+            80%,
+            100% {
+                transform: translateX(-50%) translateY(0);
+            }
+
+            40% {
+                transform: translateX(-50%) translateY(-10px);
+            }
+
+            60% {
+                transform: translateX(-50%) translateY(-5px);
+            }
+        }
+
+        .scroll-arrow {
+            width: 24px;
+            height: 24px;
+            border-right: 2px solid var(--text-muted);
+            border-bottom: 2px solid var(--text-muted);
+            transform: rotate(45deg);
+        }
+
+        /* Back to top */
+        .back-to-landing {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            padding: var(--space-3) var(--space-5);
+            background: var(--bg-card);
+            border: 1px solid var(--border-default);
+            border-radius: 100px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.3s;
+            z-index: 100;
+        }
+
+        .back-to-landing.visible {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .back-to-landing:hover {
+            background: var(--accent-purple);
+            color: white;
+        }
+
+        /* Landing hero adjustments */
+        .landing-hero {
+            text-align: center;
+            padding: var(--space-10) 0;
+        }
+
+        .landing-hero h1 {
+            font-size: 3rem;
+            margin-bottom: var(--space-4);
+        }
+
+        .landing-hero h1 span {
+            background: var(--gradient-primary);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        @media (max-width: 768px) {
+            .landing-hero h1 {
+                font-size: 2rem;
+            }
+
+            .pdf-viewer {
+                height: 400px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Animated Background Orbs -->
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+
+    <!-- Header -->
+    <header class="header">
+        <div class="header-content">
+            <a href="index.html" class="logo">
+                <span class="logo-icon">⚡</span>
+                <span>CS5008</span>
+            </a>
+            <div class="header-actions">
+                <div class="xp-badge" id="xpBadge">0 XP</div>
+                <div class="streak-badge" id="streakBadge">0 day</div>
+                <button class="search-btn" id="searchBtn" aria-label="Search">
+                    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <circle cx="11" cy="11" r="8" />
+                        <path d="m21 21-4.35-4.35" />
+                    </svg>
+                    Search
+                    <kbd>⌘K</kbd>
+                </button>
+                <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme">🌙</button>
+            </div>
+        </div>
+    </header>
+
+    <!-- LANDING VIEW -->
+    <div class="landing-view" id="landingView">
+        <main class="main-container">
+            <!-- Landing Hero -->
+            <section class="landing-hero">
+                <span class="hero-badge">🚀 Fall 2025 Edition</span>
+                <h1>Build Your Own <span>Compiler</span></h1>
+                <p class="hero-subtitle">
+                    From Python → C → Assembly → Machine Code.<br>
+                    15 weeks. 7 compilers. Your journey starts here.
+                </p>
+            </section>
+
+            <!-- Video Section -->
+            <section class="video-hero">
+                <video controls poster="course_infographic.png">
+                    <source src="How_Code_Becomes_a_Program.mp4" type="video/mp4">
+                    Your browser does not support the video tag.
+                </video>
+            </section>
+
+            <div class="section-divider">
+                <span>📊 The Big Picture</span>
+            </div>
+
+            <!-- Infographic Section -->
+            <section class="infographic-section">
+                <h2>How <span class="text-gradient">Code Becomes a Program</span></h2>
+                <p style="color: var(--text-secondary); margin-bottom: var(--space-6);">
+                    From high-level abstraction to low-level architecture
+                </p>
+                <div class="infographic-container">
+                    <img src="course_infographic.png" alt="Course Infographic - How Code Becomes a Program">
+                </div>
+            </section>
+
+            <div class="section-divider">
+                <span>📖 Course Overview</span>
+            </div>
+
+            <!-- PDF Section -->
+            <section class="pdf-section">
+                <h2>Complete <span class="text-gradient">Course Guide</span></h2>
+                <p style="color: var(--text-secondary); margin-bottom: var(--space-6);">
+                    Scroll through the comprehensive guide to understand what you'll learn
+                </p>
+                <div class="pdf-viewer">
+                    <iframe src="From_Abstraction_to_Architecture.pdf" title="Course Overview PDF"></iframe>
+                </div>
+            </section>
+
+            <!-- Begin Journey Button -->
+            <section class="begin-journey-section">
+                <button class="begin-journey-btn" id="beginJourneyBtn">
+                    <span>Begin Your Journey</span>
+                    <span class="arrow">→</span>
+                </button>
+                <p style="margin-top: var(--space-4); color: var(--text-muted); font-size: 0.875rem;">
+                    Access all 17 modules, study tools, and interactive content
+                </p>
+            </section>
+        </main>
+    </div>
+
+    <!-- Scroll Indicator -->
+    <div class="scroll-indicator" id="scrollIndicator">
+        <span>Scroll to explore</span>
+        <div class="scroll-arrow"></div>
+    </div>
+
+    <!-- MODULES VIEW -->
+    <div class="modules-view" id="modulesView">
+        <main class="main-container">
+            <!-- Hero Section -->
+            <section class="hero">
+                <span class="hero-badge">🎓 Let's Build</span>
+                <h1>Your <span class="text-gradient">Compiler Journey</span></h1>
+                <p class="hero-subtitle">17 modules from Python-level thinking to low-level wizardry</p>
+
+                <!-- Stats -->
+                <div class="hero-stats">
+                    <div class="stat-card">
+                        <div class="stat-icon">📚</div>
+                        <div class="stat-value" id="modulesCompleted">0</div>
+                        <div class="stat-label">Completed</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">📊</div>
+                        <div class="stat-value" id="overallProgress">0%</div>
+                        <div class="stat-label">Progress</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">⚡</div>
+                        <div class="stat-value" id="totalXP">0</div>
+                        <div class="stat-label">Total XP</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">🏆</div>
+                        <div class="stat-value">17</div>
+                        <div class="stat-label">Modules</div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Continue Learning Banner -->
+            <div id="continueBanner" class="continue-banner">
+                <span>📚 Pick up where you left off:</span>
+                <a href="#" id="continueLink">Loading...</a>
+            </div>
+
+            <!-- Study Tools -->
+            <section class="journey-section">
+                <h2>Study <span class="text-gradient">Tools</span></h2>
+                <div style="display: flex; gap: 16px; margin-bottom: 24px; flex-wrap: wrap; justify-content: center;">
+                    <a href="flashcards.html" class="study-tool-card"
+                        style="display: flex; align-items: center; gap: 12px; padding: 16px 24px; background: linear-gradient(135deg, rgba(139, 92, 246, 0.15) 0%, rgba(6, 182, 212, 0.15) 100%); border: 1px solid var(--accent-purple); border-radius: var(--radius-lg); color: var(--text-primary); text-decoration: none; transition: all 0.2s;">
+                        <span style="font-size: 1.5rem;">📚</span>
+                        <div>
+                            <div style="font-weight: 600;">Flashcard Study Mode</div>
+                            <div style="font-size: 0.875rem; color: var(--text-secondary);">73 questions for exam prep
+                            </div>
+                        </div>
+                    </a>
+                    <a href="reference.html"
+                        style="display: flex; align-items: center; gap: 12px; padding: 16px 24px; background: linear-gradient(135deg, rgba(6, 182, 212, 0.15) 0%, rgba(16, 185, 129, 0.15) 100%); border: 1px solid var(--accent-cyan); border-radius: var(--radius-lg); color: var(--text-primary); text-decoration: none; transition: all 0.2s;">
+                        <span style="font-size: 1.5rem;">📋</span>
+                        <div>
+                            <div style="font-weight: 600;">Quick Reference</div>
+                            <div style="font-size: 0.875rem; color: var(--text-secondary);">Tables, diagrams, cheat
+                                sheets</div>
+                        </div>
+                    </a>
+                    <a href="practice.html"
+                        style="display: flex; align-items: center; gap: 12px; padding: 16px 24px; background: linear-gradient(135deg, rgba(245, 158, 11, 0.15) 0%, rgba(239, 68, 68, 0.15) 100%); border: 1px solid var(--accent-yellow); border-radius: var(--radius-lg); color: var(--text-primary); text-decoration: none; transition: all 0.2s;">
+                        <span style="font-size: 1.5rem;">📝</span>
+                        <div>
+                            <div style="font-weight: 600;">Practice Problems</div>
+                            <div style="font-size: 0.875rem; color: var(--text-secondary);">17 problems + 5 exam traps
+                            </div>
+                        </div>
+                    </a>
+                </div>
+
+                <!-- Foundations Deep Dive Section -->
+                <div
+                    style="border: 2px solid var(--accent-green); border-radius: var(--radius-xl); padding: 20px; margin-bottom: 32px; background: linear-gradient(135deg, rgba(16, 185, 129, 0.05) 0%, rgba(34, 197, 94, 0.05) 100%);">
+                    <div style="text-align: center; margin-bottom: 16px;">
+                        <span
+                            style="font-size: 0.85rem; color: var(--accent-green); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">🧠
+                            Foundations Deep Dive</span>
+                    </div>
+                    <div style="display: flex; gap: 16px; flex-wrap: wrap; justify-content: center;">
+                        <a href="content/memory-pointers.html"
+                            style="display: flex; align-items: center; gap: 12px; padding: 16px 24px; background: var(--bg-card); border: 1px solid var(--border-default); border-radius: var(--radius-lg); color: var(--text-primary); text-decoration: none; transition: all 0.2s;">
+                            <span style="font-size: 1.5rem;">🔗</span>
+                            <div>
+                                <div style="font-weight: 600;">Memory & Pointers</div>
+                                <div style="font-size: 0.875rem; color: var(--text-secondary);">Stack, Heap, malloc/free
+                                </div>
+                            </div>
+                        </a>
+                        <a href="content/data-structures.html"
+                            style="display: flex; align-items: center; gap: 12px; padding: 16px 24px; background: var(--bg-card); border: 1px solid var(--border-default); border-radius: var(--radius-lg); color: var(--text-primary); text-decoration: none; transition: all 0.2s;">
+                            <span style="font-size: 1.5rem;">📊</span>
+                            <div>
+                                <div style="font-weight: 600;">Data Structures</div>
+                                <div style="font-size: 0.875rem; color: var(--text-secondary);">Arrays, Lists, Hash
+                                    Tables</div>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Module Grid -->
+                <h2 style="margin-top: var(--space-8);">All <span class="text-gradient">Modules</span></h2>
+                <div class="module-grid" id="moduleGrid">
+                    <!-- Modules injected by JS -->
+                </div>
+            </section>
+
+            <!-- TA Code Unlock Section -->
+            <section class="ta-section"
+                style="margin-top: 64px; padding: 32px; background: var(--bg-card); border-radius: var(--radius-xl); border: 1px solid var(--border-default);">
+                <h3 style="margin-bottom: 16px; display: flex; align-items: center; gap: 12px;">
+                    <span style="font-size: 1.5rem;">🔐</span>
+                    TA Code Access
+                </h3>
+                <p style="color: var(--text-secondary); margin-bottom: 20px;">
+                    Enter your TA-provided code to unlock pseudocode and solution hints for specific modules.
+                </p>
+                <div style="display: flex; gap: 12px; max-width: 400px;">
+                    <input type="password" id="taCodeInput" placeholder="Enter TA code"
+                        style="flex: 1; padding: 12px 16px; background: var(--bg-base); border: 1px solid var(--border-default); border-radius: var(--radius-md); color: var(--text-primary); font-size: 1rem;">
+                    <button id="taUnlockBtn"
+                        style="padding: 12px 24px; background: var(--gradient-secondary); color: white; border: none; border-radius: var(--radius-md); font-weight: 600; cursor: pointer;">
+                        Unlock
+                    </button>
+                </div>
+                <div id="taUnlockMessage" style="margin-top: 12px; font-size: 0.9rem;"></div>
+            </section>
+        </main>
+
+        <!-- Footer -->
+        <footer style="text-align: center; padding: 48px 24px; color: var(--text-muted); font-size: 0.875rem;">
+            <p>Made with ⚡ for future CS5008 students at Northeastern</p>
+            <p style="margin-top: 8px;">
+                <a href="https://github.com/USERNAME/cs5008-guide" style="color: var(--accent-purple);">Contribute on
+                    GitHub</a>
+            </p>
+        </footer>
+    </div>
+
+    <!-- Back to Landing Button -->
+    <button class="back-to-landing" id="backToLanding">
+        ↑ Back to Overview
+    </button>
+
+    <!-- Search Modal -->
+    <div class="search-backdrop" id="searchBackdrop">
+        <div class="search-modal">
+            <div class="search-input-wrapper">
+                <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <circle cx="11" cy="11" r="8" />
+                    <path d="m21 21-4.35-4.35" />
+                </svg>
+                <input type="text" class="search-input" id="searchInput" placeholder="Search topics, concepts, code...">
+                <kbd
+                    style="font-size: 0.75rem; padding: 4px 8px; background: var(--bg-base); border-radius: 4px; color: var(--text-muted);">ESC</kbd>
+            </div>
+            <div class="search-results" id="searchResults">
+                <div class="search-empty">Start typing to search across all unlocked content...</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/modules-data.js"></script>
+    <script src="js/unlock.js"></script>
+    <script src="js/progress.js"></script>
+    <script src="js/search.js"></script>
+    <script src="js/app.js"></script>
+    <script>
+        // View switching logic
+        const landingView = document.getElementById('landingView');
+        const modulesView = document.getElementById('modulesView');
+        const beginBtn = document.getElementById('beginJourneyBtn');
+        const backBtn = document.getElementById('backToLanding');
+        const scrollIndicator = document.getElementById('scrollIndicator');
+
+        // Check if user has already started
+        const hasStarted = localStorage.getItem('cs5008_started');
+
+        if (hasStarted === 'true') {
+            // Skip to modules view
+            landingView.classList.add('hidden');
+            modulesView.classList.add('visible');
+            scrollIndicator.classList.add('hidden');
+            backBtn.classList.add('visible');
+        }
+
+        // Begin Journey button click
+        beginBtn.addEventListener('click', () => {
+            localStorage.setItem('cs5008_started', 'true');
+            landingView.classList.add('hidden');
+            scrollIndicator.classList.add('hidden');
+            modulesView.classList.add('visible');
+            backBtn.classList.add('visible');
+            window.scrollTo({ top: 0, behavior: 'instant' });
+        });
+
+        // Back to landing
+        backBtn.addEventListener('click', () => {
+            localStorage.removeItem('cs5008_started');
+            modulesView.classList.remove('visible');
+            backBtn.classList.remove('visible');
+            landingView.classList.remove('hidden');
+            scrollIndicator.classList.remove('hidden');
+            window.scrollTo({ top: 0, behavior: 'instant' });
+        });
+
+        // Hide scroll indicator on scroll
+        window.addEventListener('scroll', () => {
+            if (window.scrollY > 100) {
+                scrollIndicator.classList.add('hidden');
+            } else if (!hasStarted) {
+                scrollIndicator.classList.remove('hidden');
+            }
+        });
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Week 11: Midterm Review | CS5008 Guide</title>
+    <link rel="stylesheet" href="../css/styles.css">
+    <link rel="icon"
+        href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>">
+</head>
+
+<body>
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+
+    <header class="header">
+        <div class="header-content">
+            <a href="../index.html" class="logo">
+                <span class="logo-icon">⚡</span>
+                <span>CS5008</span>
+            </a>
+            <div class="header-actions">
+                <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme">🌙</button>
+            </div>
+        </div>
+    </header>
+
+    <main class="main-container module-page">
+        <nav class="breadcrumb">
+            <a href="../index.html">← Back to modules</a>
+        </nav>
+
+        <div class="module-header">
+            <div class="module-badge">📚 Midterm Review • +100 XP</div>
+            <h1>Midterm <span class="text-gradient">Review</span></h1>
+            <p>Consolidate everything from Compilers 1-5. Reference tables and practice problems.</p>
+        </div>
+
+        <div class="progress-bar mb-6">
+            <div class="progress-bar-fill" id="moduleProgress" style="width: 0%"></div>
+        </div>
+
+        <!-- Section 1: Pipeline -->
+        <div class="section open" id="section-pipeline">
+            <div class="section-header" onclick="toggleSection('section-pipeline')">
+                <h3 class="section-title">🔄 Complete Compilation Pipeline</h3>
+                <span class="section-toggle">▶</span>
+            </div>
+            <div class="section-content">
+                <pre><code>┌─────────────────┐
+│  Source Code    │   fn main() -> int { return 5 + 3 }
+└────────┬────────┘
+         │ Lexer
+         ▼
+┌─────────────────┐
+│  Token Stream   │   [fn, main, (, ), ->, int, {, return, 5, +, 3, }]
+└────────┬────────┘
+         │ Parser
+         ▼
+┌─────────────────┐
+│   AST           │        FN(main)
+│                 │            └── return
+└────────┬────────┘                  └── +(5, 3)
+         │ Stack Machine Generator
+         ▼
+┌─────────────────┐
+│  Stack Machine  │   PUSH 5, PUSH 3, ADD, RETURN
+└────────┬────────┘
+         │ Code Generator
+         ▼
+┌─────────────────┐
+│  x86-64 ASM     │   push 5; push 3; pop rcx; pop rax; add rax,rcx; ret
+└────────┬────────┘
+         │ nasm + ld
+         ▼
+┌─────────────────┐
+│  Executable     │   ./program → exit code 8
+└─────────────────┘</code></pre>
+            </div>
+        </div>
+
+        <!-- Section 2: Quick Reference Tables -->
+        <div class="section" id="section-reference">
+            <div class="section-header" onclick="toggleSection('section-reference')">
+                <h3 class="section-title">📋 Quick Reference Tables</h3>
+                <span class="section-toggle">▶</span>
+            </div>
+            <div class="section-content">
+                <h4>x86-64 Argument Registers</h4>
+                <pre><code>Arg 1 → RDI        Arg 4 → RCX
+Arg 2 → RSI        Arg 5 → R8
+Arg 3 → RDX        Arg 6 → R9
+
+Return → RAX</code></pre>
+
+                <h4 style="margin-top: var(--space-6);">Stack Machine Instructions</h4>
+                <table style="width: 100%; border-collapse: collapse; margin: var(--space-4) 0; font-size: 0.9rem;">
+                    <tr style="background: var(--bg-card);">
+                        <th style="padding: var(--space-2); text-align: left; border: 1px solid var(--border-default);">
+                            Instruction</th>
+                        <th style="padding: var(--space-2); text-align: left; border: 1px solid var(--border-default);">
+                            Effect</th>
+                    </tr>
+                    <tr>
+                        <td style="padding: var(--space-2); border: 1px solid var(--border-default);">
+                            <code>PUSH n</code>
+                        </td>
+                        <td style="padding: var(--space-2); border: 1px solid var(--border-default);">Push constant</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: var(--space-2); border: 1px solid var(--border-default);">
+                            <code>LOAD x</code>
+                        </td>
+                        <td style="padding: var(--space-2); border: 1px solid var(--border-default);">Push variable
+                            value</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: var(--space-2); border: 1px solid var(--border-default);">
+                            <code>STORE x</code>
+                        </td>
+                        <td style="padding: var(--space-2); border: 1px solid var(--border-default);">Pop into variable
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding: var(--space-2); border: 1px solid var(--border-default);">
+                            <code>ADD, SUB, MUL, DIV</code>
+                        </td>
+                        <td style="padding: var(--space-2); border: 1px solid var(--border-default);">Pop 2, push result
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding: var(--space-2); border: 1px solid var(--border-default);">
+                            <code>CALL fn (N)</code>
+                        </td>
+                        <td style="padding: var(--space-2); border: 1px solid var(--border-default);">Pop N args, push
+                            result</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: var(--space-2); border: 1px solid var(--border-default);">
+                            <code>RETURN</code>
+                        </td>
+                        <td style="padding: var(--space-2); border: 1px solid var(--border-default);">Pop, return value
+                            in RAX</td>
+                    </tr>
+                </table>
+
+                <h4 style="margin-top: var(--space-6);">Stack Frame Layout</h4>
+                <pre><code>┌──────────────────┐  Higher addresses
+│ return address   │  (pushed by CALL)
+├──────────────────┤
+│ saved rbp        │ ← RBP points here
+├──────────────────┤
+│ local var 0      │ [rbp - 8]
+├──────────────────┤
+│ local var 1      │ [rbp - 16]
+├──────────────────┤
+│ local var 2      │ [rbp - 24]
+└──────────────────┘  ← RSP (grows down)</code></pre>
+
+                <h4 style="margin-top: var(--space-6);">Variable Offset Formula</h4>
+                <pre><code>offset = -(slot + 1) * 8
+
+slot 0 → [rbp - 8]
+slot 1 → [rbp - 16]
+slot 2 → [rbp - 24]</code></pre>
+            </div>
+        </div>
+
+        <!-- Section 3: Key Concepts -->
+        <div class="section" id="section-concepts">
+            <div class="section-header" onclick="toggleSection('section-concepts')">
+                <h3 class="section-title">🧠 Key Concepts Checklist</h3>
+                <span class="section-toggle">▶</span>
+            </div>
+            <div class="section-content">
+                <h4>Lexer (Weeks 2, 5)</h4>
+                <ul>
+                    <li>☐ Convert source text to tokens</li>
+                    <li>☐ Handle keywords, identifiers, numbers, operators</li>
+                    <li>☐ Skip whitespace and comments</li>
+                </ul>
+
+                <h4 style="margin-top: var(--space-4);">Parser (Week 6)</h4>
+                <ul>
+                    <li>☐ Build AST from token stream</li>
+                    <li>☐ Implement recursive descent</li>
+                    <li>☐ Handle operator precedence (* before +)</li>
+                </ul>
+
+                <h4 style="margin-top: var(--space-4);">Expressions (Week 7)</h4>
+                <ul>
+                    <li>☐ Precedence climbing for operators</li>
+                    <li>☐ Post-order traversal for code generation</li>
+                    <li>☐ Stack machine push/pop model</li>
+                </ul>
+
+                <h4 style="margin-top: var(--space-4);">Variables (Week 8)</h4>
+                <ul>
+                    <li>☐ Symbol table maps names → slots</li>
+                    <li>☐ Stack frame allocation</li>
+                    <li>☐ LOAD/STORE instructions</li>
+                </ul>
+
+                <h4 style="margin-top: var(--space-4);">Functions (Week 9)</h4>
+                <ul>
+                    <li>☐ Calling convention (RDI, RSI, RDX, RCX, R8, R9)</li>
+                    <li>☐ Prologue: push rbp; mov rbp,rsp; sub rsp,N</li>
+                    <li>☐ Epilogue: mov rsp,rbp; pop rbp; ret</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Section 4: Practice -->
+        <div class="section" id="section-practice">
+            <div class="section-header" onclick="toggleSection('section-practice')">
+                <h3 class="section-title">🎯 Practice Problems</h3>
+                <span class="section-toggle">▶</span>
+            </div>
+            <div class="section-content">
+                <h4>Problem 1: Tokenize</h4>
+                <pre><code>fn add(a: int, b: int) -> int { return a + b }</code></pre>
+                <details style="margin-top: var(--space-2);">
+                    <summary style="cursor: pointer; color: var(--accent-blue);">Show Answer</summary>
+                    <pre style="margin-top: var(--space-2);"><code>[FN, IDENT(add), OPEN_PAREN, IDENT(a), COLON, TYPE(int),
+ COMMA, IDENT(b), COLON, TYPE(int), CLOSE_PAREN, ARROW,
+ TYPE(int), OPEN_BRACE, RETURN, IDENT(a), PLUS, IDENT(b),
+ CLOSE_BRACE, EOF]</code></pre>
+                </details>
+
+                <h4 style="margin-top: var(--space-6);">Problem 2: Draw AST</h4>
+                <pre><code>2 + 3 * 4</code></pre>
+                <details style="margin-top: var(--space-2);">
+                    <summary style="cursor: pointer; color: var(--accent-blue);">Show Answer</summary>
+                    <pre style="margin-top: var(--space-2);"><code>    ADD
+   /   \
+  2    MUL
+      /   \
+     3     4
+
+(* has higher precedence, evaluated first)</code></pre>
+                </details>
+
+                <h4 style="margin-top: var(--space-6);">Problem 3: Stack Machine</h4>
+                <pre><code>5 - 2 * 3</code></pre>
+                <details style="margin-top: var(--space-2);">
+                    <summary style="cursor: pointer; color: var(--accent-blue);">Show Answer</summary>
+                    <pre style="margin-top: var(--space-2);"><code>PUSH 5     → [5]
+PUSH 2     → [5, 2]
+PUSH 3     → [5, 2, 3]
+MUL        → [5, 6]      // 2*3 = 6
+SUB        → [-1]        // 5-6 = -1</code></pre>
+                </details>
+
+                <h4 style="margin-top: var(--space-6);">Problem 4: Calling Convention</h4>
+                <p>What register holds the 3rd argument?</p>
+                <details style="margin-top: var(--space-2);">
+                    <summary style="cursor: pointer; color: var(--accent-blue);">Show Answer</summary>
+                    <p style="margin-top: var(--space-2);"><strong>RDX</strong> (1st=RDI, 2nd=RSI, 3rd=RDX, 4th=RCX,
+                        5th=R8, 6th=R9)</p>
+                </details>
+
+                <h4 style="margin-top: var(--space-6);">Problem 5: Stack Offset</h4>
+                <p>Variable in slot 2 has what offset?</p>
+                <details style="margin-top: var(--space-2);">
+                    <summary style="cursor: pointer; color: var(--accent-blue);">Show Answer</summary>
+                    <p style="margin-top: var(--space-2);"><strong>[rbp - 24]</strong> using formula: -(slot+1)*8 =
+                        -(2+1)*8 = -24</p>
+                </details>
+            </div>
+        </div>
+
+        <!-- Quiz Section -->
+        <div class="section" id="section-quiz">
+            <div class="section-header" onclick="toggleSection('section-quiz')">
+                <h3 class="section-title">🧠 Quick Quiz</h3>
+                <span class="section-toggle">▶</span>
+            </div>
+            <div class="section-content">
+                <div class="quiz" data-correct="2" data-quiz-id="q1" data-module-id="week-11"
+                    data-explanation="The Parser converts the token stream into an Abstract Syntax Tree (AST) that represents the program's structure.">
+                    <div class="quiz-question">What does the Parser produce?</div>
+                    <div class="quiz-options">
+                        <div class="quiz-option" data-value="0">
+                            <div class="quiz-radio"></div><span>Token stream</span>
+                        </div>
+                        <div class="quiz-option" data-value="1">
+                            <div class="quiz-radio"></div><span>Assembly code</span>
+                        </div>
+                        <div class="quiz-option" data-value="2">
+                            <div class="quiz-radio"></div><span>Abstract Syntax Tree</span>
+                        </div>
+                        <div class="quiz-option" data-value="3">
+                            <div class="quiz-radio"></div><span>Executable binary</span>
+                        </div>
+                    </div>
+                    <div class="quiz-feedback"></div>
+                </div>
+
+                <div class="quiz" data-correct="1" data-quiz-id="q2" data-module-id="week-11"
+                    data-explanation="In post-order traversal, we visit left child, right child, then the node itself. This produces operands before operators.">
+                    <div class="quiz-question">Which traversal order produces stack machine code?</div>
+                    <div class="quiz-options">
+                        <div class="quiz-option" data-value="0">
+                            <div class="quiz-radio"></div><span>Pre-order</span>
+                        </div>
+                        <div class="quiz-option" data-value="1">
+                            <div class="quiz-radio"></div><span>Post-order</span>
+                        </div>
+                        <div class="quiz-option" data-value="2">
+                            <div class="quiz-radio"></div><span>In-order</span>
+                        </div>
+                        <div class="quiz-option" data-value="3">
+                            <div class="quiz-radio"></div><span>Level-order</span>
+                        </div>
+                    </div>
+                    <div class="quiz-feedback"></div>
+                </div>
+
+                <div class="quiz" data-correct="0" data-quiz-id="q3" data-module-id="week-11"
+                    data-explanation="idiv divides rdx:rax by the operand. cqo sign-extends rax into rdx, which is required for signed division.">
+                    <div class="quiz-question">Why use <code>cqo</code> before <code>idiv</code>?</div>
+                    <div class="quiz-options">
+                        <div class="quiz-option" data-value="0">
+                            <div class="quiz-radio"></div><span>Sign-extend rax into rdx:rax</span>
+                        </div>
+                        <div class="quiz-option" data-value="1">
+                            <div class="quiz-radio"></div><span>Clear the quotient</span>
+                        </div>
+                        <div class="quiz-option" data-value="2">
+                            <div class="quiz-radio"></div><span>Save the remainder</span>
+                        </div>
+                        <div class="quiz-option" data-value="3">
+                            <div class="quiz-radio"></div><span>Align the stack</span>
+                        </div>
+                    </div>
+                    <div class="quiz-feedback"></div>
+                </div>
+
+                <div class="quiz" data-correct="3" data-quiz-id="q4" data-module-id="week-11"
+                    data-explanation="The symbol table is a data structure (usually hash table) that maps variable names to their storage locations (stack slots).">
+                    <div class="quiz-question">What is the purpose of the symbol table?</div>
+                    <div class="quiz-options">
+                        <div class="quiz-option" data-value="0">
+                            <div class="quiz-radio"></div><span>Store assembly instructions</span>
+                        </div>
+                        <div class="quiz-option" data-value="1">
+                            <div class="quiz-radio"></div><span>Track token positions</span>
+                        </div>
+                        <div class="quiz-option" data-value="2">
+                            <div class="quiz-radio"></div><span>Manage the AST</span>
+                        </div>
+                        <div class="quiz-option" data-value="3">
+                            <div class="quiz-radio"></div><span>Map variable names to stack slots</span>
+                        </div>
+                    </div>
+                    <div class="quiz-feedback"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Navigation -->
+        <div
+            style="display: flex; justify-content: space-between; align-items: center; padding: var(--space-6); background: var(--bg-card); border-radius: var(--radius-xl); border: 1px solid var(--border-default); margin-top: var(--space-10);">
+            <a href="#" onclick="event.preventDefault(); UnlockSystem.navigateToModule('week-10', 'week-10-builtins.html');"
+                style="display: flex; align-items: center; gap: var(--space-2); color: var(--text-secondary);">← Week
+                10</a>
+            <a href="#" onclick="event.preventDefault(); UnlockSystem.navigateToModule('week-12', 'week-12-control-flow.html');"
+                style="display: flex; align-items: center; gap: var(--space-2); padding: var(--space-3) var(--space-5); background: var(--gradient-primary); color: white; border-radius: var(--radius-md); font-weight: 600;">
+                Next: Control Flow →
+            </a>
+        </div>
+    </main>
+
+    <script src="../js/modules-data.js"></script>
+    <script src="../js/unlock.js"></script>
+    <script src="../js/progress.js"></script>
+    <script src="../js/quiz.js"></script>
+    <script>
+        function toggleSection(sectionId) {
+            const section = document.getElementById(sectionId);
+            if (section) {
+                section.classList.toggle('open');
+                if (section.classList.contains('open') && window.ProgressTracker) {
+                    ProgressTracker.expandSection('week-11', sectionId);
+                    updateProgress();
+                }
+            }
+        }
+
+        function updateProgress() {
+            if (window.ProgressTracker) {
+                const progress = ProgressTracker.getModuleProgress('week-11');
+                const bar = document.getElementById('moduleProgress');
+                if (bar) bar.style.width = `${progress.percentComplete}%`;
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const toggle = document.getElementById('themeToggle');
+            const savedTheme = localStorage.getItem('cs5008_theme') || 'dark';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            toggle.textContent = savedTheme === 'dark' ? '🌙' : '☀️';
+
+            toggle.addEventListener('click', () => {
+                const current = document.documentElement.getAttribute('data-theme');
+                const next = current === 'dark' ? 'light' : 'dark';
+                document.documentElement.setAttribute('data-theme', next);
+                localStorage.setItem('cs5008_theme', next);
+                toggle.textContent = next === 'dark' ? '🌙' : '☀️';
+            });
+
+            if (window.ProgressTracker) { ProgressTracker.visitModule('week-11'); updateProgress(); }
+        });
+    </script>
+</body>
+
+</html>

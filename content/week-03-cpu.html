@@ -1,0 +1,926 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Week 3: CPU Architecture & Memory | CS5008 Guide</title>
+    <link rel="stylesheet" href="../css/styles.css">
+    <link rel="icon"
+        href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>">
+</head>
+
+<body>
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+
+    <header class="header">
+        <div class="header-content">
+            <a href="../index.html" class="logo">
+                <span class="logo-icon">⚡</span>
+                <span>CS5008</span>
+            </a>
+            <div class="header-actions">
+                <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme">🌙</button>
+            </div>
+        </div>
+    </header>
+
+    <main class="main-container module-page">
+        <nav class="breadcrumb">
+            <a href="../index.html">← Back to modules</a>
+        </nav>
+
+        <div class="module-header">
+            <div class="module-badge">🖥️ Week 3 • +100 XP</div>
+            <h1>CPU Architecture & <span class="text-gradient">Memory</span></h1>
+            <p>Understand how computers actually execute instructions and manage memory. This knowledge is crucial for
+                writing your compiler's code generator.</p>
+        </div>
+
+        <div class="progress-bar mb-6">
+            <div class="progress-bar-fill" id="moduleProgress" style="width: 0%"></div>
+        </div>
+
+        <!-- Section 1: CPU Basics -->
+        <div class="section open" id="section-basics">
+            <div class="section-header" onclick="toggleSection('section-basics')">
+                <h3 class="section-title">🧠 How CPUs Work</h3>
+                <span class="section-toggle">▶</span>
+            </div>
+            <div class="section-content">
+                <p>A CPU is surprisingly simple at its core. It just does three things in an endless loop:</p>
+
+                <div style="display: grid; gap: var(--space-4); margin: var(--space-6) 0;">
+                    <div
+                        style="display: flex; gap: var(--space-4); align-items: flex-start; background: var(--bg-card); border: 1px solid var(--border-default); border-radius: var(--radius-lg); padding: var(--space-5);">
+                        <div
+                            style="width: 48px; height: 48px; background: var(--gradient-primary); border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center; font-weight: bold; flex-shrink: 0;">
+                            1</div>
+                        <div>
+                            <div style="font-weight: 600; margin-bottom: var(--space-1);">Fetch</div>
+                            <div style="color: var(--text-secondary); font-size: 0.9rem;">Read the next instruction from
+                                memory (pointed to by RIP register)</div>
+                        </div>
+                    </div>
+
+                    <div
+                        style="display: flex; gap: var(--space-4); align-items: flex-start; background: var(--bg-card); border: 1px solid var(--border-default); border-radius: var(--radius-lg); padding: var(--space-5);">
+                        <div
+                            style="width: 48px; height: 48px; background: var(--gradient-primary); border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center; font-weight: bold; flex-shrink: 0;">
+                            2</div>
+                        <div>
+                            <div style="font-weight: 600; margin-bottom: var(--space-1);">Decode</div>
+                            <div style="color: var(--text-secondary); font-size: 0.9rem;">Figure out what the
+                                instruction means (add? subtract? jump?)</div>
+                        </div>
+                    </div>
+
+                    <div
+                        style="display: flex; gap: var(--space-4); align-items: flex-start; background: var(--bg-card); border: 1px solid var(--border-default); border-radius: var(--radius-lg); padding: var(--space-5);">
+                        <div
+                            style="width: 48px; height: 48px; background: var(--gradient-primary); border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center; font-weight: bold; flex-shrink: 0;">
+                            3</div>
+                        <div>
+                            <div style="font-weight: 600; margin-bottom: var(--space-1);">Execute</div>
+                            <div style="color: var(--text-secondary); font-size: 0.9rem;">Do the operation, update
+                                registers/memory, move to next instruction</div>
+                        </div>
+                    </div>
+                </div>
+
+                <p>This <strong>Fetch-Decode-Execute</strong> cycle happens <strong>billions of times per
+                        second</strong>!</p>
+
+                <pre><code>The CPU cycle:
+┌──────────────────────────────────────────────────────┐
+│                                                      │
+│    ┌─────────┐                                       │
+│    │ Fetch   │  Read instruction at address RIP     │
+│    └────┬────┘                                       │
+│         ↓                                            │
+│    ┌─────────┐                                       │
+│    │ Decode  │  What does this instruction do?      │
+│    └────┬────┘                                       │
+│         ↓                                            │
+│    ┌─────────┐                                       │
+│    │Execute  │  Do the operation                    │
+│    └────┬────┘                                       │
+│         ↓                                            │
+│    RIP += instruction_size  (move to next)          │
+│         │                                            │
+│         └───────────────────────────────────────→ (repeat)
+│                                                      │
+└──────────────────────────────────────────────────────┘</code></pre>
+            </div>
+        </div>
+
+        <!-- Section 2: Registers -->
+        <div class="section" id="section-registers">
+            <div class="section-header" onclick="toggleSection('section-registers')">
+                <h3 class="section-title">📦 Registers: Super-Fast Storage</h3>
+                <span class="section-toggle">▶</span>
+            </div>
+            <div class="section-content">
+                <p>Registers are tiny, ultra-fast storage locations <strong>inside the CPU</strong>. They're ~100x
+                    faster than RAM!</p>
+
+                <h4>x86-64 General Purpose Registers</h4>
+                <pre><code>┌─────────────────────────────────────────────────────────┐
+│              x86-64 Registers (64-bit)                  │
+├──────────┬──────────────────────────────────────────────┤
+│   RAX    │ Accumulator / Return values                  │
+│   RBX    │ Base register (callee-saved)                 │
+│   RCX    │ Counter / 4th function argument              │
+│   RDX    │ Data / 3rd function argument                 │
+│   RSI    │ Source index / 2nd function argument         │
+│   RDI    │ Destination index / 1st function argument    │
+│   RSP    │ Stack pointer (top of stack)       ★ SPECIAL │
+│   RBP    │ Base pointer (stack frame base)    ★ SPECIAL │
+│   R8-R15 │ Extra general purpose registers              │
+├──────────┼──────────────────────────────────────────────┤
+│   RIP    │ Instruction pointer (next instruction addr) │
+│  RFLAGS  │ Status flags (zero, sign, carry, etc.)      │
+└──────────┴──────────────────────────────────────────────┘</code></pre>
+
+                <h4 style="margin-top: var(--space-8);">Register Size Variants</h4>
+                <p>Each register can be accessed at different sizes:</p>
+                <pre><code>64-bit: RAX  ←────────────────────────────────────────┐
+32-bit: EAX  ←─────────────────────────────┐          │
+16-bit: AX   ←───────────────────┐         │          │
+8-bit:  AL   ←─────┐             │         │          │
+              │    │             │         │          │
+              ├────┴─────────────┴─────────┴──────────┤
+              │ 7-0 │ 15-8 │ 31-16 │    63-32         │
+              └─────┴──────┴───────┴──────────────────┘
+
+Example:
+mov rax, 0x123456789ABCDEF0  ; RAX = full 64-bit value
+mov eax, 0x12345678          ; EAX = lower 32 bits (zeros upper 32!)
+mov ax,  0x1234              ; AX  = lower 16 bits
+mov al,  0x12                ; AL  = lowest 8 bits</code></pre>
+
+                <div
+                    style="background: var(--bg-terminal); border-radius: var(--radius-lg); padding: var(--space-5); margin: var(--space-6) 0;">
+                    <strong style="color: var(--accent-green);">🛠️ FOR YOUR COMPILER:</strong>
+                    <ul style="margin-top: var(--space-3); padding-left: var(--space-5);">
+                        <li><code>RAX</code> - Always holds function return value</li>
+                        <li><code>RDI, RSI, RDX, RCX, R8, R9</code> - First 6 function arguments</li>
+                        <li><code>RSP</code> - Stack pointer (don't mess this up!)</li>
+                        <li><code>RBP</code> - Base pointer for accessing local variables</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section 3: Memory Layout -->
+        <div class="section" id="section-memory">
+            <div class="section-header" onclick="toggleSection('section-memory')">
+                <h3 class="section-title">💾 Memory Layout</h3>
+                <span class="section-toggle">▶</span>
+            </div>
+            <div class="section-content">
+                <p>When your program runs, memory is organized into distinct regions:</p>
+
+                <pre><code>High Address (0x7FFF...)
+┌────────────────────────────────────────────────────┐
+│                    Stack                           │  ← Local variables, function calls
+│                      ↓                             │    (grows DOWNWARD)
+│                                                    │
+├──────────────────── gap ───────────────────────────┤
+│                                                    │
+│                      ↑                             │    (grows UPWARD)
+│                    Heap                            │  ← malloc() allocations
+├────────────────────────────────────────────────────┤
+│            Uninitialized Data (BSS)                │  ← Zero-initialized globals
+├────────────────────────────────────────────────────┤
+│              Initialized Data                      │  ← Initialized globals, string literals
+├────────────────────────────────────────────────────┤
+│                    Code                            │  ← Your program's machine instructions
+└────────────────────────────────────────────────────┘
+Low Address (0x0000...)</code></pre>
+
+                <h4 style="margin-top: var(--space-8);">Stack vs Heap Comparison</h4>
+                <table style="width: 100%; border-collapse: collapse; margin-top: var(--space-4);">
+                    <tr style="background: var(--bg-card);">
+                        <th style="padding: var(--space-3); text-align: left; border: 1px solid var(--border-default);">
+                        </th>
+                        <th style="padding: var(--space-3); text-align: left; border: 1px solid var(--border-default);">
+                            Stack</th>
+                        <th style="padding: var(--space-3); text-align: left; border: 1px solid var(--border-default);">
+                            Heap</th>
+                    </tr>
+                    <tr>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);">
+                            <strong>Allocation</strong>
+                        </td>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);">Automatic (just
+                            move RSP)</td>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);">Manual (malloc)
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);">
+                            <strong>Deallocation</strong>
+                        </td>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);">Automatic
+                            (function return)</td>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);">Manual (free)</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);">
+                            <strong>Speed</strong>
+                        </td>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);">Very fast</td>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);">Slower</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);">
+                            <strong>Size</strong>
+                        </td>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);">Limited (~8MB
+                            typical)</td>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);">Large (limited by
+                            RAM)</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);">
+                            <strong>Organization</strong>
+                        </td>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);">LIFO (Last In
+                            First Out)</td>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);">Random access</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);"><strong>Use
+                                For</strong></td>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);">Local variables,
+                            function calls</td>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);">Dynamic data,
+                            large allocations</td>
+                    </tr>
+                </table>
+
+                <h4 style="margin-top: var(--space-8);">Stack Frame Structure</h4>
+                <pre><code>When you call: main() calls add(5, 3)
+
+Stack (growing downward):
+┌────────────────────────┐ High addresses
+│     main's locals      │
+│     ──────────────     │
+│   return address to    │ ← Where to go back after add() returns
+│   whoever called main  │
+│     saved RBP          │ ← main's frame base
+├────────────────────────┤
+│     add's locals       │
+│     ──────────────     │
+│   return address       │ ← Where to return (back to main)
+│     saved RBP          │ ← RBP points here during add()
+│     argument: 5        │ ← [RBP - 8]
+│     argument: 3        │ ← [RBP - 16]
+└────────────────────────┘ ← RSP (stack top)
+                           Low addresses</code></pre>
+            </div>
+        </div>
+
+        <!-- Section 4: malloc and free -->
+        <div class="section" id="section-malloc">
+            <div class="section-header" onclick="toggleSection('section-malloc')">
+                <h3 class="section-title">🔧 Dynamic Memory: malloc & free</h3>
+                <span class="section-toggle">▶</span>
+            </div>
+            <div class="section-content">
+                <h4>🐍 YOU KNOW (Python): Automatic memory management</h4>
+                <pre><code>my_list = [1, 2, 3]  # Python allocates memory for you
+my_list.append(4)    # Python resizes automatically
+# Python garbage collector frees memory when no longer used</code></pre>
+
+                <h4 style="margin-top: var(--space-6);">⚙️ IN C: Manual memory management</h4>
+                <pre><code>#include &lt;stdlib.h&gt;
+
+// Allocate memory on heap
+int *arr = malloc(10 * sizeof(int));  // 40 bytes
+if (arr == NULL) {
+    // Handle allocation failure!
+    return -1;
+}
+
+// Use it
+arr[0] = 42;
+arr[9] = 100;
+
+// Free when done
+free(arr);
+arr = NULL;  // Good practice - prevent use after free</code></pre>
+
+                <h4 style="margin-top: var(--space-8);">malloc/free Rules</h4>
+                <div style="display: grid; gap: var(--space-4); margin: var(--space-4) 0;">
+                    <div
+                        style="background: rgba(16, 185, 129, 0.1); border: 1px solid var(--accent-green); border-radius: var(--radius-lg); padding: var(--space-5);">
+                        <div style="color: var(--accent-green); font-weight: 600;">✅ DO:</div>
+                        <ul style="margin-top: var(--space-2); padding-left: var(--space-5);">
+                            <li>Check if malloc returns NULL (allocation can fail!)</li>
+                            <li>Free every malloc'd pointer exactly once</li>
+                            <li>Set pointer to NULL after freeing</li>
+                            <li>Match types: <code>int *p = malloc(sizeof(int))</code></li>
+                        </ul>
+                    </div>
+                    <div
+                        style="background: rgba(239, 68, 68, 0.1); border: 1px solid var(--accent-red); border-radius: var(--radius-lg); padding: var(--space-5);">
+                        <div style="color: var(--accent-red); font-weight: 600;">❌ DON'T:</div>
+                        <ul style="margin-top: var(--space-2); padding-left: var(--space-5);">
+                            <li>Use pointer before checking if malloc succeeded</li>
+                            <li>Free the same pointer twice (double free)</li>
+                            <li>Use pointer after freeing (use after free)</li>
+                            <li>Lose track of malloc'd pointer (memory leak)</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <h4 style="margin-top: var(--space-8);">calloc and realloc</h4>
+                <pre><code>// calloc - allocate AND zero-initialize
+int *arr = calloc(10, sizeof(int));  // All elements = 0
+
+// realloc - resize allocation
+int *bigger = realloc(arr, 20 * sizeof(int));
+if (bigger != NULL) {
+    arr = bigger;  // arr now has room for 20 ints
+}</code></pre>
+
+                <div
+                    style="background: var(--bg-terminal); border-radius: var(--radius-lg); padding: var(--space-5); margin: var(--space-6) 0;">
+                    <strong style="color: var(--accent-green);">🛠️ IN YOUR COMPILER - Dynamic Arrays:</strong>
+                    <pre style="margin-top: var(--space-3);"><code>typedef struct {
+    Token *items;
+    long count;
+    long capacity;
+} Token_Array;
+
+void da_append(Token_Array *arr, Token tok) {
+    if (arr->count >= arr->capacity) {
+        arr->capacity = (arr->capacity == 0) ? 16 : arr->capacity * 2;
+        arr->items = realloc(arr->items, arr->capacity * sizeof(Token));
+    }
+    arr->items[arr->count++] = tok;
+}</code></pre>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section 5: Common Pitfalls -->
+        <div class="section" id="section-pitfalls">
+            <div class="section-header" onclick="toggleSection('section-pitfalls')">
+                <h3 class="section-title">⚠️ Common Memory Pitfalls</h3>
+                <span class="section-toggle">▶</span>
+            </div>
+            <div class="section-content">
+                <h4>Pitfall 1: Dangling Pointer</h4>
+                <pre><code>// ❌ WRONG: Returning pointer to local variable
+int *get_value() {
+    int x = 42;
+    return &x;  // x dies when function returns!
+}
+
+int *p = get_value();
+printf("%d\n", *p);  // UNDEFINED BEHAVIOR!
+
+// ✅ FIX: Return value, or allocate on heap
+int get_value() { return 42; }  // Return by value
+
+int *get_value_heap() {
+    int *x = malloc(sizeof(int));
+    *x = 42;
+    return x;  // Heap memory persists
+}</code></pre>
+
+                <h4 style="margin-top: var(--space-8);">Pitfall 2: Memory Leak</h4>
+                <pre><code>// ❌ WRONG: Lost reference to allocated memory
+void leak() {
+    int *p = malloc(100 * sizeof(int));
+    // ... use p ...
+    return;  // Never called free! Memory leaked forever
+}
+
+// ✅ FIX: Free before returning
+void no_leak() {
+    int *p = malloc(100 * sizeof(int));
+    // ... use p ...
+    free(p);  // Always free what you malloc
+}</code></pre>
+
+                <h4 style="margin-top: var(--space-8);">Pitfall 3: Double Free</h4>
+                <pre><code>// ❌ WRONG: Freeing same memory twice
+int *p = malloc(sizeof(int));
+free(p);
+free(p);  // CRASH! Already freed!
+
+// ✅ FIX: Set to NULL after freeing
+int *p = malloc(sizeof(int));
+free(p);
+p = NULL;   // Now safe
+free(p);    // No-op: free(NULL) is safe</code></pre>
+
+                <h4 style="margin-top: var(--space-8);">Pitfall 4: Use After Free</h4>
+                <pre><code>// ❌ WRONG: Using memory after freeing
+int *p = malloc(sizeof(int));
+*p = 42;
+free(p);
+printf("%d\n", *p);  // UNDEFINED! Memory might be reused
+
+// ✅ FIX: Use before freeing
+int *p = malloc(sizeof(int));
+*p = 42;
+printf("%d\n", *p);  // Use it first
+free(p);             // Then free</code></pre>
+
+                <h4 style="margin-top: var(--space-8);">Pitfall 5: Uninitialized Pointer</h4>
+                <pre><code>// ❌ WRONG: Pointer not initialized
+int *p;        // p contains garbage address!
+*p = 42;       // Writing to random memory location - CRASH!
+
+// ✅ FIX: Initialize to NULL or valid address
+int *p = NULL;
+// ... later ...
+p = malloc(sizeof(int));
+if (p != NULL) {
+    *p = 42;  // Safe
+}</code></pre>
+            </div>
+        </div>
+
+        <!-- Section 6: Why This Matters for Compiler -->
+        <div class="section" id="section-compiler">
+            <div class="section-header" onclick="toggleSection('section-compiler')">
+                <h3 class="section-title">🔧 Why This Matters for Your Compiler</h3>
+                <span class="section-toggle">▶</span>
+            </div>
+            <div class="section-content">
+                <p>Your compiler will generate assembly that directly manipulates registers, stack, and memory:</p>
+
+                <h4>Function Prologue/Epilogue (Stack Setup)</h4>
+                <pre><code>; Every function starts with "prologue":
+my_function:
+    push rbp          ; Save caller's base pointer
+    mov rbp, rsp      ; Set new base pointer
+    sub rsp, 32       ; Allocate space for local variables
+
+    ; Function body here...
+
+    ; Every function ends with "epilogue":
+    mov rsp, rbp      ; Deallocate locals
+    pop rbp           ; Restore caller's base pointer
+    ret               ; Return to caller</code></pre>
+
+                <h4 style="margin-top: var(--space-8);">Accessing Local Variables</h4>
+                <pre><code>; For: let x: int = 5; let y: int = 10; return x + y;
+fn main() -> int {
+    let x: int = 5;    ; x is at [rbp - 8]
+    let y: int = 10;   ; y is at [rbp - 16]
+    return x + y;
+}
+
+; Generated assembly:
+main:
+    push rbp
+    mov rbp, rsp
+    sub rsp, 16           ; Room for 2 local ints
+
+    mov qword [rbp-8], 5  ; x = 5
+    mov qword [rbp-16], 10 ; y = 10
+
+    mov rax, [rbp-8]      ; rax = x
+    add rax, [rbp-16]     ; rax = x + y
+
+    mov rsp, rbp
+    pop rbp
+    ret                   ; Return value in rax</code></pre>
+
+                <h4 style="margin-top: var(--space-8);">Function Arguments (System V ABI)</h4>
+                <pre><code>; Calling convention: first 6 args in registers
+; Arg 1: RDI
+; Arg 2: RSI
+; Arg 3: RDX
+; Arg 4: RCX
+; Arg 5: R8
+; Arg 6: R9
+; More args: pushed on stack
+; Return value: RAX
+
+; Example: add(5, 3)
+mov rdi, 5        ; First argument
+mov rsi, 3        ; Second argument
+call add          ; Call function
+; Result is now in rax</code></pre>
+
+                <div
+                    style="background: var(--bg-terminal); border-radius: var(--radius-lg); padding: var(--space-5); margin: var(--space-6) 0;">
+                    <strong style="color: var(--accent-cyan);">📌 KEY TAKEAWAYS FOR CODEGEN:</strong>
+                    <ol style="margin-top: var(--space-3); padding-left: var(--space-5);">
+                        <li><strong>RAX</strong> = Return value (always put result here before ret)</li>
+                        <li><strong>RDI, RSI, RDX, RCX, R8, R9</strong> = Function arguments</li>
+                        <li><strong>RSP</strong> = Stack top (subtract to allocate, add to deallocate)</li>
+                        <li><strong>RBP</strong> = Frame base (local vars at [rbp-8], [rbp-16], etc.)</li>
+                        <li><strong>push/pop</strong> = Use stack for temporary values during expressions</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section: Dynamic Arrays -->
+        <div class="section" id="section-arrays">
+            <div class="section-header" onclick="toggleSection('section-arrays')">
+                <h3 class="section-title">📊 Dynamic Arrays & Complexity</h3>
+                <span class="section-toggle">▶</span>
+            </div>
+            <div class="section-content">
+                <p>Your compiler uses growable arrays for tokens, AST nodes, and more. In C, we must manage this
+                    manually.</p>
+
+                <h4>Python vs C: List Append</h4>
+                <pre><code># Python: grows automatically
+arr = []
+arr.append(1)  # Magic!
+arr.append(2)  # Still works!</code></pre>
+
+                <pre><code>// C: Must manage capacity manually
+DynamicArray = {
+    items: pointer to array
+    count: how many elements used
+    capacity: how many elements allocated
+}</code></pre>
+
+                <h4 style="margin-top: var(--space-6);">Append Algorithm</h4>
+                <pre><code>FUNCTION da_append(arr, value):
+    // Need to grow?
+    IF arr.count >= arr.capacity:
+        // Double capacity
+        arr.capacity = arr.capacity * 2 (or 16 if 0)
+        arr.items = realloc(arr.items, new_size)
+    
+    // Add element
+    arr.items[arr.count] = value
+    arr.count = arr.count + 1</code></pre>
+
+                <h4 style="margin-top: var(--space-6);">Why Double Capacity?</h4>
+                <table style="width: 100%; border-collapse: collapse; margin: var(--space-4) 0; font-size: 0.9rem;">
+                    <tr style="background: var(--bg-card);">
+                        <th style="padding: var(--space-2); text-align: left; border: 1px solid var(--border-default);">
+                            Operation</th>
+                        <th style="padding: var(--space-2); text-align: left; border: 1px solid var(--border-default);">
+                            Old Cap</th>
+                        <th style="padding: var(--space-2); text-align: left; border: 1px solid var(--border-default);">
+                            New Cap</th>
+                        <th style="padding: var(--space-2); text-align: left; border: 1px solid var(--border-default);">
+                            Copies</th>
+                    </tr>
+                    <tr>
+                        <td style="padding: var(--space-2); border: 1px solid var(--border-default);">1st append</td>
+                        <td style="padding: var(--space-2); border: 1px solid var(--border-default);">0</td>
+                        <td style="padding: var(--space-2); border: 1px solid var(--border-default);">16</td>
+                        <td style="padding: var(--space-2); border: 1px solid var(--border-default);">0</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: var(--space-2); border: 1px solid var(--border-default);">17th append</td>
+                        <td style="padding: var(--space-2); border: 1px solid var(--border-default);">16</td>
+                        <td style="padding: var(--space-2); border: 1px solid var(--border-default);">32</td>
+                        <td style="padding: var(--space-2); border: 1px solid var(--border-default);">16</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: var(--space-2); border: 1px solid var(--border-default);">33rd append</td>
+                        <td style="padding: var(--space-2); border: 1px solid var(--border-default);">32</td>
+                        <td style="padding: var(--space-2); border: 1px solid var(--border-default);">64</td>
+                        <td style="padding: var(--space-2); border: 1px solid var(--border-default);">32</td>
+                    </tr>
+                </table>
+                <p style="color: var(--text-secondary); font-size: 0.9rem;">Total copies for n appends: ~2n →
+                    <strong>Amortized O(1)</strong> per append!
+                </p>
+
+                <h4 style="margin-top: var(--space-6);">Compiler Data Structures Complexity</h4>
+                <table style="width: 100%; border-collapse: collapse; margin: var(--space-4) 0; font-size: 0.9rem;">
+                    <tr style="background: var(--bg-card);">
+                        <th style="padding: var(--space-2); text-align: left; border: 1px solid var(--border-default);">
+                            Structure</th>
+                        <th style="padding: var(--space-2); text-align: left; border: 1px solid var(--border-default);">
+                            Use In Compiler</th>
+                        <th style="padding: var(--space-2); text-align: left; border: 1px solid var(--border-default);">
+                            Lookup</th>
+                        <th style="padding: var(--space-2); text-align: left; border: 1px solid var(--border-default);">
+                            Insert</th>
+                    </tr>
+                    <tr>
+                        <td style="padding: var(--space-2); border: 1px solid var(--border-default);">Dynamic Array</td>
+                        <td style="padding: var(--space-2); border: 1px solid var(--border-default);">Token storage</td>
+                        <td style="padding: var(--space-2); border: 1px solid var(--border-default);">O(1)</td>
+                        <td style="padding: var(--space-2); border: 1px solid var(--border-default);">O(1)*</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: var(--space-2); border: 1px solid var(--border-default);">Linked List</td>
+                        <td style="padding: var(--space-2); border: 1px solid var(--border-default);">AST children</td>
+                        <td style="padding: var(--space-2); border: 1px solid var(--border-default);">O(n)</td>
+                        <td style="padding: var(--space-2); border: 1px solid var(--border-default);">O(1)</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: var(--space-2); border: 1px solid var(--border-default);">Hash Table</td>
+                        <td style="padding: var(--space-2); border: 1px solid var(--border-default);">Symbol table</td>
+                        <td style="padding: var(--space-2); border: 1px solid var(--border-default);">O(1)*</td>
+                        <td style="padding: var(--space-2); border: 1px solid var(--border-default);">O(1)*</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: var(--space-2); border: 1px solid var(--border-default);">Tree (AST)</td>
+                        <td style="padding: var(--space-2); border: 1px solid var(--border-default);">Program structure
+                        </td>
+                        <td style="padding: var(--space-2); border: 1px solid var(--border-default);">O(h)</td>
+                        <td style="padding: var(--space-2); border: 1px solid var(--border-default);">O(h)</td>
+                    </tr>
+                </table>
+                <p style="color: var(--text-secondary); font-size: 0.9rem;">* = amortized or average case. h = tree
+                    height.</p>
+            </div>
+        </div>
+
+        <!-- Quiz Section -->
+        <div class="section" id="section-quiz">
+            <div class="section-header" onclick="toggleSection('section-quiz')">
+                <h3 class="section-title">🧠 Check Your Understanding</h3>
+                <span class="section-toggle">▶</span>
+            </div>
+            <div class="section-content">
+                <div class="quiz" data-correct="0" data-quiz-id="q1" data-module-id="week-03"
+                    data-explanation="RAX is the register used for return values in the System V x86-64 calling convention (used on Linux/macOS).">
+                    <div class="quiz-question">Which register holds the return value of a function?</div>
+                    <div class="quiz-options">
+                        <div class="quiz-option" data-value="0">
+                            <div class="quiz-radio"></div>
+                            <span>RAX</span>
+                        </div>
+                        <div class="quiz-option" data-value="1">
+                            <div class="quiz-radio"></div>
+                            <span>RDI</span>
+                        </div>
+                        <div class="quiz-option" data-value="2">
+                            <div class="quiz-radio"></div>
+                            <span>RSP</span>
+                        </div>
+                        <div class="quiz-option" data-value="3">
+                            <div class="quiz-radio"></div>
+                            <span>RBP</span>
+                        </div>
+                    </div>
+                    <div class="quiz-feedback"></div>
+                </div>
+
+                <div class="quiz" data-correct="1" data-quiz-id="q2" data-module-id="week-03"
+                    data-explanation="The stack grows downward (toward lower addresses) on x86-64. RSP decreases when you push, increases when you pop.">
+                    <div class="quiz-question">In which direction does the stack grow on x86-64?</div>
+                    <div class="quiz-options">
+                        <div class="quiz-option" data-value="0">
+                            <div class="quiz-radio"></div>
+                            <span>Upward (toward higher addresses)</span>
+                        </div>
+                        <div class="quiz-option" data-value="1">
+                            <div class="quiz-radio"></div>
+                            <span>Downward (toward lower addresses)</span>
+                        </div>
+                        <div class="quiz-option" data-value="2">
+                            <div class="quiz-radio"></div>
+                            <span>It doesn't grow, it's fixed size</span>
+                        </div>
+                        <div class="quiz-option" data-value="3">
+                            <div class="quiz-radio"></div>
+                            <span>Both directions</span>
+                        </div>
+                    </div>
+                    <div class="quiz-feedback"></div>
+                </div>
+
+                <div class="quiz" data-correct="2" data-quiz-id="q3" data-module-id="week-03"
+                    data-explanation="malloc allocates memory on the heap. The heap is for dynamic allocations that persist beyond function calls.">
+                    <div class="quiz-question">Where does malloc() allocate memory?</div>
+                    <div class="quiz-options">
+                        <div class="quiz-option" data-value="0">
+                            <div class="quiz-radio"></div>
+                            <span>Stack</span>
+                        </div>
+                        <div class="quiz-option" data-value="1">
+                            <div class="quiz-radio"></div>
+                            <span>Registers</span>
+                        </div>
+                        <div class="quiz-option" data-value="2">
+                            <div class="quiz-radio"></div>
+                            <span>Heap</span>
+                        </div>
+                        <div class="quiz-option" data-value="3">
+                            <div class="quiz-radio"></div>
+                            <span>Data segment</span>
+                        </div>
+                    </div>
+                    <div class="quiz-feedback"></div>
+                </div>
+
+                <div class="quiz" data-correct="3" data-quiz-id="q4" data-module-id="week-03"
+                    data-explanation="A 'dangling pointer' points to memory that has been freed or has gone out of scope. Using it causes undefined behavior.">
+                    <div class="quiz-question">What is a "dangling pointer"?</div>
+                    <div class="quiz-options">
+                        <div class="quiz-option" data-value="0">
+                            <div class="quiz-radio"></div>
+                            <span>A pointer set to NULL</span>
+                        </div>
+                        <div class="quiz-option" data-value="1">
+                            <div class="quiz-radio"></div>
+                            <span>A pointer that's never used</span>
+                        </div>
+                        <div class="quiz-option" data-value="2">
+                            <div class="quiz-radio"></div>
+                            <span>A pointer to a malloc'd block</span>
+                        </div>
+                        <div class="quiz-option" data-value="3">
+                            <div class="quiz-radio"></div>
+                            <span>A pointer to memory that's been freed or is out of scope</span>
+                        </div>
+                    </div>
+                    <div class="quiz-feedback"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Practice Problems Section -->
+        <div class="section" id="section-practice">
+            <div class="section-header" onclick="toggleSection('section-practice')">
+                <h3 class="section-title">📝 Practice Problems</h3>
+                <span class="section-toggle">▶</span>
+            </div>
+            <div class="section-content">
+                <div style="display: flex; flex-direction: column; gap: var(--space-6);">
+
+                    <!-- Problem 1 -->
+                    <div
+                        style="background: var(--bg-card); border: 1px solid var(--border-default); border-radius: var(--radius-lg); padding: var(--space-5);">
+                        <h4 style="color: var(--accent-cyan); margin-bottom: var(--space-3);">Problem 1: Find the Bug
+                        </h4>
+                        <pre><code>char *duplicate_string(const char *s) {
+    char copy[100];
+    strcpy(copy, s);
+    return copy;  // What's wrong?
+}
+
+int main() {
+    char *s = duplicate_string("hello");
+    printf("%s\n", s);  // Probably garbage
+}</code></pre>
+                        <details style="margin-top: var(--space-4);">
+                            <summary style="cursor: pointer; color: var(--accent-purple); font-weight: 600;">Click for
+                                solution</summary>
+                            <div
+                                style="margin-top: var(--space-3); padding: var(--space-4); background: rgba(239, 68, 68, 0.1); border-radius: var(--radius-md);">
+                                <p><strong>Problem:</strong> <code>copy</code> is a local array on the stack, destroyed
+                                    when function returns.</p>
+                                <pre><code>// Fix: Allocate on heap
+char *duplicate_string(const char *s) {
+    size_t len = strlen(s) + 1;
+    char *copy = malloc(len);
+    if (copy != NULL) strcpy(copy, s);
+    return copy;  // Heap persists!
+}
+// Caller must free!</code></pre>
+                            </div>
+                        </details>
+                    </div>
+
+                    <!-- Problem 2 -->
+                    <div
+                        style="background: var(--bg-card); border: 1px solid var(--border-default); border-radius: var(--radius-lg); padding: var(--space-5);">
+                        <h4 style="color: var(--accent-cyan); margin-bottom: var(--space-3);">Problem 2: Memory Leak
+                            Hunt</h4>
+                        <pre><code>void process_data(const char *filename) {
+    FILE *f = fopen(filename, "r");
+    if (f == NULL) return;
+
+    char *buffer = malloc(1000);
+    if (buffer == NULL) {
+        fclose(f);
+        return;
+    }
+
+    fread(buffer, 1, 1000, f);
+
+    if (some_error_condition()) {
+        return;  // Is there a leak?
+    }
+
+    free(buffer);
+    fclose(f);
+}</code></pre>
+                        <details style="margin-top: var(--space-4);">
+                            <summary style="cursor: pointer; color: var(--accent-purple); font-weight: 600;">Click for
+                                solution</summary>
+                            <div
+                                style="margin-top: var(--space-3); padding: var(--space-4); background: rgba(239, 68, 68, 0.1); border-radius: var(--radius-md);">
+                                <p><strong>Leak!</strong> If <code>some_error_condition()</code> is true, we return
+                                    without freeing <code>buffer</code> or closing <code>f</code>!</p>
+                                <pre><code>// Fix: Free resources before ALL returns
+if (some_error_condition()) {
+    free(buffer);   // ✅
+    fclose(f);      // ✅
+    return;
+}</code></pre>
+                            </div>
+                        </details>
+                    </div>
+
+                    <!-- Problem 3 -->
+                    <div
+                        style="background: var(--bg-card); border: 1px solid var(--border-default); border-radius: var(--radius-lg); padding: var(--space-5);">
+                        <h4 style="color: var(--accent-cyan); margin-bottom: var(--space-3);">Problem 3: Stack vs Heap
+                        </h4>
+                        <p>For each allocation, identify where it lives (Stack or Heap):</p>
+                        <pre><code>void example() {
+    int a = 5;              // 1. Where?
+    int *b = malloc(4);     // 2. Where is b? Where is *b?
+    char str[] = "hello";   // 3. Where?
+    char *ptr = "world";    // 4. Where is ptr? Where is "world"?
+}</code></pre>
+                        <details style="margin-top: var(--space-4);">
+                            <summary style="cursor: pointer; color: var(--accent-purple); font-weight: 600;">Click for
+                                solution</summary>
+                            <div
+                                style="margin-top: var(--space-3); padding: var(--space-4); background: rgba(16, 185, 129, 0.1); border-radius: var(--radius-md);">
+                                <ol>
+                                    <li><code>a</code> → <strong>Stack</strong> (local variable)</li>
+                                    <li><code>b</code> → <strong>Stack</strong> (pointer), <code>*b</code> →
+                                        <strong>Heap</strong> (malloc'd memory)</li>
+                                    <li><code>str</code> → <strong>Stack</strong> (local array, contents copied from
+                                        literal)</li>
+                                    <li><code>ptr</code> → <strong>Stack</strong> (pointer), <code>"world"</code> →
+                                        <strong>Data segment</strong> (string literal)</li>
+                                </ol>
+                            </div>
+                        </details>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Navigation -->
+        <div
+            style="display: flex; justify-content: space-between; align-items: center; padding: var(--space-6); background: var(--bg-card); border-radius: var(--radius-xl); border: 1px solid var(--border-default); margin-top: var(--space-10);">
+            <a href="#"
+                onclick="event.preventDefault(); UnlockSystem.navigateToModule('week-02', 'week-02-intro-c.html');"
+                style="display: flex; align-items: center; gap: var(--space-2); color: var(--text-secondary);">
+                ← Week 2
+            </a>
+            <a href="#"
+                onclick="event.preventDefault(); UnlockSystem.navigateToModule('week-04', 'week-04-assembly.html');"
+                style="display: flex; align-items: center; gap: var(--space-2); padding: var(--space-3) var(--space-5); background: var(--gradient-primary); color: white; border-radius: var(--radius-md); font-weight: 600;">
+                Next: x86-64 Assembly →
+            </a>
+        </div>
+    </main>
+
+    <script src="../js/modules-data.js"></script>
+    <script src="../js/unlock.js"></script>
+    <script src="../js/progress.js"></script>
+    <script src="../js/quiz.js"></script>
+    <script>
+        function toggleSection(sectionId) {
+            const section = document.getElementById(sectionId);
+            if (section) {
+                section.classList.toggle('open');
+                if (section.classList.contains('open') && window.ProgressTracker) {
+                    ProgressTracker.expandSection('week-03', sectionId);
+                    updateProgress();
+                }
+            }
+        }
+
+        function updateProgress() {
+            if (window.ProgressTracker) {
+                const progress = ProgressTracker.getModuleProgress('week-03');
+                const bar = document.getElementById('moduleProgress');
+                if (bar) bar.style.width = `${progress.percentComplete}%`;
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const toggle = document.getElementById('themeToggle');
+            const savedTheme = localStorage.getItem('cs5008_theme') || 'dark';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            toggle.textContent = savedTheme === 'dark' ? '🌙' : '☀️';
+
+            toggle.addEventListener('click', () => {
+                const current = document.documentElement.getAttribute('data-theme');
+                const next = current === 'dark' ? 'light' : 'dark';
+                document.documentElement.setAttribute('data-theme', next);
+                localStorage.setItem('cs5008_theme', next);
+                toggle.textContent = next === 'dark' ? '🌙' : '☀️';
+            });
+
+            if (window.ProgressTracker) {
+                ProgressTracker.visitModule('week-03');
+                updateProgress();
+            }
+        });
+    </script>
+</body>
+
+</html>

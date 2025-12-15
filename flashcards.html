@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flashcards | CS5008 Study Guide</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <style>
+        .flashcard-container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: var(--space-6);
+        }
+
+        .flashcard-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--space-6);
+            flex-wrap: wrap;
+            gap: var(--space-4);
+        }
+
+        .flashcard-progress {
+            font-size: 1.1rem;
+            color: var(--text-secondary);
+        }
+
+        .flashcard-controls {
+            display: flex;
+            gap: var(--space-3);
+        }
+
+        .control-btn {
+            padding: var(--space-2) var(--space-4);
+            background: var(--bg-elevated);
+            border: 1px solid var(--border-default);
+            border-radius: var(--radius-md);
+            color: var(--text-primary);
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 0.9rem;
+        }
+
+        .control-btn:hover {
+            background: var(--accent-purple);
+            border-color: var(--accent-purple);
+        }
+
+        .flashcard-wrapper {
+            perspective: 1000px;
+            margin-bottom: var(--space-6);
+        }
+
+        .flashcard {
+            width: 100%;
+            min-height: 300px;
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
+        }
+
+        .flashcard.flipped {
+            transform: rotateY(180deg);
+        }
+
+        .flashcard-face {
+            position: absolute;
+            width: 100%;
+            min-height: 300px;
+            backface-visibility: hidden;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: var(--space-8);
+            border-radius: var(--radius-xl);
+            border: 2px solid var(--border-default);
+            text-align: center;
+        }
+
+        .flashcard-front {
+            background: linear-gradient(135deg, var(--bg-card) 0%, var(--bg-elevated) 100%);
+            border-color: var(--accent-cyan);
+        }
+
+        .flashcard-back {
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, var(--bg-card) 100%);
+            transform: rotateY(180deg);
+            border-color: var(--accent-green);
+        }
+
+        .flashcard-label {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--text-muted);
+            margin-bottom: var(--space-4);
+        }
+
+        .flashcard-front .flashcard-label {
+            color: var(--accent-cyan);
+        }
+
+        .flashcard-back .flashcard-label {
+            color: var(--accent-green);
+        }
+
+        .flashcard-text {
+            font-size: 1.25rem;
+            line-height: 1.6;
+            color: var(--text-primary);
+        }
+
+        .flashcard-text code {
+            background: var(--bg-terminal);
+            padding: 2px 6px;
+            border-radius: var(--radius-sm);
+            font-family: var(--font-mono);
+            color: var(--accent-green);
+        }
+
+        .flashcard-hint {
+            margin-top: var(--space-4);
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .navigation-buttons {
+            display: flex;
+            justify-content: center;
+            gap: var(--space-4);
+        }
+
+        .nav-btn {
+            padding: var(--space-3) var(--space-6);
+            background: var(--bg-card);
+            border: 1px solid var(--border-default);
+            border-radius: var(--radius-lg);
+            color: var(--text-primary);
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 1rem;
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+        }
+
+        .nav-btn:hover:not(:disabled) {
+            background: var(--accent-purple);
+            border-color: var(--accent-purple);
+            transform: translateY(-2px);
+        }
+
+        .nav-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 6px;
+            background: var(--bg-elevated);
+            border-radius: 3px;
+            margin-bottom: var(--space-6);
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent-cyan), var(--accent-purple));
+            border-radius: 3px;
+            transition: width 0.3s ease;
+        }
+
+        .keyboard-hint {
+            text-align: center;
+            margin-top: var(--space-6);
+            color: var(--text-muted);
+            font-size: 0.875rem;
+        }
+
+        .keyboard-hint kbd {
+            background: var(--bg-elevated);
+            padding: 2px 8px;
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--border-default);
+            font-family: var(--font-mono);
+            font-size: 0.8rem;
+        }
+
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: var(--space-2);
+            color: var(--text-secondary);
+            text-decoration: none;
+            margin-bottom: var(--space-6);
+            transition: color 0.2s;
+        }
+
+        .back-link:hover {
+            color: var(--accent-cyan);
+        }
+
+        .stats-bar {
+            display: flex;
+            justify-content: center;
+            gap: var(--space-6);
+            margin-top: var(--space-6);
+            padding: var(--space-4);
+            background: var(--bg-card);
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--border-default);
+        }
+
+        .stat {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--accent-cyan);
+        }
+
+        .stat-label {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+        }
+
+        @media (max-width: 600px) {
+            .flashcard-text {
+                font-size: 1.1rem;
+            }
+
+            .flashcard-face {
+                padding: var(--space-5);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="flashcard-container">
+        <a href="index.html" class="back-link">← Back to Guide</a>
+
+        <h1 style="margin-bottom: var(--space-2);">📚 Flashcard Study Mode</h1>
+        <p style="color: var(--text-secondary); margin-bottom: var(--space-6);">73 questions covering the entire CS5008
+            course</p>
+
+        <div class="progress-bar">
+            <div class="progress-fill" id="progressFill" style="width: 0%"></div>
+        </div>
+
+        <div class="flashcard-header">
+            <div class="flashcard-progress">
+                Card <span id="currentCard">1</span> of <span id="totalCards">73</span>
+            </div>
+            <div class="flashcard-controls">
+                <button class="control-btn" onclick="shuffleCards()">🔀 Shuffle</button>
+                <button class="control-btn" onclick="resetCards()">↺ Reset</button>
+            </div>
+        </div>
+
+        <div class="flashcard-wrapper">
+            <div class="flashcard" id="flashcard" onclick="flipCard()">
+                <div class="flashcard-face flashcard-front">
+                    <div class="flashcard-label">Question</div>
+                    <div class="flashcard-text" id="questionText">Loading...</div>
+                    <div class="flashcard-hint">Click or press Space to reveal answer</div>
+                </div>
+                <div class="flashcard-face flashcard-back">
+                    <div class="flashcard-label">Answer</div>
+                    <div class="flashcard-text" id="answerText">Loading...</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="navigation-buttons">
+            <button class="nav-btn" id="prevBtn" onclick="prevCard()">← Previous</button>
+            <button class="nav-btn" id="nextBtn" onclick="nextCard()">Next →</button>
+        </div>
+
+        <div class="keyboard-hint">
+            <kbd>←</kbd> Previous &nbsp;|&nbsp; <kbd>Space</kbd> Flip &nbsp;|&nbsp; <kbd>→</kbd> Next
+        </div>
+
+        <div class="stats-bar">
+            <div class="stat">
+                <div class="stat-value" id="viewedCount">0</div>
+                <div class="stat-label">Viewed</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value" id="remainingCount">73</div>
+                <div class="stat-label">Remaining</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Flashcard data - parsed from CSV
+        const flashcards = [
+            { q: "In C programming, what is the key difference from Python/Java regarding memory management?", a: "C requires manual memory allocation and deallocation, whereas Python/Java use automatic garbage collection." },
+            { q: "What is the primary purpose of the Lexer stage in a compiler pipeline?", a: "To simplify parsing by grouping individual characters into meaningful units called tokens." },
+            { q: "The Parser stage in a compiler transforms a stream of tokens into what hierarchical data structure?", a: "An Abstract Syntax Tree (AST)." },
+            { q: "Why is a Stack Machine used as an intermediate representation in a compiler?", a: "It simplifies the translation from a high-level AST to low-level assembly code." },
+            { q: "In C, variables are not labels for values but are actual _____.", a: "memory locations" },
+            { q: "In C, what is the consequence of not initializing a variable before use?", a: "The variable will contain garbage data, leading to undefined behavior." },
+            { q: "What is a 'tagged union' in C?", a: "A pattern where a struct contains a union and a 'tag' field that indicates which member of the union is currently valid." },
+            { q: "In C, accessing a struct's field is done with the . operator, while accessing a field from a pointer to a struct is done with the _____ operator.", a: "<code>-></code> (arrow)" },
+            { q: "What is the fundamental difference between C strings and Python/Java strings?", a: "C strings are null-terminated character arrays, not objects with built-in methods and length tracking." },
+            { q: "What C standard library function is used to compare the content of two strings?", a: "<code>strcmp()</code>" },
+            { q: "What is the term for a pointer that points to a memory location that has been freed or is out of scope?", a: "A dangling pointer." },
+            { q: "In C's memory model, what is the difference between the Stack and the Heap?", a: "The Stack is used for local variables with automatic cleanup, while the Heap is used for dynamically allocated memory that requires manual cleanup." },
+            { q: "What does the C function malloc(size_t size) do?", a: "It allocates a specified number of bytes on the heap and returns a pointer to the beginning of the block." },
+            { q: "What is a memory leak in C programming?", a: "A situation where memory allocated on the heap is no longer needed but is never released using <code>free()</code>." },
+            { q: "In pointer arithmetic, if p is an int*, what does the expression p + 1 actually add to the address?", a: "It adds <code>sizeof(int)</code> bytes to the address, moving the pointer to the next integer element." },
+            { q: "In x86-64 assembly, what is the primary role of the rax register?", a: "It holds the return value of a function." },
+            { q: "According to the x86-64 System V calling convention, which register holds the first argument passed to a function?", a: "The <code>rdi</code> register." },
+            { q: "What is the key rule regarding memory operands in a single x86-64 instruction?", a: "An instruction can have at most one memory operand." },
+            { q: "What is the difference between the mov and lea instructions in x86-64 assembly?", a: "<code>mov</code> loads the value from a memory address, while <code>lea</code> (Load Effective Address) calculates the address itself and stores it in the destination register." },
+            { q: "Before executing the idiv (signed division) instruction in x86-64, what instruction must be used to sign-extend rax into rdx:rax?", a: "The <code>cqo</code> (Convert Quadword to Octoword) instruction." },
+            { q: "What is the purpose of a function's prologue in x86-64 assembly?", a: "To set up the stack frame by saving the old base pointer (<code>rbp</code>) and allocating space for local variables." },
+            { q: "The function epilogue in x86-64 assembly typically consists of mov rsp, rbp, pop rbp, and _____.", a: "<code>ret</code>" },
+            { q: "In x86-64, local variables are typically accessed using negative offsets from which register?", a: "The base pointer register (<code>rbp</code>)." },
+            { q: "What is the term for registers that a called function (callee) must preserve and restore before returning?", a: "Callee-saved registers (e.g., <code>rbx</code>, <code>rbp</code>, <code>r12</code>-<code>r15</code>)." },
+            { q: "How does a program request a service from the operating system, such as exiting or writing to a file, in x86-64 Linux?", a: "By using a system call (<code>syscall</code>) instruction with the appropriate syscall number in <code>rax</code>." },
+            { q: "In a dynamic array implementation, why is it more efficient to double the capacity when full rather than adding a fixed amount?", a: "Doubling capacity results in an amortized O(1) time complexity per append operation, while adding a fixed amount results in O(n)." },
+            { q: "In a hash table that uses external chaining, how are collisions resolved?", a: "Entries that hash to the same slot are stored in a linked list at that slot." },
+            { q: "What is the 'load factor' of a hash table?", a: "The ratio of the number of entries to the number of slots in the table." },
+            { q: "What is the defining property of a Binary Search Tree (BST) for any given node?", a: "All values in the left subtree are less than the node's value, and all values in the right subtree are greater." },
+            { q: "Which tree traversal algorithm, when applied to a Binary Search Tree, visits the nodes in sorted order?", a: "In-order traversal (Left, Root, Right)." },
+            { q: "The process of generating stack machine code from an AST is equivalent to performing a _____ traversal of the tree.", a: "post-order" },
+            { q: "What is the main space complexity trade-off between an adjacency matrix and an adjacency list for graph representation?", a: "An adjacency matrix uses O(n²) space, while an adjacency list uses O(n + e) space, making lists more efficient for sparse graphs." },
+            { q: "Which graph traversal algorithm uses a queue and is guaranteed to find the shortest path in an unweighted graph?", a: "Breadth-First Search (BFS)." },
+            { q: "In EBNF notation, what do curly braces { ... } signify?", a: "Repetition, indicating that the enclosed element can appear zero or more times." },
+            { q: "In EBNF notation, what do square brackets [ ... ] signify?", a: "Optionality, indicating that the enclosed element can appear zero or one time." },
+            { q: "How is operator precedence encoded in a recursive descent parser's grammar?", a: "By having functions for lower-precedence operators call functions for higher-precedence operators (e.g., <code>parse_additive</code> calls <code>parse_multiplicative</code>)." },
+            { q: "What is 'greedy matching' in a lexer?", a: "The principle of matching the longest possible token, such as recognizing <code>==</code> as a single token instead of two separate <code>=</code> tokens." },
+            { q: "A symbol table in a compiler is typically implemented with what data structure for its O(1) average lookup time?", a: "A hash table." },
+            { q: "What information does a symbol table map a variable name to?", a: "Information about the variable, such as its type and storage location (e.g., stack slot number)." },
+            { q: "In Jive, the let keyword is used for variable _____, while the set keyword is for variable _____.", a: "declaration, assignment" },
+            { q: "What is the formula to calculate the memory address of a local variable at slot N in an x86-64 stack frame?", a: "<code>[rbp - (N + 1) * 8]</code>" },
+            { q: "According to the x86-64 System V calling convention, what are the first two registers used for passing integer arguments?", a: "<code>rdi</code> for the first argument and <code>rsi</code> for the second." },
+            { q: "What is the purpose of the setcc family of instructions (e.g., sete, setl) in x86-64?", a: "To set a destination byte register to 1 or 0 based on the result of a previous <code>cmp</code> or <code>test</code> instruction." },
+            { q: "How is a while loop typically implemented in assembly?", a: "With a label at the start, a conditional jump that exits the loop, the loop body, and an unconditional jump back to the start label." },
+            { q: "In the Jive language, how are boolean values represented for control flow?", a: "The integer <code>0</code> represents false, and any non-zero integer represents true." },
+            { q: "To implement if (condition) in assembly, one typically evaluates the condition and uses a conditional jump that executes when the condition is _____.", a: "false" },
+            { q: "What system call is used in the course compiler to perform dynamic memory allocation for arrays?", a: "The <code>mmap</code> syscall." },
+            { q: "How is array element access, such as arr[i], translated into assembly for an array of 64-bit integers?", a: "It is translated to an address calculation like <code>[base_address + index * 8]</code>." },
+            { q: "In the x86-64 assembly generated by the compiler, where are string literals stored?", a: "In the read-only <code>.data</code> section of the executable." },
+            { q: "What is Levenshtein distance, and how can it be used in a compiler?", a: "It's the minimum number of edits to change one string into another; used to suggest corrections for misspelled identifiers (e.g., 'Did you mean printf?')." },
+            { q: "What is 'constant folding' as a compiler optimization?", a: "The process of evaluating expressions with constant values at compile time instead of at runtime." },
+            { q: "What does a 'forward declaration' achieve in C?", a: "It allows a function or type to be used before its full definition appears in the source code." },
+            { q: "What is the difference between passing a struct by value versus by reference (pointer) to a C function?", a: "Passing by value copies the entire struct, while passing by reference only copies the pointer (address), which is much more efficient for large structs." },
+            { q: "What C keyword is used to create a type alias, such as making Point an alias for struct Point?", a: "<code>typedef</code>" },
+            { q: "What is the purpose of the NULL pointer in C?", a: "It's a special value indicating that a pointer does not point to any valid memory location." },
+            { q: "In C, the expression arr[i] is syntactic sugar for what pointer arithmetic expression?", a: "<code>*(arr + i)</code>" },
+            { q: "What is the main advantage of the custom String struct (with a length field) over standard C null-terminated strings?", a: "It provides O(1) length lookup, whereas C strings require an O(n) scan to find the length." },
+            { q: "In x86-64 assembly, what is the effect of writing to a 32-bit register like eax on its 64-bit counterpart rax?", a: "It zeros the upper 32 bits of the 64-bit register <code>rax</code>." },
+            { q: "A program's entry point for the linker is the _start label, which typically calls main and then uses syscall number _____ to exit.", a: "60" },
+            { q: "Which graph data structure, adjacency matrix or list, is better for representing a sparse graph (where e << n²)?", a: "Adjacency list, due to its O(n + e) space complexity." },
+            { q: "Stack Machine Instruction: What does LOAD 1 do?", a: "It finds the variable stored in slot 1 and pushes its value onto the evaluation stack." },
+            { q: "Stack Machine Instruction: What does STORE 0 do?", a: "It pops the top value from the evaluation stack and stores it in the variable located at slot 0." },
+            { q: "In the System V calling convention, if a function needs to use registers rbx or r12, what is its responsibility?", a: "It must save their original values before using them and restore them before returning (they are callee-saved)." },
+            { q: "What is the difference in parsing a versus a()?", a: "<code>a</code> is parsed as an identifier (variable access), while <code>a()</code> is parsed as a function call due to the lookahead for an opening parenthesis." },
+            { q: "Stack Machine Instruction: What is the purpose of JUMP_IF_ZERO L1?", a: "It pops a value from the stack, and if that value is zero, it jumps to the program label <code>L1</code>." },
+            { q: "In Jive, array types are denoted with what syntax?", a: "By enclosing the element type in square brackets, such as <code>[int]</code> for an array of integers." },
+            { q: "What is 'dead code elimination'?", a: "A compiler optimization that removes code that can never be executed, such as statements inside <code>if (false)</code>." },
+            { q: "The printf format specifier for a C string (char*) is %s, and for a pointer address is _____.", a: "<code>%p</code>" },
+            { q: "What does the realloc function in C do?", a: "It changes the size of a previously allocated memory block, potentially moving it to a new location." },
+            { q: "Term: Recursive Descent Parsing", a: "A top-down parsing technique where a set of mutually recursive procedures is used to process the input, with one procedure for each nonterminal in the grammar." },
+            { q: "In an AST for the expression a - b - c, which subtraction operator would be the root of the tree to enforce left-associativity?", a: "The second subtraction operator, with the AST for <code>a - b</code> as its left child." },
+            { q: "What is the output of the test rax, rax instruction used for?", a: "To set the CPU's zero flag (ZF) if <code>rax</code> is zero, without modifying <code>rax</code> itself." },
+            { q: "What are the two fundamental operations associated with C pointers?", a: "The address-of operator <code>&</code> to get a variable's address, and the dereference operator <code>*</code> to access the value at an address." }
+        ];
+
+        let currentIndex = 0;
+        let originalOrder = [...flashcards];
+        let cards = [...flashcards];
+        let viewedCards = new Set();
+
+        function updateCard() {
+            const card = cards[currentIndex];
+            document.getElementById('questionText').innerHTML = card.q;
+            document.getElementById('answerText').innerHTML = card.a;
+            document.getElementById('currentCard').textContent = currentIndex + 1;
+            document.getElementById('totalCards').textContent = cards.length;
+
+            // Update progress
+            const progress = ((currentIndex + 1) / cards.length) * 100;
+            document.getElementById('progressFill').style.width = progress + '%';
+
+            // Track viewed
+            viewedCards.add(currentIndex);
+            document.getElementById('viewedCount').textContent = viewedCards.size;
+            document.getElementById('remainingCount').textContent = cards.length - viewedCards.size;
+
+            // Update button states
+            document.getElementById('prevBtn').disabled = currentIndex === 0;
+            document.getElementById('nextBtn').disabled = currentIndex === cards.length - 1;
+
+            // Reset flip state
+            document.getElementById('flashcard').classList.remove('flipped');
+        }
+
+        function flipCard() {
+            document.getElementById('flashcard').classList.toggle('flipped');
+        }
+
+        function nextCard() {
+            if (currentIndex < cards.length - 1) {
+                currentIndex++;
+                updateCard();
+            }
+        }
+
+        function prevCard() {
+            if (currentIndex > 0) {
+                currentIndex--;
+                updateCard();
+            }
+        }
+
+        function shuffleCards() {
+            cards = [...cards].sort(() => Math.random() - 0.5);
+            currentIndex = 0;
+            viewedCards.clear();
+            updateCard();
+        }
+
+        function resetCards() {
+            cards = [...originalOrder];
+            currentIndex = 0;
+            viewedCards.clear();
+            updateCard();
+        }
+
+        // Keyboard navigation
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight') {
+                nextCard();
+            } else if (e.key === 'ArrowLeft') {
+                prevCard();
+            } else if (e.key === ' ') {
+                e.preventDefault();
+                flipCard();
+            }
+        });
+
+        // Initialize
+        updateCard();
+    </script>
+</body>
+
+</html>

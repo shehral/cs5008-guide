@@ -1,0 +1,728 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Week 9: Compiler 5 - Functions | CS5008 Guide</title>
+    <link rel="stylesheet" href="../css/styles.css">
+    <link rel="icon"
+        href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>">
+</head>
+
+<body>
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+
+    <header class="header">
+        <div class="header-content">
+            <a href="../index.html" class="logo">
+                <span class="logo-icon">⚡</span>
+                <span>CS5008</span>
+            </a>
+            <div class="header-actions">
+                <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme">🌙</button>
+            </div>
+        </div>
+    </header>
+
+    <main class="main-container module-page">
+        <nav class="breadcrumb">
+            <a href="../index.html">← Back to modules</a>
+        </nav>
+
+        <div class="module-header">
+            <div class="module-badge green">📞 Compiler 5 • +100 XP</div>
+            <h1>Function <span class="text-gradient">Calls</span></h1>
+            <p>Implement the x86-64 calling convention with parameters, arguments, and the CALL/RET protocol.</p>
+        </div>
+
+        <div class="progress-bar mb-6">
+            <div class="progress-bar-fill" id="moduleProgress" style="width: 0%"></div>
+        </div>
+
+        <!-- Section 1: Functions in Jive -->
+        <div class="section open" id="section-what">
+            <div class="section-header" onclick="toggleSection('section-what')">
+                <h3 class="section-title">📞 Function Calls in Jive</h3>
+                <span class="section-toggle">▶</span>
+            </div>
+            <div class="section-content">
+                <pre><code>fn add(a: int, b: int) -> int {
+    return a + b
+}
+
+fn main() -> int {
+    let result: int = add(5, 3)
+    return result        // Returns 8
+}</code></pre>
+
+                <h4 style="margin-top: var(--space-6);">🐍 YOU KNOW (Python)</h4>
+                <pre><code>def add(a, b):
+    return a + b
+
+result = add(5, 3)  # Python handles everything</code></pre>
+
+                <h4 style="margin-top: var(--space-4);">⚙️ What Your Compiler Must Handle</h4>
+                <ol style="margin-top: var(--space-3);">
+                    <li><strong>Caller side:</strong> Evaluate arguments, put them in registers, call function</li>
+                    <li><strong>Callee side:</strong> Save parameters to stack, execute body, return value in RAX</li>
+                </ol>
+            </div>
+        </div>
+
+        <!-- Section 2: Calling Convention -->
+        <div class="section" id="section-abi">
+            <div class="section-header" onclick="toggleSection('section-abi')">
+                <h3 class="section-title">📋 System V x86-64 Calling Convention</h3>
+                <span class="section-toggle">▶</span>
+            </div>
+            <div class="section-content">
+                <p>The <strong>calling convention</strong> defines how functions communicate. Everyone follows the same
+                    rules!</p>
+
+                <h4>Argument Registers</h4>
+                <table style="width: 100%; border-collapse: collapse; margin: var(--space-4) 0;">
+                    <tr style="background: var(--bg-card);">
+                        <th style="padding: var(--space-3); text-align: left; border: 1px solid var(--border-default);">
+                            Argument #</th>
+                        <th style="padding: var(--space-3); text-align: left; border: 1px solid var(--border-default);">
+                            Register</th>
+                        <th style="padding: var(--space-3); text-align: left; border: 1px solid var(--border-default);">
+                            Mnemonic</th>
+                    </tr>
+                    <tr>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);">1st</td>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);"><code>RDI</code>
+                        </td>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);">Destination Index
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);">2nd</td>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);"><code>RSI</code>
+                        </td>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);">Source Index</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);">3rd</td>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);"><code>RDX</code>
+                        </td>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);">Data</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);">4th</td>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);"><code>RCX</code>
+                        </td>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);">Counter</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);">5th</td>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);"><code>R8</code>
+                        </td>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);">-</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);">6th</td>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);"><code>R9</code>
+                        </td>
+                        <td style="padding: var(--space-3); border: 1px solid var(--border-default);">-</td>
+                    </tr>
+                </table>
+
+                <div
+                    style="background: rgba(16, 185, 129, 0.1); border: 1px solid var(--accent-green); border-radius: var(--radius-lg); padding: var(--space-5); margin: var(--space-6) 0;">
+                    <strong style="color: var(--accent-green);">💡 Return Value:</strong>
+                    <p style="margin-top: var(--space-2);">Always in <code>RAX</code>. The caller reads RAX after the
+                        function returns.</p>
+                </div>
+
+                <h4 style="margin-top: var(--space-6);">Caller-Saved vs Callee-Saved</h4>
+                <pre><code>Caller-saved (may be clobbered by call):
+    RAX, RCX, RDX, RSI, RDI, R8-R11
+
+Callee-saved (preserved across calls):
+    RBX, RBP, R12-R15
+
+Your compiler uses parameters (slots 0, 1, ...) which are
+saved to the stack immediately, so you don't need to worry
+about caller-saved registers being overwritten!</code></pre>
+            </div>
+        </div>
+
+        <!-- Section 3: Caller's Responsibilities -->
+        <div class="section" id="section-caller">
+            <div class="section-header" onclick="toggleSection('section-caller')">
+                <h3 class="section-title">📤 Caller's Responsibilities (Pseudocode)</h3>
+                <span class="section-toggle">▶</span>
+            </div>
+            <div class="section-content">
+                <pre><code>ALGORITHM: Generate Function Call
+
+generate_call(function_name, arguments):
+    arg_registers = ["rdi", "rsi", "rdx", "rcx", "r8", "r9"]
+    
+    // Step 1: Evaluate all arguments onto the stack
+    FOR each argument in arguments:
+        generate_expression(argument)    // Pushes result
+    
+    // Step 2: Pop arguments into registers (REVERSE order!)
+    num_args = count(arguments)
+    FOR i FROM (num_args - 1) DOWN TO 0:
+        emit "pop {arg_registers[i]}"
+    
+    // Step 3: Make the call
+    emit "call {function_name}"
+    
+    // Step 4: Push return value back onto stack
+    emit "push rax"</code></pre>
+
+                <h4 style="margin-top: var(--space-8);">Example: <code>add(5, 3)</code></h4>
+                <pre><code>Step 1: Evaluate arguments
+    push 5         ; First argument
+    push 3         ; Second argument
+
+Step 2: Pop into registers (reverse order!)
+    pop rsi        ; RSI = 3 (2nd arg)
+    pop rdi        ; RDI = 5 (1st arg)
+
+Step 3: Call function
+    call add
+
+Step 4: Use result
+    push rax       ; Result now on stack</code></pre>
+
+                <div
+                    style="background: rgba(239, 68, 68, 0.1); border: 1px solid var(--accent-red); border-radius: var(--radius-lg); padding: var(--space-5); margin: var(--space-6) 0;">
+                    <strong style="color: var(--accent-red);">⚠️ Why Reverse Order?</strong>
+                    <p style="margin-top: var(--space-2);">Arguments are pushed left-to-right, so the last argument is
+                        on top. Popping gives us the last argument first, which goes in the <em>last</em> register (rsi
+                        for 2 args). Then we pop the first argument into the first register (rdi).</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section 4: Callee's Responsibilities -->
+        <div class="section" id="section-callee">
+            <div class="section-header" onclick="toggleSection('section-callee')">
+                <h3 class="section-title">📥 Callee's Responsibilities (Pseudocode)</h3>
+                <span class="section-toggle">▶</span>
+            </div>
+            <div class="section-content">
+                <pre><code>ALGORITHM: Generate Function Definition
+
+generate_function(name, parameters, body):
+    param_registers = ["rdi", "rsi", "rdx", "rcx", "r8", "r9"]
+    
+    // Emit label
+    emit "{name}:"
+    
+    // Prologue: set up stack frame
+    emit "push rbp"
+    emit "mov rbp, rsp"
+    
+    // Allocate space for params + local variables
+    total_slots = count(parameters) + count(local_variables)
+    IF total_slots > 0:
+        emit "sub rsp, {total_slots * 8}"
+    
+    // Save parameters from registers to stack slots
+    FOR i FROM 0 TO count(parameters) - 1:
+        offset = -(i + 1) * 8    // First param at [rbp-8]
+        emit "mov [rbp{offset}], {param_registers[i]}"
+    
+    // Generate function body
+    generate_statements(body)
+    
+    // Epilogue: restore stack frame
+    emit "mov rsp, rbp"
+    emit "pop rbp"
+    emit "ret"</code></pre>
+
+                <h4 style="margin-top: var(--space-8);">Example: <code>add(a: int, b: int)</code></h4>
+                <pre><code>add:
+    ; Prologue
+    push rbp
+    mov rbp, rsp
+    sub rsp, 16        ; Space for a and b
+    
+    ; Save parameters to stack
+    mov [rbp-8], rdi   ; a = first arg
+    mov [rbp-16], rsi  ; b = second arg
+    
+    ; Body: return a + b
+    push qword [rbp-8]   ; Load a
+    push qword [rbp-16]  ; Load b
+    pop rcx
+    pop rax
+    add rax, rcx
+    push rax
+    
+    ; Return
+    pop rax
+    
+    ; Epilogue
+    mov rsp, rbp
+    pop rbp
+    ret</code></pre>
+            </div>
+        </div>
+
+        <!-- Section 5: Stack Frame Layout -->
+        <div class="section" id="section-stack">
+            <div class="section-header" onclick="toggleSection('section-stack')">
+                <h3 class="section-title">📚 Stack Frame with Parameters</h3>
+                <span class="section-toggle">▶</span>
+            </div>
+            <div class="section-content">
+                <pre><code>During call to add(5, 3):
+
+┌────────────────────────────────────────────────────────────┐
+│                                             Higher Addresses│
+├──────────────────┬─────────────────────────────────────────┤
+│ return address   │ (pushed by CALL instruction)            │
+├──────────────────┼─────────────────────────────────────────┤
+│ saved rbp        │ ← RBP points here                       │
+├──────────────────┼─────────────────────────────────────────┤
+│ a (param 0)      │ [rbp - 8]  = 5 (from RDI)               │
+├──────────────────┼─────────────────────────────────────────┤
+│ b (param 1)      │ [rbp - 16] = 3 (from RSI)               │
+├──────────────────┼─────────────────────────────────────────┤
+│ (expression      │ ← RSP (stack grows down)                │
+│  evaluation)     │                                         │
+└──────────────────┴─────────────────────────────────────────┘
+                                              Lower Addresses</code></pre>
+
+                <h4 style="margin-top: var(--space-6);">Key Points</h4>
+                <ul>
+                    <li><strong>Parameters occupy first N slots</strong> (same as local variables)</li>
+                    <li><strong>Local variables follow parameters</strong> in subsequent slots</li>
+                    <li><strong>CALL instruction</strong> automatically pushes return address</li>
+                    <li><strong>RET instruction</strong> pops return address and jumps to it</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Section 6: New Stack Machine Instruction -->
+        <div class="section" id="section-stack-machine">
+            <div class="section-header" onclick="toggleSection('section-stack-machine')">
+                <h3 class="section-title">🎯 Stack Machine CALL Instruction</h3>
+                <span class="section-toggle">▶</span>
+            </div>
+            <div class="section-content">
+                <pre><code>CALL function_name (N args)
+
+Effect:
+  1. Pop N values from stack (arguments)
+  2. Call function with those arguments
+  3. Push return value onto stack</code></pre>
+
+                <h4 style="margin-top: var(--space-6);">Example: <code>add(x, y)</code></h4>
+                <pre><code>LOAD x          ; Push x's value
+LOAD y          ; Push y's value
+CALL add (2)    ; Call with 2 arguments
+                ; Result now on stack</code></pre>
+            </div>
+        </div>
+
+        <!-- Quiz Section -->
+        <div class="section" id="section-quiz">
+            <div class="section-header" onclick="toggleSection('section-quiz')">
+                <h3 class="section-title">🧠 Check Your Understanding</h3>
+                <span class="section-toggle">▶</span>
+            </div>
+            <div class="section-content">
+                <div class="quiz" data-correct="1" data-quiz-id="q1" data-module-id="week-09"
+                    data-explanation="In the System V ABI, the first argument is passed in RDI.">
+                    <div class="quiz-question">Which register holds the first function argument?</div>
+                    <div class="quiz-options">
+                        <div class="quiz-option" data-value="0">
+                            <div class="quiz-radio"></div><span>RAX</span>
+                        </div>
+                        <div class="quiz-option" data-value="1">
+                            <div class="quiz-radio"></div><span>RDI</span>
+                        </div>
+                        <div class="quiz-option" data-value="2">
+                            <div class="quiz-radio"></div><span>RSI</span>
+                        </div>
+                        <div class="quiz-option" data-value="3">
+                            <div class="quiz-radio"></div><span>RSP</span>
+                        </div>
+                    </div>
+                    <div class="quiz-feedback"></div>
+                </div>
+
+                <div class="quiz" data-correct="0" data-quiz-id="q2" data-module-id="week-09"
+                    data-explanation="Return values are always placed in RAX by the callee, and the caller reads RAX after the call returns.">
+                    <div class="quiz-question">Where does the caller find the return value?</div>
+                    <div class="quiz-options">
+                        <div class="quiz-option" data-value="0">
+                            <div class="quiz-radio"></div><span>RAX</span>
+                        </div>
+                        <div class="quiz-option" data-value="1">
+                            <div class="quiz-radio"></div><span>On the stack</span>
+                        </div>
+                        <div class="quiz-option" data-value="2">
+                            <div class="quiz-radio"></div><span>RDI</span>
+                        </div>
+                        <div class="quiz-option" data-value="3">
+                            <div class="quiz-radio"></div><span>RBP</span>
+                        </div>
+                    </div>
+                    <div class="quiz-feedback"></div>
+                </div>
+
+                <div class="quiz" data-correct="2" data-quiz-id="q3" data-module-id="week-09"
+                    data-explanation="Arguments are pushed left-to-right, so the last argument is on top. We pop in reverse to put them in correct registers.">
+                    <div class="quiz-question">Why do we pop arguments in reverse order when calling?</div>
+                    <div class="quiz-options">
+                        <div class="quiz-option" data-value="0">
+                            <div class="quiz-radio"></div><span>It's faster</span>
+                        </div>
+                        <div class="quiz-option" data-value="1">
+                            <div class="quiz-radio"></div><span>The ABI requires it</span>
+                        </div>
+                        <div class="quiz-option" data-value="2">
+                            <div class="quiz-radio"></div><span>Stack is LIFO, last pushed is popped first</span>
+                        </div>
+                        <div class="quiz-option" data-value="3">
+                            <div class="quiz-radio"></div><span>To match Python's order</span>
+                        </div>
+                    </div>
+                    <div class="quiz-feedback"></div>
+                </div>
+
+                <div class="quiz" data-correct="1" data-quiz-id="q4" data-module-id="week-09"
+                    data-explanation="The callee must save parameters from registers to stack slots so they can be accessed like any other variable.">
+                    <div class="quiz-question">Why does the callee save parameters to the stack?</div>
+                    <div class="quiz-options">
+                        <div class="quiz-option" data-value="0">
+                            <div class="quiz-radio"></div><span>Registers are too slow</span>
+                        </div>
+                        <div class="quiz-option" data-value="1">
+                            <div class="quiz-radio"></div><span>Parameters use the same slot mechanism as
+                                variables</span>
+                        </div>
+                        <div class="quiz-option" data-value="2">
+                            <div class="quiz-radio"></div><span>The ABI forbids using registers</span>
+                        </div>
+                        <div class="quiz-option" data-value="3">
+                            <div class="quiz-radio"></div><span>To prevent stack overflow</span>
+                        </div>
+                    </div>
+                    <div class="quiz-feedback"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TA-Only: C Implementation -->
+        <div class="ta-only-content" id="ta-content-week-09" data-content-id="week-09-code">
+            <div class="ta-only-header"><span>💻</span>C Implementation</div>
+            <pre><code>// Argument registers (System V ABI order)
+static const char *arg_regs[] = {"rdi", "rsi", "rdx", "rcx", "r8", "r9"};
+
+// Generate function call
+void gen_call(AST_Node *call, Symbol_Table *table, FILE *out) {
+    // Step 1: Evaluate all arguments onto the stack
+    int n_args = 0;
+    for (AST_Node *arg = call->call.args.head; arg; arg = arg->next) {
+        gen_expr(arg, table, out);
+        n_args++;
+    }
+    
+    // Step 2: Pop arguments into registers (reverse order!)
+    for (int i = n_args - 1; i >= 0; i--) {
+        fprintf(out, "    pop %s\n", arg_regs[i]);
+    }
+    
+    // Step 3: Make the call
+    fprintf(out, "    call %.*s\n", 
+            PRINT_STRING(call->call.fn_name));
+    
+    // Step 4: Push return value onto stack
+    fprintf(out, "    push rax\n");
+}
+
+// Generate function definition
+void gen_function(AST_Node *fn, FILE *out) {
+    Symbol_Table *table = create_symbol_table();
+    
+    // Label
+    fprintf(out, "%.*s:\n", PRINT_STRING(fn->fn.name));
+    
+    // Prologue
+    fprintf(out, "    push rbp\n");
+    fprintf(out, "    mov rbp, rsp\n");
+    
+    // Count total stack slots needed
+    int n_params = count_list(&fn->fn.params);
+    int n_locals = count_locals(fn->fn.body);
+    int total_slots = n_params + n_locals;
+    
+    if (total_slots > 0) {
+        fprintf(out, "    sub rsp, %d\n", total_slots * 8);
+    }
+    
+    // Add parameters to symbol table and save to stack
+    int slot = 0;
+    for (AST_Node *param = fn->fn.params.head; param; param = param->next) {
+        // Add to symbol table
+        Symbol_Data data = {.variable_slot = slot, .type = param->param.type};
+        insert_symbol(table, param->param.name, data);
+        
+        // Save from register to stack
+        int offset = -(slot + 1) * 8;
+        fprintf(out, "    mov [rbp%+d], %s\n", offset, arg_regs[slot]);
+        slot++;
+    }
+    
+    // Generate body
+    gen_statements(fn->fn.body, table, out);
+    
+    // Epilogue
+    fprintf(out, "    mov rsp, rbp\n");
+    fprintf(out, "    pop rbp\n");
+    fprintf(out, "    ret\n");
+    
+    free_symbol_table(table);
+}</code></pre>
+        </div>
+
+        <!-- Common Mistakes Section -->
+        <div class="accordion-item" id="section-mistakes">
+            <button class="accordion-toggle" onclick="toggleSection('section-mistakes')">
+                <span>⚠️ Common Mistakes to Avoid</span>
+                <span class="toggle-icon">▼</span>
+            </button>
+            <div class="accordion-content">
+                <div style="display: flex; flex-direction: column; gap: var(--space-4);">
+
+                    <div
+                        style="padding: var(--space-4); background: rgba(239, 68, 68, 0.1); border-left: 4px solid var(--accent-red); border-radius: var(--radius-md);">
+                        <h4 style="color: var(--accent-red); margin-bottom: var(--space-2);">Mistake 1: Not Saving
+                            Parameter Registers</h4>
+                        <p style="color: var(--text-secondary); margin-bottom: var(--space-3);">
+                            Parameter registers (rdi, rsi, etc.) are caller-saved. Save them if you make any function
+                            calls.
+                        </p>
+                        <pre><code>; ❌ WRONG - Parameters lost if we call another function
+fn_add:
+    push rbp
+    mov rbp, rsp
+    sub rsp, 16
+    ; Forgot to save rdi and rsi!
+
+; ✅ CORRECT - Save parameters to stack
+fn_add:
+    push rbp
+    mov rbp, rsp
+    sub rsp, 16
+    mov [rbp - 8], rdi     ; Save first param
+    mov [rbp - 16], rsi    ; Save second param</code></pre>
+                    </div>
+
+                    <div
+                        style="padding: var(--space-4); background: rgba(239, 68, 68, 0.1); border-left: 4px solid var(--accent-red); border-radius: var(--radius-md);">
+                        <h4 style="color: var(--accent-red); margin-bottom: var(--space-2);">Mistake 2: Wrong Argument
+                            Order</h4>
+                        <p style="color: var(--text-secondary); margin-bottom: var(--space-3);">
+                            Stack is LIFO! Pop in reverse order or use temp registers.
+                        </p>
+                        <pre><code>; Stack after pushing args: [top] arg2, arg1
+
+; ❌ WRONG - Pop directly (reversed order!)
+pop rdi    ; rdi gets arg2 (should be arg1!)
+pop rsi    ; rsi gets arg1 (should be arg2!)
+
+; ✅ CORRECT - Use temp registers
+pop r11    ; r11 = arg2
+pop r10    ; r10 = arg1
+mov rdi, r10  ; rdi = arg1 (correct)
+mov rsi, r11  ; rsi = arg2 (correct)</code></pre>
+                    </div>
+
+                    <div
+                        style="padding: var(--space-4); background: rgba(239, 68, 68, 0.1); border-left: 4px solid var(--accent-red); border-radius: var(--radius-md);">
+                        <h4 style="color: var(--accent-red); margin-bottom: var(--space-2);">Mistake 3: Forgetting to
+                            Push Return Value</h4>
+                        <p style="color: var(--text-secondary); margin-bottom: var(--space-3);">
+                            After <code>call</code>, return value is in rax. Push it for stack machine to use.
+                        </p>
+                        <pre><code>; ❌ WRONG - Return value lost for further calculations
+call square
+; rax has return value but not on stack!
+
+; ✅ CORRECT - Push return value to stack
+call square
+push rax    ; Now can be used in expressions</code></pre>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <!-- Practice Problems Section -->
+        <div class="accordion-item" id="section-practice">
+            <button class="accordion-toggle" onclick="toggleSection('section-practice')">
+                <span>📝 Practice Problems</span>
+                <span class="toggle-icon">▼</span>
+            </button>
+            <div class="accordion-content">
+                <div style="display: flex; flex-direction: column; gap: var(--space-6);">
+
+                    <!-- Problem 1 -->
+                    <div
+                        style="background: var(--bg-card); border: 1px solid var(--border-default); border-radius: var(--radius-lg); padding: var(--space-5);">
+                        <h4 style="color: var(--accent-cyan); margin-bottom: var(--space-3);">Problem 1: Single
+                            Parameter</h4>
+                        <p style="margin-bottom: var(--space-3);">What is the exit code?</p>
+                        <pre><code>fn double(x: int) -> int {
+    return x * 2
+}
+
+fn main() -> int {
+    return double(5)
+}</code></pre>
+                        <details style="margin-top: var(--space-4);">
+                            <summary style="cursor: pointer; color: var(--accent-purple); font-weight: 600;">Click to
+                                reveal solution</summary>
+                            <div
+                                style="margin-top: var(--space-3); padding: var(--space-4); background: rgba(16, 185, 129, 0.1); border-radius: var(--radius-md);">
+                                <p><strong>Answer: Exit code 10</strong></p>
+                                <ul style="padding-left: var(--space-5);">
+                                    <li>Parameter x saved from rdi to [rbp - 8]</li>
+                                    <li>x * 2 = 5 * 2 = 10</li>
+                                    <li>Return value in rax</li>
+                                </ul>
+                            </div>
+                        </details>
+                    </div>
+
+                    <!-- Problem 2 -->
+                    <div
+                        style="background: var(--bg-card); border: 1px solid var(--border-default); border-radius: var(--radius-lg); padding: var(--space-5);">
+                        <h4 style="color: var(--accent-cyan); margin-bottom: var(--space-3);">Problem 2: Multiple
+                            Arguments</h4>
+                        <p style="margin-bottom: var(--space-3);">What is the exit code?</p>
+                        <pre><code>fn add(a: int, b: int) -> int {
+    return a + b
+}
+
+fn main() -> int {
+    return add(10, 15)
+}</code></pre>
+                        <details style="margin-top: var(--space-4);">
+                            <summary style="cursor: pointer; color: var(--accent-purple); font-weight: 600;">Click to
+                                reveal solution</summary>
+                            <div
+                                style="margin-top: var(--space-3); padding: var(--space-4); background: rgba(16, 185, 129, 0.1); border-radius: var(--radius-md);">
+                                <p><strong>Answer: Exit code 25</strong></p>
+                                <ul style="padding-left: var(--space-5);">
+                                    <li>a saved from rdi → [rbp - 8]</li>
+                                    <li>b saved from rsi → [rbp - 16]</li>
+                                    <li>10 + 15 = 25</li>
+                                </ul>
+                            </div>
+                        </details>
+                    </div>
+
+                    <!-- Problem 3 -->
+                    <div
+                        style="background: var(--bg-card); border: 1px solid var(--border-default); border-radius: var(--radius-lg); padding: var(--space-5);">
+                        <h4 style="color: var(--accent-cyan); margin-bottom: var(--space-3);">Problem 3: Nested Calls
+                        </h4>
+                        <p style="margin-bottom: var(--space-3);">What is the exit code?</p>
+                        <pre><code>fn square(x: int) -> int {
+    return x * x
+}
+
+fn main() -> int {
+    return square(2) + square(3)
+}</code></pre>
+                        <details style="margin-top: var(--space-4);">
+                            <summary style="cursor: pointer; color: var(--accent-purple); font-weight: 600;">Click to
+                                reveal solution</summary>
+                            <div
+                                style="margin-top: var(--space-3); padding: var(--space-4); background: rgba(16, 185, 129, 0.1); border-radius: var(--radius-md);">
+                                <p><strong>Answer: Exit code 13</strong></p>
+                                <ol style="padding-left: var(--space-5);">
+                                    <li><code>square(2)</code> returns 4, pushed on stack</li>
+                                    <li><code>square(3)</code> returns 9, pushed on stack</li>
+                                    <li>ADD pops both: 4 + 9 = 13</li>
+                                </ol>
+                            </div>
+                        </details>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <!-- Navigation -->
+        <div
+            style="display: flex; justify-content: space-between; align-items: center; padding: var(--space-6); background: var(--bg-card); border-radius: var(--radius-xl); border: 1px solid var(--border-default); margin-top: var(--space-10);">
+            <a href="#" onclick="event.preventDefault(); UnlockSystem.navigateToModule('week-08', 'week-08-variables.html');"
+                style="display: flex; align-items: center; gap: var(--space-2); color: var(--text-secondary);">← Week
+                8</a>
+            <a href="#" onclick="event.preventDefault(); UnlockSystem.navigateToModule('week-10', 'week-10-builtins.html');"
+                style="display: flex; align-items: center; gap: var(--space-2); padding: var(--space-3) var(--space-5); background: var(--gradient-primary); color: white; border-radius: var(--radius-md); font-weight: 600;">
+                Next: Built-in Functions →
+            </a>
+        </div>
+    </main>
+
+    <script src="../js/modules-data.js"></script>
+    <script src="../js/unlock.js"></script>
+    <script src="../js/progress.js"></script>
+    <script src="../js/quiz.js"></script>
+    <script>
+        function toggleSection(sectionId) {
+            const section = document.getElementById(sectionId);
+            if (section) {
+                section.classList.toggle('open');
+                if (section.classList.contains('open') && window.ProgressTracker) {
+                    ProgressTracker.expandSection('week-09', sectionId);
+                    updateProgress();
+                }
+            }
+        }
+
+        function updateProgress() {
+            if (window.ProgressTracker) {
+                const progress = ProgressTracker.getModuleProgress('week-09');
+                const bar = document.getElementById('moduleProgress');
+                if (bar) bar.style.width = `${progress.percentComplete}%`;
+            }
+        }
+
+        function checkTAContent() {
+            if (window.UnlockSystem) {
+                document.querySelectorAll('.ta-only-content').forEach(el => {
+                    if (UnlockSystem.isTAContentUnlocked(el.dataset.contentId)) {
+                        el.classList.add('unlocked');
+                    }
+                });
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const toggle = document.getElementById('themeToggle');
+            const savedTheme = localStorage.getItem('cs5008_theme') || 'dark';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            toggle.textContent = savedTheme === 'dark' ? '🌙' : '☀️';
+
+            toggle.addEventListener('click', () => {
+                const current = document.documentElement.getAttribute('data-theme');
+                const next = current === 'dark' ? 'light' : 'dark';
+                document.documentElement.setAttribute('data-theme', next);
+                localStorage.setItem('cs5008_theme', next);
+                toggle.textContent = next === 'dark' ? '🌙' : '☀️';
+            });
+
+            if (window.UnlockSystem) { UnlockSystem.init(); checkTAContent(); }
+            if (window.ProgressTracker) { ProgressTracker.visitModule('week-09'); updateProgress(); }
+        });
+    </script>
+</body>
+
+</html>

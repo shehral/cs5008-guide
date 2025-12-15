@@ -1,0 +1,733 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quick Reference | CS5008 Study Guide</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <style>
+        .reference-container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: var(--space-6);
+        }
+
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: var(--space-2);
+            color: var(--text-secondary);
+            text-decoration: none;
+            margin-bottom: var(--space-6);
+            transition: color 0.2s;
+        }
+
+        .back-link:hover {
+            color: var(--accent-cyan);
+        }
+
+        .section-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-default);
+            border-radius: var(--radius-xl);
+            padding: var(--space-6);
+            margin-bottom: var(--space-6);
+        }
+
+        .section-card h2 {
+            color: var(--accent-cyan);
+            margin-bottom: var(--space-4);
+            display: flex;
+            align-items: center;
+            gap: var(--space-3);
+        }
+
+        .reference-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9rem;
+            margin-bottom: var(--space-4);
+        }
+
+        .reference-table thead tr {
+            background: var(--bg-elevated);
+        }
+
+        .reference-table th,
+        .reference-table td {
+            padding: var(--space-3);
+            text-align: left;
+            border-bottom: 1px solid var(--border-default);
+        }
+
+        .reference-table code {
+            background: var(--bg-terminal);
+            padding: 2px 6px;
+            border-radius: var(--radius-sm);
+            font-family: var(--font-mono);
+            color: var(--accent-green);
+        }
+
+        .diagram-box {
+            background: var(--bg-terminal);
+            padding: var(--space-4);
+            border-radius: var(--radius-md);
+            font-family: var(--font-mono);
+            font-size: 0.85rem;
+            line-height: 1.5;
+            overflow-x: auto;
+            color: #e6e6e6;
+        }
+
+        .toc {
+            background: var(--bg-elevated);
+            padding: var(--space-4);
+            border-radius: var(--radius-lg);
+            margin-bottom: var(--space-6);
+        }
+
+        .toc-title {
+            font-weight: 600;
+            margin-bottom: var(--space-3);
+            color: var(--text-primary);
+        }
+
+        .toc-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: var(--space-2);
+        }
+
+        .toc-list a {
+            color: var(--accent-purple);
+            text-decoration: none;
+            padding: var(--space-1) 0;
+        }
+
+        .toc-list a:hover {
+            text-decoration: underline;
+        }
+
+        .comparison-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: var(--space-4);
+        }
+
+        @media (max-width: 600px) {
+            .comparison-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .comparison-box {
+            background: var(--bg-elevated);
+            border-radius: var(--radius-md);
+            padding: var(--space-4);
+        }
+
+        .comparison-box h4 {
+            margin-bottom: var(--space-2);
+            font-size: 0.9rem;
+        }
+
+        .comparison-box.python h4 {
+            color: #3776ab;
+        }
+
+        .comparison-box.c h4 {
+            color: var(--accent-green);
+        }
+    </style>
+</head>
+
+<body>
+    <div class="reference-container">
+        <!-- Header with theme toggle -->
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-4);">
+            <a href="index.html" class="back-link" style="margin-bottom: 0;">← Back to Guide</a>
+            <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme"
+                style="background: var(--bg-card); border: 1px solid var(--border-default); border-radius: 8px; padding: 8px 12px; cursor: pointer; font-size: 1.25rem;">🌙</button>
+        </div>
+
+        <h1 style="margin-bottom: var(--space-2);">📋 Quick Reference</h1>
+        <p style="color: var(--text-secondary); margin-bottom: var(--space-6);">Essential tables and diagrams for exam
+            prep</p>
+
+        <!-- Table of Contents -->
+        <div class="toc">
+            <div class="toc-title">Jump to Section</div>
+            <div class="toc-list">
+                <a href="#registers">x86-64 Registers</a>
+                <a href="#instructions">Assembly Instructions</a>
+                <a href="#stack-machine">Stack Machine</a>
+                <a href="#calling">Calling Convention</a>
+                <a href="#precedence">Operator Precedence</a>
+                <a href="#memory">Memory Layout</a>
+                <a href="#pipeline">Compiler Pipeline</a>
+                <a href="#comparisons">Python vs C</a>
+            </div>
+        </div>
+
+        <!-- x86-64 Registers -->
+        <div class="section-card" id="registers">
+            <h2>📦 x86-64 Registers</h2>
+            <table class="reference-table">
+                <thead>
+                    <tr>
+                        <th>Register</th>
+                        <th>Size</th>
+                        <th>Purpose</th>
+                        <th>Preserved?</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>rax</code></td>
+                        <td>64-bit</td>
+                        <td>Return value, arithmetic</td>
+                        <td>Caller-saved</td>
+                    </tr>
+                    <tr>
+                        <td><code>rbx</code></td>
+                        <td>64-bit</td>
+                        <td>General purpose</td>
+                        <td>Callee-saved</td>
+                    </tr>
+                    <tr>
+                        <td><code>rcx</code></td>
+                        <td>64-bit</td>
+                        <td>4th argument, counter</td>
+                        <td>Caller-saved</td>
+                    </tr>
+                    <tr>
+                        <td><code>rdx</code></td>
+                        <td>64-bit</td>
+                        <td>3rd argument, remainder</td>
+                        <td>Caller-saved</td>
+                    </tr>
+                    <tr>
+                        <td><code>rsi</code></td>
+                        <td>64-bit</td>
+                        <td>2nd argument</td>
+                        <td>Caller-saved</td>
+                    </tr>
+                    <tr>
+                        <td><code>rdi</code></td>
+                        <td>64-bit</td>
+                        <td>1st argument</td>
+                        <td>Caller-saved</td>
+                    </tr>
+                    <tr>
+                        <td><code>rbp</code></td>
+                        <td>64-bit</td>
+                        <td>Base pointer (frame)</td>
+                        <td>Callee-saved</td>
+                    </tr>
+                    <tr>
+                        <td><code>rsp</code></td>
+                        <td>64-bit</td>
+                        <td>Stack pointer</td>
+                        <td>Special</td>
+                    </tr>
+                    <tr>
+                        <td><code>r8-r9</code></td>
+                        <td>64-bit</td>
+                        <td>5th, 6th arguments</td>
+                        <td>Caller-saved</td>
+                    </tr>
+                    <tr>
+                        <td><code>r12-r15</code></td>
+                        <td>64-bit</td>
+                        <td>General purpose</td>
+                        <td>Callee-saved</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h4 style="margin-top: var(--space-4); color: var(--text-secondary);">Register Hierarchy</h4>
+            <div class="diagram-box">
+                rax (64-bit): [--------64 bits--------]
+                eax (32-bit): [--32 bits--]
+                ax (16-bit): [16 bits]
+                al (8-bit): [8b]
+                ah (8-bit): [8b]
+            </div>
+        </div>
+
+        <!-- Assembly Instructions -->
+        <div class="section-card" id="instructions">
+            <h2>⚙️ Common Assembly Instructions</h2>
+            <table class="reference-table">
+                <thead>
+                    <tr>
+                        <th>Instruction</th>
+                        <th>Description</th>
+                        <th>Example</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>mov dst, src</code></td>
+                        <td>Move/copy value</td>
+                        <td><code>mov rax, 42</code></td>
+                    </tr>
+                    <tr>
+                        <td><code>add dst, src</code></td>
+                        <td>Addition</td>
+                        <td><code>add rax, rcx</code></td>
+                    </tr>
+                    <tr>
+                        <td><code>sub dst, src</code></td>
+                        <td>Subtraction</td>
+                        <td><code>sub rax, 5</code></td>
+                    </tr>
+                    <tr>
+                        <td><code>imul src</code></td>
+                        <td>Signed multiply (rax * src → rdx:rax)</td>
+                        <td><code>imul rcx</code></td>
+                    </tr>
+                    <tr>
+                        <td><code>idiv src</code></td>
+                        <td>Signed divide (rdx:rax / src)</td>
+                        <td><code>idiv rcx</code></td>
+                    </tr>
+                    <tr>
+                        <td><code>cqo</code></td>
+                        <td>Sign-extend rax → rdx</td>
+                        <td><code>cqo</code></td>
+                    </tr>
+                    <tr>
+                        <td><code>push src</code></td>
+                        <td>Push to stack (rsp -= 8)</td>
+                        <td><code>push rax</code></td>
+                    </tr>
+                    <tr>
+                        <td><code>pop dst</code></td>
+                        <td>Pop from stack (rsp += 8)</td>
+                        <td><code>pop rcx</code></td>
+                    </tr>
+                    <tr>
+                        <td><code>call func</code></td>
+                        <td>Call function</td>
+                        <td><code>call foo</code></td>
+                    </tr>
+                    <tr>
+                        <td><code>ret</code></td>
+                        <td>Return from function</td>
+                        <td><code>ret</code></td>
+                    </tr>
+                    <tr>
+                        <td><code>cmp a, b</code></td>
+                        <td>Compare (sets flags)</td>
+                        <td><code>cmp rax, 0</code></td>
+                    </tr>
+                    <tr>
+                        <td><code>test a, b</code></td>
+                        <td>Bitwise AND (sets flags)</td>
+                        <td><code>test rax, rax</code></td>
+                    </tr>
+                    <tr>
+                        <td><code>je label</code></td>
+                        <td>Jump if equal (ZF=1)</td>
+                        <td><code>je .L1</code></td>
+                    </tr>
+                    <tr>
+                        <td><code>jne label</code></td>
+                        <td>Jump if not equal</td>
+                        <td><code>jne .L2</code></td>
+                    </tr>
+                    <tr>
+                        <td><code>jl / jg</code></td>
+                        <td>Jump if less / greater</td>
+                        <td><code>jl .L3</code></td>
+                    </tr>
+                    <tr>
+                        <td><code>jmp label</code></td>
+                        <td>Unconditional jump</td>
+                        <td><code>jmp .L4</code></td>
+                    </tr>
+                    <tr>
+                        <td><code>lea dst, [addr]</code></td>
+                        <td>Load effective address</td>
+                        <td><code>lea rax, [rbp-8]</code></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Stack Machine Instructions -->
+        <div class="section-card" id="stack-machine">
+            <h2>📚 Stack Machine Instructions</h2>
+            <table class="reference-table">
+                <thead>
+                    <tr>
+                        <th>Instruction</th>
+                        <th>Description</th>
+                        <th>Stack Effect</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>PUSH value</code></td>
+                        <td>Push constant</td>
+                        <td>[...] → [..., value]</td>
+                    </tr>
+                    <tr>
+                        <td><code>ADD</code></td>
+                        <td>Pop 2, push sum</td>
+                        <td>[..., a, b] → [..., a+b]</td>
+                    </tr>
+                    <tr>
+                        <td><code>SUB</code></td>
+                        <td>Pop 2, push difference</td>
+                        <td>[..., a, b] → [..., a-b]</td>
+                    </tr>
+                    <tr>
+                        <td><code>MUL</code></td>
+                        <td>Pop 2, push product</td>
+                        <td>[..., a, b] → [..., a*b]</td>
+                    </tr>
+                    <tr>
+                        <td><code>DIV</code></td>
+                        <td>Pop 2, push quotient</td>
+                        <td>[..., a, b] → [..., a/b]</td>
+                    </tr>
+                    <tr>
+                        <td><code>MOD</code></td>
+                        <td>Pop 2, push remainder</td>
+                        <td>[..., a, b] → [..., a%b]</td>
+                    </tr>
+                    <tr>
+                        <td><code>LOAD slot</code></td>
+                        <td>Load variable</td>
+                        <td>[...] → [..., var]</td>
+                    </tr>
+                    <tr>
+                        <td><code>STORE slot</code></td>
+                        <td>Pop & store to variable</td>
+                        <td>[..., val] → [...]</td>
+                    </tr>
+                    <tr>
+                        <td><code>CALL fn, argc</code></td>
+                        <td>Call function</td>
+                        <td>[..., args] → [..., result]</td>
+                    </tr>
+                    <tr>
+                        <td><code>RETURN</code></td>
+                        <td>Pop & return</td>
+                        <td>[..., val] → exit</td>
+                    </tr>
+                    <tr>
+                        <td><code>JUMP_IF_FALSE lbl</code></td>
+                        <td>Pop, jump if 0</td>
+                        <td>[..., cond] → [...]</td>
+                    </tr>
+                    <tr>
+                        <td><code>JUMP lbl</code></td>
+                        <td>Unconditional jump</td>
+                        <td>[...] → [...]</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Calling Convention -->
+        <div class="section-card" id="calling">
+            <h2>📞 System V x86-64 Calling Convention</h2>
+            <table class="reference-table">
+                <thead>
+                    <tr>
+                        <th>Element</th>
+                        <th>Details</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Arguments (1-6)</strong></td>
+                        <td><code>rdi, rsi, rdx, rcx, r8, r9</code></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Arguments (7+)</strong></td>
+                        <td>Pushed on stack (right to left)</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Return Value</strong></td>
+                        <td><code>rax</code></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Caller-saved</strong></td>
+                        <td><code>rax, rcx, rdx, rsi, rdi, r8-r11</code></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Callee-saved</strong></td>
+                        <td><code>rbx, rbp, r12-r15</code></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Stack Alignment</strong></td>
+                        <td>16-byte before <code>call</code></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Variable at slot N</strong></td>
+                        <td><code>[rbp - (N+1)*8]</code></td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h4 style="margin-top: var(--space-4); color: var(--text-secondary);">Function Prologue / Epilogue</h4>
+            <div class="comparison-grid">
+                <div class="comparison-box">
+                    <h4 style="color: var(--accent-cyan);">Prologue</h4>
+                    <div class="diagram-box">
+                        push rbp ; Save old frame
+                        mov rbp, rsp ; New frame base
+                        sub rsp, N ; Space for locals
+                    </div>
+                </div>
+                <div class="comparison-box">
+                    <h4 style="color: var(--accent-purple);">Epilogue</h4>
+                    <div class="diagram-box">
+                        mov rsp, rbp ; Restore stack
+                        pop rbp ; Restore frame
+                        ret ; Return
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Operator Precedence -->
+        <div class="section-card" id="precedence">
+            <h2>🎯 Operator Precedence (High to Low)</h2>
+            <table class="reference-table">
+                <thead>
+                    <tr>
+                        <th>Level</th>
+                        <th>Operators</th>
+                        <th>Associativity</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>1</td>
+                        <td><code>()</code> grouping</td>
+                        <td>N/A</td>
+                    </tr>
+                    <tr>
+                        <td>2</td>
+                        <td><code>- ~ !</code> unary</td>
+                        <td>Right</td>
+                    </tr>
+                    <tr>
+                        <td>3</td>
+                        <td><code>* / %</code></td>
+                        <td>Left</td>
+                    </tr>
+                    <tr>
+                        <td>4</td>
+                        <td><code>+ -</code> binary</td>
+                        <td>Left</td>
+                    </tr>
+                    <tr>
+                        <td>5</td>
+                        <td><code>&lt; &gt; &lt;= &gt;=</code></td>
+                        <td>Left</td>
+                    </tr>
+                    <tr>
+                        <td>6</td>
+                        <td><code>== !=</code></td>
+                        <td>Left</td>
+                    </tr>
+                    <tr>
+                        <td>7</td>
+                        <td><code>&amp;&amp;</code> logical AND</td>
+                        <td>Left</td>
+                    </tr>
+                    <tr>
+                        <td>8</td>
+                        <td><code>||</code> logical OR</td>
+                        <td>Left</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Memory Layout -->
+        <div class="section-card" id="memory">
+            <h2>🧠 Memory Layout</h2>
+            <h4 style="color: var(--text-secondary); margin-bottom: var(--space-3);">Stack Frame</h4>
+            <div class="diagram-box">
+                <pre style="margin:0;">Higher addresses
+┌──────────────────────┐
+│   caller's stack     │
+├──────────────────────┤
+│   return address     │  ← pushed by call
+├──────────────────────┤
+│   saved rbp          │  ← rbp points here
+├──────────────────────┤
+│   param 0  (slot 0)  │  ← [rbp - 8]  (from rdi)
+├──────────────────────┤
+│   param 1  (slot 1)  │  ← [rbp - 16] (from rsi)
+├──────────────────────┤
+│   local 0  (slot 2)  │  ← [rbp - 24]
+├──────────────────────┤
+│   local 1  (slot 3)  │  ← [rbp - 32]
+└──────────────────────┘  ← rsp
+Lower addresses</pre>
+            </div>
+
+            <h4 style="color: var(--text-secondary); margin-top: var(--space-4); margin-bottom: var(--space-3);">Pointer
+                Arithmetic</h4>
+            <div class="diagram-box">
+                <pre style="margin:0;">int arr[5] = {10, 20, 30, 40, 50};
+int *ptr = arr + 2;
+
+Memory:
+┌────┬────┬────┬────┬────┐
+│ 10 │ 20 │ 30 │ 40 │ 50 │
+└────┴────┴────┴────┴────┘
+  ↑         ↑
+ arr       ptr
+
+*ptr       = 30  (arr[2])
+*(ptr + 1) = 40  (arr[3])
+*(ptr - 1) = 20  (arr[1])
+ptr[1]     = 40  (same as *(ptr + 1))
+
+Key: ptr + n moves n × sizeof(int) bytes</pre>
+            </div>
+        </div>
+
+        <!-- Compiler Pipeline -->
+        <div class="section-card" id="pipeline">
+            <h2>🔄 Compiler Pipeline</h2>
+            <div class="diagram-box">
+                <pre style="margin:0;">┌──────────────────────────────────────────────────────┐
+│  Step 1: LEXER (Lexical Analysis)                    │
+│  Breaks source code into tokens                      │
+└──────────────────────────────────────────────────────┘
+  Input:  fn main() -> int { return 42 }
+  Output: [fn, main, (, ), ->, int, {, return, 42, }]
+                            ↓
+┌──────────────────────────────────────────────────────┐
+│  Step 2: PARSER (Syntax Analysis)                    │
+│  Builds Abstract Syntax Tree (AST)                   │
+└──────────────────────────────────────────────────────┘
+  Output: FN_DEF(name="main", body=[RETURN(INTEGER(42))])
+                            ↓
+┌──────────────────────────────────────────────────────┐
+│  Step 3: CODE GENERATOR                              │
+│  Generates stack machine instructions                │
+└──────────────────────────────────────────────────────┘
+  Output: FN main
+          PUSH 42
+          RETURN
+                            ↓
+┌──────────────────────────────────────────────────────┐
+│  Step 4: ASSEMBLY GENERATOR                          │
+│  Converts to x86-64 assembly                         │
+└──────────────────────────────────────────────────────┘
+  Output: main:
+          mov rax, 42
+          ret
+                            ↓
+┌──────────────────────────────────────────────────────┐
+│  Step 5: ASSEMBLER + LINKER (nasm + ld)              │
+│  Creates executable binary                           │
+└──────────────────────────────────────────────────────┘
+  Output: ./main (executable)</pre>
+            </div>
+        </div>
+
+        <!-- Python vs C -->
+        <div class="section-card" id="comparisons">
+            <h2>🐍 Python vs C Comparisons</h2>
+
+            <h4 style="color: var(--text-secondary); margin-bottom: var(--space-3);">Variables & Memory</h4>
+            <div class="comparison-grid">
+                <div class="comparison-box python">
+                    <h4>Python</h4>
+                    <div class="diagram-box">
+                        x = 42 # Label to object
+                        x = "hello" # Same label, new object
+                        # Automatic garbage collection
+                    </div>
+                </div>
+                <div class="comparison-box c">
+                    <h4>C</h4>
+                    <div class="diagram-box">
+                        int x = 42; // Memory location
+                        x = 100; // Same location
+                        // Manual memory management
+                    </div>
+                </div>
+            </div>
+
+            <h4 style="color: var(--text-secondary); margin-top: var(--space-4); margin-bottom: var(--space-3);">Strings
+            </h4>
+            <div class="comparison-grid">
+                <div class="comparison-box python">
+                    <h4>Python</h4>
+                    <div class="diagram-box">
+                        s = "hello"
+                        len(s) # O(1)
+                        s + " world" # Easy concat
+                        s == "hello" # Value comparison
+                    </div>
+                </div>
+                <div class="comparison-box c">
+                    <h4>C</h4>
+                    <div class="diagram-box">
+                        char *s = "hello";
+                        strlen(s); // O(n) scan
+                        strcat(dst, s); // Requires buffer
+                        strcmp(s, "hello"); // Returns 0 if equal
+                    </div>
+                </div>
+            </div>
+
+            <h4 style="color: var(--text-secondary); margin-top: var(--space-4); margin-bottom: var(--space-3);">Arrays
+            </h4>
+            <div class="comparison-grid">
+                <div class="comparison-box python">
+                    <h4>Python</h4>
+                    <div class="diagram-box">
+                        arr = [1, 2, 3]
+                        arr.append(4) # Dynamic sizing
+                        len(arr) # Built-in length
+                    </div>
+                </div>
+                <div class="comparison-box c">
+                    <h4>C</h4>
+                    <div class="diagram-box">
+                        int arr[3] = {1, 2, 3};
+                        // Fixed size, no append
+                        // No built-in length tracking
+                        sizeof(arr)/sizeof(arr[0]); // Compile-time only
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // Theme toggle
+        document.addEventListener('DOMContentLoaded', () => {
+            const toggle = document.getElementById('themeToggle');
+            const savedTheme = localStorage.getItem('cs5008_theme') || 'dark';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            toggle.textContent = savedTheme === 'dark' ? '🌙' : '☀️';
+
+            toggle.addEventListener('click', () => {
+                const current = document.documentElement.getAttribute('data-theme');
+                const next = current === 'dark' ? 'light' : 'dark';
+                document.documentElement.setAttribute('data-theme', next);
+                localStorage.setItem('cs5008_theme', next);
+                toggle.textContent = next === 'dark' ? '🌙' : '☀️';
+            });
+        });
+    </script>
+</body>
+
+</html>
