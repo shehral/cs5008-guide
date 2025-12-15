@@ -10,11 +10,6 @@ CLAUDE.md
 # Internal documentation (not needed in repo)
 CONTENT_MAPPING.md
 
-# Large media files (optional - uncomment if you want to exclude these)
-# From_Abstraction_to_Architecture.pdf
-# How_Code_Becomes_a_Program.mp4
-# course_infographic.png
-
 # Logs
 *.log
 npm-debug.log*
