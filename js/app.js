@@ -25,13 +25,14 @@ const App = {
     /**
      * Wait for dependent systems to initialize
      */
-    waitForSystems() {
+    async waitForSystems() {
         return new Promise(resolve => {
-            const check = () => {
+            const check = async () => {
                 if (window.UnlockSystem && window.ProgressTracker && window.SearchSystem) {
                     UnlockSystem.init();
                     ProgressTracker.init();
-                    SearchSystem.init();
+                    // SearchSystem.init() is now async and indexes actual content
+                    await SearchSystem.init();
                     resolve();
                 } else {
                     setTimeout(check, 10);

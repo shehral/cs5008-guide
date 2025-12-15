@@ -6,48 +6,124 @@
 const SearchSystem = {
     searchIndex: [],
     isInitialized: false,
+    isIndexing: false,
 
     /**
      * Initialize the search system
      */
-    init() {
+    async init() {
+        if (this.isInitialized || this.isIndexing) return;
+
+        this.isIndexing = true;
         // Build search index from unlocked modules
-        this.buildIndex();
+        await this.buildIndex();
         this.isInitialized = true;
+        this.isIndexing = false;
     },
 
     /**
-     * Build the search index from module data
-     * In a full implementation, this would index actual content
+     * Build the search index from module data and actual content
      */
-    buildIndex() {
+    async buildIndex() {
         this.searchIndex = [];
 
-        MODULES.forEach(module => {
+        for (const module of MODULES) {
             // Only index unlocked modules
-            if (!UnlockSystem.isModuleUnlocked(module.id)) return;
+            if (!UnlockSystem.isModuleUnlocked(module.id)) continue;
 
-            // Add module itself
+            // Add module metadata
             this.searchIndex.push({
                 type: 'module',
                 moduleId: module.id,
                 title: module.title,
                 description: module.description,
                 topics: module.topics,
+                url: `content/${module.contentFile}`,
                 searchText: `${module.title} ${module.description} ${module.topics.join(' ')}`.toLowerCase()
             });
 
-            // Add topics as separate entries
-            module.topics.forEach(topic => {
-                this.searchIndex.push({
-                    type: 'topic',
-                    moduleId: module.id,
-                    moduleTitle: module.title,
-                    title: topic,
-                    searchText: topic.toLowerCase()
-                });
+            // Fetch and index actual content
+            try {
+                const content = await this.fetchModuleContent(module);
+                if (content) {
+                    // Index sections
+                    content.sections.forEach(section => {
+                        this.searchIndex.push({
+                            type: 'section',
+                            moduleId: module.id,
+                            moduleTitle: module.title,
+                            title: section.title,
+                            content: section.content,
+                            url: `content/${module.contentFile}#${section.id}`,
+                            searchText: `${section.title} ${section.content}`.toLowerCase()
+                        });
+                    });
+
+                    // Index code snippets
+                    content.codeSnippets.forEach((snippet, index) => {
+                        this.searchIndex.push({
+                            type: 'code',
+                            moduleId: module.id,
+                            moduleTitle: module.title,
+                            title: `Code snippet in ${module.title}`,
+                            content: snippet,
+                            url: `content/${module.contentFile}`,
+                            searchText: snippet.toLowerCase()
+                        });
+                    });
+                }
+            } catch (error) {
+                console.warn(`Failed to index content for ${module.id}:`, error);
+            }
+        }
+    },
+
+    /**
+     * Fetch and parse module content from HTML file
+     */
+    async fetchModuleContent(module) {
+        try {
+            const response = await fetch(`content/${module.contentFile}`);
+            if (!response.ok) return null;
+
+            const html = await response.text();
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(html, 'text/html');
+
+            const sections = [];
+            const codeSnippets = [];
+
+            // Extract sections
+            doc.querySelectorAll('.section').forEach(section => {
+                const header = section.querySelector('.section-title');
+                const content = section.querySelector('.section-content');
+
+                if (header && content) {
+                    const sectionId = section.id || '';
+                    const title = header.textContent.trim();
+                    const text = content.textContent.trim().substring(0, 500); // Limit length
+
+                    sections.push({
+                        id: sectionId,
+                        title: title,
+                        content: text
+                    });
+                }
             });
-        });
+
+            // Extract code snippets
+            doc.querySelectorAll('pre code, .code-block').forEach(code => {
+                const snippet = code.textContent.trim();
+                if (snippet.length > 10 && snippet.length < 500) {
+                    codeSnippets.push(snippet);
+                }
+            });
+
+            return { sections, codeSnippets };
+        } catch (error) {
+            console.error(`Error fetching ${module.contentFile}:`, error);
+            return null;
+        }
     },
 
     /**
@@ -60,25 +136,51 @@ const SearchSystem = {
         }
 
         const queryLower = query.toLowerCase().trim();
-        const queryWords = queryLower.split(/\s+/);
+        const queryWords = queryLower.split(/\s+/).filter(w => w.length > 1);
 
         const results = [];
 
         this.searchIndex.forEach(item => {
             let score = 0;
 
-            // Exact match in title
-            if (item.title.toLowerCase().includes(queryLower)) {
-                score += 10;
+            // Type-based relevance boosting
+            const typeBoost = {
+                'module': 3,
+                'section': 2,
+                'topic': 2,
+                'code': 1
+            };
+
+            // Exact phrase match in title (highest priority)
+            if (item.title && item.title.toLowerCase().includes(queryLower)) {
+                score += 20 * (typeBoost[item.type] || 1);
             }
 
-            // Partial word matches
+            // Exact phrase match in content
+            if (item.content && item.content.toLowerCase().includes(queryLower)) {
+                score += 15 * (typeBoost[item.type] || 1);
+            }
+
+            // Exact phrase match in search text
+            if (item.searchText.includes(queryLower)) {
+                score += 10 * (typeBoost[item.type] || 1);
+            }
+
+            // Individual word matches
             queryWords.forEach(word => {
-                if (item.searchText.includes(word)) {
-                    score += 2;
+                // Title matches
+                if (item.title && item.title.toLowerCase().includes(word)) {
+                    score += 5 * (typeBoost[item.type] || 1);
                 }
-                if (item.title.toLowerCase().includes(word)) {
-                    score += 3;
+
+                // Content matches
+                if (item.content && item.content.toLowerCase().includes(word)) {
+                    score += 3 * (typeBoost[item.type] || 1);
+                }
+
+                // General search text matches
+                if (item.searchText.includes(word)) {
+                    score += 2 * (typeBoost[item.type] || 1);
                 }
             });
 
@@ -86,7 +188,7 @@ const SearchSystem = {
                 results.push({
                     ...item,
                     score,
-                    highlight: this.highlightMatches(item.title, queryWords)
+                    highlight: this.highlightMatches(item.title || item.content?.substring(0, 100) || '', queryWords)
                 });
             }
         });
@@ -94,8 +196,8 @@ const SearchSystem = {
         // Sort by score descending
         results.sort((a, b) => b.score - a.score);
 
-        // Return top 10 results
-        return results.slice(0, 10);
+        // Return top 15 results
+        return results.slice(0, 15);
     },
 
     /**
@@ -120,8 +222,10 @@ const SearchSystem = {
     /**
      * Rebuild index when modules are unlocked
      */
-    rebuildIndex() {
-        this.buildIndex();
+    async rebuildIndex() {
+        this.isInitialized = false;
+        await this.buildIndex();
+        this.isInitialized = true;
     }
 };
 
