@@ -564,6 +564,8 @@ pre code {
   color: var(--text-secondary);
   max-width: 600px;
   margin: 0 auto var(--space-8);
+  text-align: center;
+  line-height: 1.6;
 }
 
 /* Terminal-style tagline */
