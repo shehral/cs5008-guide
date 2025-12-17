@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Tutor | CS5008 Guide</title>
+    <link rel="stylesheet" href="/css/styles.css">
+    <style>
+        .chatbot-container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: var(--space-6);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .chatbot-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--space-6);
+            padding-bottom: var(--space-4);
+            border-bottom: 1px solid var(--border-default);
+        }
+
+        .chatbot-status {
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+            padding: var(--space-2) var(--space-4);
+            background: var(--bg-card);
+            border-radius: var(--radius-md);
+            font-size: 0.875rem;
+        }
+
+        .status-indicator {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--color-locked);
+        }
+
+        .status-indicator.ready {
+            background: var(--accent-green);
+            animation: pulse 2s infinite;
+        }
+
+        .status-indicator.loading {
+            background: var(--accent-cyan);
+            animation: pulse 1s infinite;
+        }
+
+        .status-indicator.error {
+            background: #ef4444;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            margin-bottom: var(--space-6);
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-4);
+            padding: var(--space-2);
+        }
+
+        .message {
+            padding: var(--space-4);
+            border-radius: var(--radius-lg);
+            max-width: 85%;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .message.user {
+            align-self: flex-end;
+            background: linear-gradient(135deg, rgba(124, 58, 237, 0.2), rgba(6, 182, 212, 0.2));
+            border: 1px solid var(--accent-purple);
+        }
+
+        .message.assistant {
+            align-self: flex-start;
+            background: var(--bg-card);
+            border: 1px solid var(--border-default);
+        }
+
+        .message-header {
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+            margin-bottom: var(--space-2);
+            font-weight: 600;
+            font-size: 0.875rem;
+        }
+
+        .message-content {
+            line-height: 1.6;
+            white-space: pre-wrap;
+        }
+
+        .citations {
+            margin-top: var(--space-3);
+            padding-top: var(--space-3);
+            border-top: 1px solid var(--border-subtle);
+            font-size: 0.875rem;
+        }
+
+        .citations-label {
+            color: var(--text-muted);
+            margin-bottom: var(--space-2);
+        }
+
+        .citation-link {
+            display: inline-block;
+            margin: var(--space-1) var(--space-2) var(--space-1) 0;
+            padding: var(--space-1) var(--space-2);
+            background: var(--bg-elevated);
+            border-radius: var(--radius-sm);
+            color: var(--accent-cyan);
+            text-decoration: none;
+            font-size: 0.8rem;
+            transition: all 0.2s;
+        }
+
+        .citation-link:hover {
+            background: var(--accent-cyan);
+            color: var(--bg-base);
+        }
+
+        .chat-input-container {
+            position: sticky;
+            bottom: 0;
+            background: var(--bg-base);
+            padding-top: var(--space-4);
+            border-top: 1px solid var(--border-default);
+        }
+
+        .chat-input-wrapper {
+            display: flex;
+            gap: var(--space-3);
+            align-items: flex-end;
+        }
+
+        .chat-input {
+            flex: 1;
+            padding: var(--space-3) var(--space-4);
+            background: var(--bg-card);
+            border: 1px solid var(--border-default);
+            border-radius: var(--radius-lg);
+            color: var(--text-primary);
+            font-size: 1rem;
+            resize: none;
+            min-height: 50px;
+            max-height: 150px;
+            font-family: inherit;
+        }
+
+        .chat-input:focus {
+            outline: none;
+            border-color: var(--accent-purple);
+        }
+
+        .send-button {
+            padding: var(--space-3) var(--space-6);
+            background: var(--gradient-primary);
+            border: none;
+            border-radius: var(--radius-lg);
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s;
+            white-space: nowrap;
+        }
+
+        .send-button:hover:not(:disabled) {
+            transform: translateY(-2px);
+        }
+
+        .send-button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .intro-message {
+            text-align: center;
+            padding: var(--space-8) var(--space-4);
+            color: var(--text-secondary);
+        }
+
+        .intro-message h2 {
+            margin-bottom: var(--space-4);
+        }
+
+        .example-questions {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: var(--space-3);
+            margin-top: var(--space-6);
+        }
+
+        .example-question {
+            padding: var(--space-3);
+            background: var(--bg-card);
+            border: 1px solid var(--border-default);
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: left;
+        }
+
+        .example-question:hover {
+            border-color: var(--accent-purple);
+            transform: translateY(-2px);
+        }
+
+        .example-question strong {
+            display: block;
+            margin-bottom: var(--space-2);
+        }
+
+        .loading {
+            display: flex;
+            gap: 8px;
+            padding: var(--space-2);
+        }
+
+        .loading-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--accent-purple);
+            animation: bounce 1.4s infinite ease-in-out;
+        }
+
+        .loading-dot:nth-child(1) { animation-delay: -0.32s; }
+        .loading-dot:nth-child(2) { animation-delay: -0.16s; }
+
+        @keyframes bounce {
+            0%, 80%, 100% { transform: scale(0); }
+            40% { transform: scale(1); }
+        }
+
+        .error-message {
+            padding: var(--space-4);
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid #ef4444;
+            border-radius: var(--radius-md);
+            color: #ef4444;
+            margin: var(--space-4) 0;
+        }
+
+        @media (max-width: 768px) {
+            .chatbot-container {
+                padding: var(--space-4);
+            }
+
+            .message {
+                max-width: 90%;
+            }
+
+            .example-questions {
+                grid-template-columns: 1fr;
+            }
+
+            .send-button {
+                padding: var(--space-3) var(--space-4);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="chatbot-container">
+        <!-- Header -->
+        <div class="chatbot-header">
+            <div>
+                <a href="/index.html" class="back-link">← Back to Guide</a>
+                <h1 style="margin: var(--space-2) 0 0 0;">🤖 AI Tutor</h1>
+                <p style="color: var(--text-secondary); font-size: 0.875rem; margin-top: var(--space-1);">
+                    Ask questions about your unlocked course material
+                </p>
+            </div>
+            <div class="chatbot-status">
+                <div class="status-indicator" id="statusIndicator"></div>
+                <span id="statusText">Initializing...</span>
+            </div>
+        </div>
+
+        <!-- Messages -->
+        <div class="chat-messages" id="chatMessages">
+            <div class="intro-message" id="introMessage">
+                <h2>👋 Hi! I'm your CS5008 tutor</h2>
+                <p>I can help you understand concepts from your unlocked course modules.</p>
+                <p style="font-size: 0.875rem; color: var(--text-muted); margin-top: var(--space-4);">
+                    ⚠️ I explain concepts and provide hints, but won't give complete homework solutions.
+                </p>
+
+                <div class="example-questions">
+                    <div class="example-question" onclick="askExample(this)">
+                        <strong>📌 Pointer Basics</strong>
+                        <p style="font-size: 0.875rem; margin-top: var(--space-2); color: var(--text-secondary);">
+                            How does pointer arithmetic work in C?
+                        </p>
+                    </div>
+                    <div class="example-question" onclick="askExample(this)">
+                        <strong>🔧 Compiler Pipeline</strong>
+                        <p style="font-size: 0.875rem; margin-top: var(--space-2); color: var(--text-secondary);">
+                            What does the lexer do in a compiler?
+                        </p>
+                    </div>
+                    <div class="example-question" onclick="askExample(this)">
+                        <strong>💾 Memory Management</strong>
+                        <p style="font-size: 0.875rem; margin-top: var(--space-2); color: var(--text-secondary);">
+                            What's the difference between stack and heap?
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Input -->
+        <div class="chat-input-container">
+            <div class="chat-input-wrapper">
+                <textarea
+                    id="chatInput"
+                    class="chat-input"
+                    placeholder="Ask a question about the course..."
+                    rows="1"
+                ></textarea>
+                <button class="send-button" id="sendButton" disabled>
+                    Send
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="/js/modules-data.js?v=2"></script>
+    <script src="/js/unlock.js?v=2"></script>
+    <script src="/js/content-indexer.js?v=2"></script>
+    <script src="/js/chatbot-engine.js?v=2"></script>
+    <script>
+        let isInitialized = false;
+
+        async function initializeChatbot() {
+            try {
+                // Fix for cache issue - ensure ContentIndexer is an instance
+                if (typeof window.ContentIndexer === 'function') {
+                    console.log('Converting ContentIndexer from class to instance...');
+                    window.ContentIndexer = new window.ContentIndexer();
+                }
+
+                // Update status
+                updateStatus('loading', 'Initializing unlock system...');
+
+                // Initialize unlock system
+                UnlockSystem.init();
+
+                // Build content index
+                updateStatus('loading', 'Indexing course content...');
+                await window.ContentIndexer.buildIndex();
+
+                // Log index stats
+                const stats = window.ContentIndexer.getStats();
+                console.log('Index stats:', stats);
+
+                // Fix for cache issue - ensure ChatbotEngine is an instance
+                if (typeof window.ChatbotEngine === 'function') {
+                    console.log('Converting ChatbotEngine from class to instance...');
+                    window.ChatbotEngine = new window.ChatbotEngine();
+                }
+
+                // Initialize chatbot engine
+                updateStatus('loading', 'Loading AI model...');
+                await window.ChatbotEngine.init();
+
+                // Ready
+                updateStatus('ready', 'Ready to help!');
+                document.getElementById('sendButton').disabled = false;
+                document.getElementById('chatInput').focus();
+                isInitialized = true;
+
+            } catch (error) {
+                console.error('Initialization error:', error);
+                updateStatus('error', 'Failed to initialize');
+
+                // Show error message
+                addMessage('assistant',
+                    `Sorry, I couldn't initialize. ${error.message}\n\n` +
+                    `Make sure you're using Chrome 138+ and have enabled the Prompt API in chrome://flags.`,
+                    []
+                );
+            }
+        }
+
+        function updateStatus(state, text) {
+            const indicator = document.getElementById('statusIndicator');
+            const statusText = document.getElementById('statusText');
+
+            indicator.className = 'status-indicator ' + state;
+            statusText.textContent = text;
+        }
+
+        function addMessage(role, content, citations = []) {
+            const messagesDiv = document.getElementById('chatMessages');
+
+            // Remove intro if present
+            const intro = document.getElementById('introMessage');
+            if (intro) {
+                intro.remove();
+            }
+
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${role}`;
+
+            const icon = role === 'user' ? '👤' : '🤖';
+            const name = role === 'user' ? 'You' : 'Tutor';
+
+            let html = `
+                <div class="message-header">
+                    <span>${icon}</span>
+                    <span>${name}</span>
+                </div>
+                <div class="message-content">${escapeHtml(content)}</div>
+            `;
+
+            if (citations && citations.length > 0) {
+                html += `
+                    <div class="citations">
+                        <div class="citations-label">📚 Sources:</div>
+                        ${citations.map(c =>
+                            `<a href="${c.url}" class="citation-link" target="_blank">${escapeHtml(c.text)} →</a>`
+                        ).join('')}
+                    </div>
+                `;
+            }
+
+            messageDiv.innerHTML = html;
+            messagesDiv.appendChild(messageDiv);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function addLoadingMessage() {
+            const messagesDiv = document.getElementById('chatMessages');
+            const loadingDiv = document.createElement('div');
+            loadingDiv.className = 'message assistant';
+            loadingDiv.id = 'loadingMessage';
+            loadingDiv.innerHTML = `
+                <div class="message-header">
+                    <span>🤖</span>
+                    <span>Tutor</span>
+                </div>
+                <div class="loading">
+                    <div class="loading-dot"></div>
+                    <div class="loading-dot"></div>
+                    <div class="loading-dot"></div>
+                </div>
+            `;
+            messagesDiv.appendChild(loadingDiv);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+
+        function removeLoadingMessage() {
+            const loading = document.getElementById('loadingMessage');
+            if (loading) loading.remove();
+        }
+
+        async function sendMessage() {
+            const input = document.getElementById('chatInput');
+            const question = input.value.trim();
+
+            if (!question || !isInitialized) return;
+
+            // Disable input
+            input.disabled = true;
+            document.getElementById('sendButton').disabled = true;
+
+            // Add user message
+            addMessage('user', question);
+            input.value = '';
+            input.style.height = 'auto';
+
+            // Show loading
+            addLoadingMessage();
+
+            try {
+                // Get answer from chatbot
+                const result = await window.ChatbotEngine.askQuestion(question);
+
+                // Remove loading
+                removeLoadingMessage();
+
+                // Add assistant message
+                addMessage('assistant', result.answer, result.citations);
+
+            } catch (error) {
+                removeLoadingMessage();
+                addMessage('assistant',
+                    `Sorry, I encountered an error: ${error.message}`,
+                    []
+                );
+            } finally {
+                // Re-enable input
+                input.disabled = false;
+                document.getElementById('sendButton').disabled = false;
+                input.focus();
+            }
+        }
+
+        function askExample(element) {
+            const question = element.querySelector('p').textContent.trim();
+            document.getElementById('chatInput').value = question;
+            sendMessage();
+        }
+
+        // Event listeners
+        document.getElementById('sendButton').addEventListener('click', sendMessage);
+
+        document.getElementById('chatInput').addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendMessage();
+            }
+        });
+
+        // Auto-resize textarea
+        document.getElementById('chatInput').addEventListener('input', function() {
+            this.style.height = 'auto';
+            this.style.height = Math.min(this.scrollHeight, 150) + 'px';
+        });
+
+        // Initialize on load
+        document.addEventListener('DOMContentLoaded', initializeChatbot);
+    </script>
+</body>
+</html>

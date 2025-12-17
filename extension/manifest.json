@@ -1,0 +1,25 @@
+{
+  "manifest_version": 3,
+  "name": "CS5008 AI Tutor",
+  "version": "1.0.0",
+  "description": "AI-powered tutor for CS5008 course content using on-device Gemini Nano",
+  "permissions": [
+    "storage"
+  ],
+  "host_permissions": [
+    "http://localhost:8000/*",
+    "https://cs5008.shehral.com/*"
+  ],
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "CS5008 AI Tutor"
+  },
+  "icons": {
+    "16": "icon-16.png",
+    "48": "icon-48.png",
+    "128": "icon-128.png"
+  },
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'self'"
+  }
+}
