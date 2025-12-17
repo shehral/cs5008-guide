@@ -111,7 +111,7 @@ Remember: Your goal is to teach concepts and guide learning, not to solve homewo
 
     try {
       // 1. Retrieve relevant content from course materials
-      const chunks = ContentIndexer.search(question, 5);
+      const chunks = window.ContentIndexer.search(question, 5);
 
       if (chunks.length === 0) {
         return {
