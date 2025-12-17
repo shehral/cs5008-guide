@@ -12,14 +12,6 @@ async function init() {
         // Initialize unlock system
         UnlockSystem.init();
 
-        // Fix for class vs instance issue
-        if (typeof window.ContentIndexer === 'function') {
-            window.ContentIndexer = new window.ContentIndexer();
-        }
-        if (typeof window.ChatbotEngine === 'function') {
-            window.ChatbotEngine = new window.ChatbotEngine();
-        }
-
         // Build content index
         updateStatus('loading', 'Indexing course content...');
         await window.ContentIndexer.buildIndex();
