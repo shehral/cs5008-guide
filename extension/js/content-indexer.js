@@ -7,6 +7,8 @@ class ContentIndexer {
   constructor() {
     this.index = [];
     this.isIndexed = false;
+    // Base URL for fetching content (extension needs absolute URLs)
+    this.baseURL = 'http://localhost:8000';
   }
 
   /**
@@ -24,8 +26,10 @@ class ContentIndexer {
 
     for (const module of unlockedModules) {
       try {
-        // Fetch HTML content
-        const response = await fetch(`content/${module.contentFile}`);
+        // Fetch HTML content (use absolute URL for extension context)
+        const url = `${this.baseURL}/content/${module.contentFile}`;
+        console.log(`Fetching: ${url}`);
+        const response = await fetch(url);
         if (!response.ok) {
           console.warn(`Failed to fetch ${module.contentFile}`);
           continue;
@@ -56,7 +60,7 @@ class ContentIndexer {
                 sectionTitle,
                 content: chunk,
                 citation: `${module.title}, Section: ${sectionTitle}`,
-                url: `/content/${module.contentFile}#${sectionId}`,
+                url: `${this.baseURL}/content/${module.contentFile}#${sectionId}`,
                 keywords: this.extractKeywords(chunk + ' ' + sectionTitle),
                 type: 'section'
               });
@@ -74,7 +78,7 @@ class ContentIndexer {
               type: 'code',
               content: codeContent,
               citation: `${module.title}, Code Example`,
-              url: `/content/${module.contentFile}`,
+              url: `${this.baseURL}/content/${module.contentFile}`,
               keywords: this.extractKeywords(codeContent)
             });
           }
