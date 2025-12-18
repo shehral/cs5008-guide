@@ -359,12 +359,6 @@
 
         async function initializeChatbot() {
             try {
-                // Fix for cache issue - ensure ContentIndexer is an instance
-                if (typeof window.ContentIndexer === 'function') {
-                    console.log('Converting ContentIndexer from class to instance...');
-                    window.ContentIndexer = new window.ContentIndexer();
-                }
-
                 // Update status
                 updateStatus('loading', 'Initializing unlock system...');
 
@@ -378,12 +372,6 @@
                 // Log index stats
                 const stats = window.ContentIndexer.getStats();
                 console.log('Index stats:', stats);
-
-                // Fix for cache issue - ensure ChatbotEngine is an instance
-                if (typeof window.ChatbotEngine === 'function') {
-                    console.log('Converting ChatbotEngine from class to instance...');
-                    window.ChatbotEngine = new window.ChatbotEngine();
-                }
 
                 // Initialize chatbot engine
                 updateStatus('loading', 'Loading AI model...');
