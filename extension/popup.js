@@ -5,12 +5,51 @@
 
 let isInitialized = false;
 
+/**
+ * Sync unlock state from website's localStorage (if on course site)
+ */
+async function syncUnlockState() {
+    try {
+        // Try to get current tab
+        const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+
+        // Check if on course website
+        if (tab && (tab.url.includes('localhost:8000') || tab.url.includes('cs5008.shehral.com'))) {
+            console.log('Syncing unlock state from website...');
+
+            // Request unlock state from content script
+            const response = await chrome.tabs.sendMessage(tab.id, { action: 'getUnlockState' });
+
+            if (response && response.success) {
+                // Save to chrome.storage
+                await chrome.storage.local.set({
+                    'cs5008_unlocked_modules': response.unlockedModules,
+                    'cs5008_ta_unlocked': response.taUnlocked
+                });
+                console.log('✓ Synced unlock state from website:', {
+                    modules: response.unlockedModules.length,
+                    taContent: response.taUnlocked.length
+                });
+                return true;
+            }
+        }
+    } catch (error) {
+        console.log('Could not sync from website (may not be on course site):', error.message);
+    }
+    return false;
+}
+
 async function init() {
     try {
+        updateStatus('loading', 'Syncing unlock state...');
+
+        // Try to sync unlock state from website first
+        await syncUnlockState();
+
         updateStatus('loading', 'Initializing unlock system...');
 
-        // Initialize unlock system
-        UnlockSystem.init();
+        // Initialize unlock system (will use chrome.storage)
+        await UnlockSystem.init();
 
         // Build content index
         updateStatus('loading', 'Indexing course content...');

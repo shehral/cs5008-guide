@@ -12,16 +12,40 @@ const UnlockSystem = {
     /**
      * Initialize the unlock system
      */
-    init() {
-        this.unlockedModules = this.loadUnlockedModules();
-        this.taUnlocked = this.loadTAUnlocked();
+    async init() {
+        // Check if in extension context and need async load
+        if (typeof chrome !== 'undefined' && chrome.storage) {
+            try {
+                const result = await chrome.storage.local.get([this.STORAGE_KEY, this.TA_STORAGE_KEY]);
+                this.unlockedModules = result[this.STORAGE_KEY] || [];
+                this.taUnlocked = result[this.TA_STORAGE_KEY] || [];
+                console.log('Loaded unlock state from chrome.storage:', {
+                    modules: this.unlockedModules.length,
+                    taContent: this.taUnlocked.length
+                });
+            } catch (e) {
+                console.error('Error loading from chrome.storage:', e);
+                this.unlockedModules = [];
+                this.taUnlocked = [];
+            }
+        } else {
+            // Web context - use sync load
+            this.unlockedModules = this.loadUnlockedModules();
+            this.taUnlocked = this.loadTAUnlocked();
+        }
     },
 
     /**
-     * Load unlocked modules from localStorage
+     * Load unlocked modules from chrome.storage (extension) or localStorage (web)
      */
     loadUnlockedModules() {
         try {
+            // Check if chrome.storage is available (extension context)
+            if (typeof chrome !== 'undefined' && chrome.storage) {
+                // Return empty for now, will be loaded async in init()
+                return [];
+            }
+            // Fallback to localStorage (web context)
             const stored = localStorage.getItem(this.STORAGE_KEY);
             return stored ? JSON.parse(stored) : [];
         } catch (e) {
@@ -31,10 +55,16 @@ const UnlockSystem = {
     },
 
     /**
-     * Load TA-unlocked content from localStorage
+     * Load TA-unlocked content from chrome.storage (extension) or localStorage (web)
      */
     loadTAUnlocked() {
         try {
+            // Check if chrome.storage is available (extension context)
+            if (typeof chrome !== 'undefined' && chrome.storage) {
+                // Return empty for now, will be loaded async in init()
+                return [];
+            }
+            // Fallback to localStorage (web context)
             const stored = localStorage.getItem(this.TA_STORAGE_KEY);
             return stored ? JSON.parse(stored) : [];
         } catch (e) {
@@ -44,10 +74,18 @@ const UnlockSystem = {
     },
 
     /**
-     * Save unlocked modules to localStorage
+     * Save unlocked modules to chrome.storage (extension) or localStorage (web)
      */
-    saveUnlockedModules() {
+    async saveUnlockedModules() {
         try {
+            // Check if chrome.storage is available (extension context)
+            if (typeof chrome !== 'undefined' && chrome.storage) {
+                await chrome.storage.local.set({
+                    [this.STORAGE_KEY]: this.unlockedModules
+                });
+                return;
+            }
+            // Fallback to localStorage (web context)
             localStorage.setItem(this.STORAGE_KEY, JSON.stringify(this.unlockedModules));
         } catch (e) {
             console.error('Error saving unlocked modules:', e);
@@ -55,10 +93,18 @@ const UnlockSystem = {
     },
 
     /**
-     * Save TA-unlocked content to localStorage
+     * Save TA-unlocked content to chrome.storage (extension) or localStorage (web)
      */
-    saveTAUnlocked() {
+    async saveTAUnlocked() {
         try {
+            // Check if chrome.storage is available (extension context)
+            if (typeof chrome !== 'undefined' && chrome.storage) {
+                await chrome.storage.local.set({
+                    [this.TA_STORAGE_KEY]: this.taUnlocked
+                });
+                return;
+            }
+            // Fallback to localStorage (web context)
             localStorage.setItem(this.TA_STORAGE_KEY, JSON.stringify(this.taUnlocked));
         } catch (e) {
             console.error('Error saving TA unlocked content:', e);

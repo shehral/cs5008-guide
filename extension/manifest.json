@@ -4,11 +4,23 @@
   "version": "1.0.0",
   "description": "AI-powered tutor for CS5008 course content using on-device Gemini Nano",
   "permissions": [
-    "storage"
+    "storage",
+    "activeTab",
+    "scripting"
   ],
   "host_permissions": [
     "http://localhost:8000/*",
     "https://cs5008.shehral.com/*"
+  ],
+  "content_scripts": [
+    {
+      "matches": [
+        "http://localhost:8000/*",
+        "https://cs5008.shehral.com/*"
+      ],
+      "js": ["content-script.js"],
+      "run_at": "document_idle"
+    }
   ],
   "action": {
     "default_popup": "popup.html",
